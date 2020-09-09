@@ -1,0 +1,2183 @@
+# -*- mode: org; eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
+
+#+TITLE: Hermeneus
+
+#+PROPERTY: header-args :results silent :tangle yes
+#+PROPERTY: header-args:emacs-lisp :lexical t
+
+* Early definitions
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:b4c7fe07-d157-4832-94c7-2be9bf65d6d9
+:END:
+#+begin_src emacs-lisp
+  (require 'eieio-core)
+  (require 'cl-preloaded)
+  (require 'eieio)
+  (require 'custom)
+  (require 'derived)
+
+  (eval-when-compile (require 'subr-x)
+                     (require 'rx)
+                     (require 'cl-macs))
+#+end_src
+** Constants
+:PROPERTIES:
+:ID:       TKR:476d569a-11f6-4c85-9c83-286ab6af8fec
+:END:
+#+begin_src emacs-lisp
+  (defconst hrm--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
+    "Every letter in the Greek alphabet, including the digamma and yot.")
+
+  (defconst hrm--greek-diacritics "\u0313\u0314\u0300\u0301\u0342\u0308\u0345\u0304\u0306"
+    "Every combining diacritic relevant to Ancient Greek.")
+
+  (defconst hrm--greek-punctuation "’·;")
+
+  ;; This isn’t actually used anywhere. I don’t remember why I made it.
+  ;; But it’s nice, so it stays.
+  (defconst hrm--greek-letter-names
+    (list "alpha"  "beta"   "gamma" "delta" "epsilon" "digamma" "zeta"
+            "eta" "theta"    "iota"   "yot"   "kappa"  "lambda"   "mu"
+             "nu"    "xi" "omicron"    "pi"     "rho"   "sigma"  "tau"
+        "upsilon"   "phi"     "chi"   "psi"   "omega"))
+
+  (defconst hrm--greek-unicode-all
+    (cl-loop for v being the hash-values of (ucs-names)
+             for v = (char-to-string v)
+             if (string-match-p (rx (category greek)) v)
+             concat v))
+
+  (defconst hrm--lowercase-sigmas "σςϲͻͼͽ")
+  (defconst hrm--uppercase-sigmas "ΣϹϽϾϿ")
+
+  ;; Oops! ALL sigmas
+  (defconst hrm--all-sigmas (concat hrm--lowercase-sigmas
+                                    hrm--uppercase-sigmas)
+    "Every sigma. All of them.
+    You need a lowercase word-ending sigma? Consider it done. How
+    about a capital reverse dotted lunate sigma? We’ve got you
+    covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
+
+  (defconst hrm--git-lsj-dir "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/")
+#+end_src
+** Utility functions
+:PROPERTIES:
+:ID:       TKR:033a6ce1-0d17-431f-921d-75c4ed9bd8d9
+:END:
+#+begin_src emacs-lisp
+  (defun hrm-alist-to-local-vars (alist &optional prefix)
+    (let (rtn)
+      (dolist (a alist (nreverse rtn))
+        (let* ((var-sym (if prefix
+                            (intern (concat prefix "-" (symbol-name (car a))))
+                          (car a)))
+               (var (make-local-variable var-sym)))
+          (set var (cdr a))
+          (push var rtn)))))
+
+  (defun hrm--make-keyword (symbol)
+    (make-symbol (concat ":" (symbol-name symbol))))
+#+end_src
+*** Get default value of class slot
+:PROPERTIES:
+:ID:       TKR:48d94516-5ea7-456d-b072-2666f4600d71
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--get-slot-default-value (class slot)
+    (thread-first (cl-loop for slot in (eieio-class-slots class)
+                           if (eq (cl--slot-descriptor-name slot) 'object-name)
+                           return slot)
+      (cl--slot-descriptor-initform)
+      (eieio-default-eval-maybe)))
+#+end_src
+*** Which words have combining diacriticals that won’t… combine?
+#+begin_src emacs-lisp :tangle no :results replace list :load no
+  (let (current-word)
+    (lööp for i across (seq-copy hrm-greek-words-beta)
+          if (string-match-p (rx (category combining-diacritic)) (setq current-word (hrm-beta-to-unicode i)))
+                             collect (message "%s ⇒ %s" i current-word)))
+#+end_src
+
+#+RESULTS:
+- a)qw/|/wsis ⇒ ἀθῴ́ωσις
+- *)ai/+das ⇒ ἈΪ́Δας
+- *)ai/+dhs ⇒ ἈΪ́Δης
+- a)lh/(ion ⇒ ἀλή̔ιον
+- a)mfiqrw/|/skw ⇒ ἀμφιθρῴ́σκω
+- a)natru\/ga/w ⇒ ἀνατρὺ́γάω
+- a)nd=i/kths ⇒ ἀνδ͂ίκτης
+- da+mosiofu/lakes ⇒ δα̈μοσιοφύλακες
+- dafno=ghqh/s ⇒ δαφνο͂γηθής
+- e)nagro/meno|s ⇒ ἐναγρόμενοͅς
+- e)noiko=dome/w ⇒ ἐνοικο͂δομέω
+- e)u)+krhmnos ⇒ ἐὐ̈κρημνος
+- *)ia=puc ⇒ ἸΑ͂Πυξ
+- polupu\/los ⇒ πολυπὺ́λος
+- *)ra=ros ⇒ Ρ̓Α͂Ρος
+- *)ra/rion ⇒ Ρ̓ΆΡιον
+- w)|o=fage/w ⇒ ᾠο͂φαγέω
+*** Trim a string
+#+begin_src emacs-lisp
+  (defun hrm--trim-string-extra (string)
+    (let ((trim (rx (one-or-more (any blank punctuation ?\n)))))
+      (string-trim string trim trim)))
+#+end_src
+** Options
+:PROPERTIES:
+:ID:       TKR:feba7f56-ff49-4ed3-9db0-f6602296810a
+:END:
+#+begin_src emacs-lisp
+  (defgroup hermeneus nil
+    "Options for Hermeneus, the Ancient Greek word utility."
+    :tag "Hermeneus"
+    :group 'applications)
+
+  (defgroup hrm-faces nil
+    "Faces used in Hermeneus, the Ancient Greek word utility."
+    :tag "Hermeneus faces"
+    :group 'hermeneus)
+#+end_src
+*** Hooks
+:PROPERTIES:
+:ID:       TKR:d47a2a83-a109-4534-927f-b93831bb9cbe
+:END:
+#+begin_src emacs-lisp
+  (defcustom hrm-scan-entry-functions nil
+    "Functions called by ‘hrm-scan-xml’ for every XML element
+  in the lexicon. Each function is run with two arguments: the
+  word-object corresponding to the entry, and the DOM parsed
+  from the XML element itself."
+    :type 'hook
+    :group 'hermeneus)
+#+end_src
+** Modes
+:PROPERTIES:
+:ID:       TKR:e540ec29-199d-4eaa-86e5-fb355dd51938
+:END:
+#+begin_src emacs-lisp
+  (define-derived-mode hermeneus-mode special-mode "Hermeneus")
+#+end_src
+** Keys
+:PROPERTIES:
+:ID:       TKR:057b84a7-d596-45d7-ab34-ce9b509049a7
+:END:
+#+begin_src emacs-lisp
+  (define-key hermeneus-mode-map "g" 'hrm-buffer-update)
+#+end_src
+* Conversion
+:PROPERTIES:
+:ID:       TKR:a5c757b2-ff0f-4c62-957d-8d8dc8da62a1
+:header-args:emacs-lisp: :tangle hrm-conv.el
+:END:
+So, we have three kinds of ways to express letters:
+
+- Unicode (as Hermes intended)
+- Beta code (as appears in the XML LSJ)
+- Greek keyboard layout (for Tina)
+
+But wait a minute, “Greek keyboard layout” is a bit subjective… it’s supposed to be “what you get when you’re using QWERTY but you think it’s a Greek layout.” It’s a way of making sure I can type text that will be interpreted as Unicode but without switching keyboard layouts. But, what about the fact that, if you’re using a differerent European layout, you might be… aaaaahhhh!! And my brain just broke.
+So, clearly we may simply need an option for what your alternative “Beta code” style layout is. The main hiccup in this is that the sigma might be represented by one Latin letter (standard beta) or two (Greek keyboard style). So, we should have a fixed variable describing the Beta code used in the LSJ, and a custom option for what sort of “Beta” code you’ll be typing in. Well, huh. We might need to have a function (or at least a loop) to come up with the proper type definition for that one.
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:91c60345-0a80-4c03-8984-9a02ff01186d
+:END:
+#+begin_src emacs-lisp
+  (require 'cl-lib)
+  (require 'ucs-normalize)
+
+  (eval-when-compile
+    (require 'rx)
+    (require 'cl-macs)
+    (require 'subr-x))
+#+end_src
+** Utility functions
+#+begin_src emacs-lisp
+  (defun hrm--regexp-bracket-quote (string)
+    (if (> (length string) 1)
+        (concat "[" (regexp-quote string) "]")
+      (regexp-quote string)))
+#+end_src
+** Macros
+#+begin_src emacs-lisp
+  (defmacro hrm--make-regexp-versions (def-form &rest string-vars)
+      (declare (indent 1)
+               (debug ([&or "defvar" "defconst" "setq"] &rest symbolp)))
+      `(progn
+         ,@(cl-loop for var in string-vars
+                  collect (list def-form (intern (concat (symbol-name var) "-regexp"))
+                                (hrm--regexp-bracket-quote (symbol-value var))))))
+#+end_src
+** Variables
+:PROPERTIES:
+:ID:       TKR:c056d1e0-5c34-41de-89de-94d388c5285f
+:END:
+#+begin_src emacs-lisp
+  ;; For comparison, here is ‘hrm--greek-letters’:
+  ;; αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ
+  (defconst hrm--beta-letters--standard
+    "abgdevzhqijklmncoprstufxywABGDEVZHQIJKLMNCOPRSTUFXYW")
+
+  (defvar hrm--beta-letters--user hrm--beta-letters--standard)
+
+  ;; (defconst hrm--greek-kbd-letters
+  ;;   "abgde`zhuiĳklmnjoprwtyfxcvABGDE~ZHUIĲKLMNJOPRWTYFXCV")
+
+  ;; (defvar hrm--beta-letters--user hrm--beta-letters--standard)
+  ;; (defvar hrm--beta-output-letters hrm--greek-letters)
+
+  ;; For comparison, here are the non-combining versions of the
+  ;; characters in ‘hrm--greek-diacritics’:
+  ;; ᾿῾ `´῀¨ͺˉ˘
+  (defconst hrm--beta-diacritics
+    ")(\\/=+|_^")
+
+  (defconst hrm--beta-punctuation
+    "':;") ; "’·;"
+
+  (defconst hrm--beta-all--standard
+    (concat hrm--beta-punctuation hrm--beta-diacritics hrm--beta-letters--standard))
+
+  (hrm--make-regexp-versions defconst
+    hrm--beta-diacritics hrm--beta-punctuation
+    hrm--beta-all--standard)
+
+  (defvar hrm--beta-all--user hrm--beta-all--standard)
+  (defvar hrm--beta-all--user-regexp
+    (hrm--regexp-bracket-quote hrm--beta-all--user))
+
+  (defvar hrm--greek-all
+    (concat hrm--greek-punctuation hrm--greek-diacritics
+            (apply #'string
+                   (delete-dups (append (string-to-list hrm--greek-letters)
+                                        (string-to-list hrm--all-sigmas))))))
+#+end_src
+** Options
+#+begin_src emacs-lisp
+(defun hrm--make-beta-hash-1 (input-letters output-letters hash)
+    (when (stringp input-letters)
+      (setq input-letters (mapcar #'char-to-string
+                                  (string-to-list input-letters))))
+    (cl-loop for i in input-letters
+             for o across output-letters
+             if (eq (length i) 1)
+             do (puthash (string-to-char i) o hash)
+             else do (setq hash (hrm--make-beta-hash-1 i (make-string (length i) o) hash))
+             finally return hash))
+
+  (cl-defun hrm--make-beta-hash (input-letters &optional
+                                               (output-letters hrm--greek-letters)
+                                               (hash (make-hash-table :size (length hrm--greek-letters)))
+                                               &key
+                                               (output-punctuation hrm--greek-punctuation)
+                                               (output-diacritics hrm--greek-diacritics)
+                                               (input-punctuation hrm--beta-punctuation)
+                                               (input-diacritics hrm--beta-diacritics))
+    "Make a hash table for translating INPUT-LETTERS to OUTPUT-LETTERS.
+  INPUT-LETTERS can be a string or a list of strings.
+  OUTPUT-LETTERS must be a string.
+
+  If INPUT-LETTERS is a string, then each letter in INPUT-LETTERS
+  will be used as a key in the resulting hash table, with the
+  corresponding letter in OUTPUT-LETTERS as the value.
+
+  If INPUT-LETTERS is a list of strings, then each character in
+  each string is interpreted as alternate keys for whichever
+  character has the positional index in OUTPUT-LETTERS that the
+  string has in INPUT-LETTERS (a many-to-one mapping). E.g., the
+  arguments '(\"ab\" \"c\" \"d\") and \"xyz\" would result in a
+  hash table mapping \"a\" to \"x\", \"b\" to \"x\", \"c\" to
+  \"y\", and \"d\" to \"z\".
+
+  Use HASH if you want to start from an existing hash-table rather
+  than make a new one."
+    (setq hash (hrm--make-beta-hash-1 input-letters output-letters hash))
+    (when (and input-punctuation input-diacritics output-punctuation output-diacritics)
+      (cl-loop for i across (concat input-punctuation input-diacritics)
+               for o across (concat output-punctuation output-diacritics)
+               do (puthash i o hash)))
+    hash)
+
+  (defvar hrm--beta-hash--standard (hrm--make-beta-hash hrm--beta-letters--standard))
+  (defvar hrm--beta-hash--user (copy-hash-table hrm--beta-hash--standard))
+
+  (cl-defun hrm-conv--set-beta-input-type (&optional sym (def hrm-beta-input-type f))
+    "Setter function for the option `hrm-beta-input-type'."
+    (unless sym
+      (setq sym 'hrm-beta-input-type))
+
+    (cond ((eq def 'beta)
+           (setq hrm--beta-hash--user
+                 hrm--beta-hash--standard)
+           (setq hrm--beta-letters--user
+                 hrm--beta-letters--standard))
+
+          ;; Note that standard Greek keyboard layouts don’t have
+          ;; a key for the digamma or yot; so, for the ‘greek-kbd’
+          ;; setting, I kind of fudged things. The digamma is
+          ;; moved to the backtick/tilde key, while the yot is
+          ;; moved to ĳ. I don’t think many people have that key
+          ;; on their keyboards, either, but as I can’t find a
+          ;; single word in the LSJ that contains a yot, I think
+          ;; it’s best to avoid clobbering potentially useful
+          ;; inputs with it.
+          ;; Once Hermeneus is sophisticated enough to need
+          ;; support for typing a yot in Greek-keyboard style Beta
+          ;; code, I will be happy to rethink this.
+          ;; …And if you need that functionality, PLEASE take me
+          ;; out to dinner.
+          ;; —Tina
+          ((eq def 'greek-kbd)
+           (let ((greek-kbd-def
+                  '("a" "b" "g" "d" "e" "`"  "z" "h" "u" "i" "ĳ" "k" "l" "m"
+                    "n" "j" "o" "p" "r" "sw" "t" "y" "f" "x" "c" "v"
+                    "A" "B" "G" "D" "E" "~"  "Z" "H" "U" "I" "Ĳ" "K" "L" "M"
+                    "N" "J" "O" "P" "R" "SW" "T" "Y" "F" "X" "C" "V")))
+             (setq hrm--beta-hash--user
+                   (hrm--make-beta-hash greek-kbd-def)
+                   hrm--beta-letters-user
+                   (apply #'concat greek-kbd-def))))
+
+          ((and (listp def) (cl-every #'stringp def))
+           (setq hrm--beta-hash--user
+                 (hrm--make-beta-hash def)
+                 hrm--beta-letters--user
+                 (apply #'concat def)))
+
+          (t (error "Invalid definition for ‘hrm-beta-input-type’: %s" def)))
+
+    (setq hrm--beta-all--user
+          (concat hrm--beta-punctuation hrm--beta-diacritics hrm--beta-letters--user)
+          hrm--beta-all--user-regexp
+          (hrm--regexp-bracket-quote hrm--beta-all--user))
+
+    ;; if definition is specified, set the variable itself
+    (when f
+      (set-default sym def)))
+
+  (defcustom hrm-beta-input-type 'beta
+    "How to interpret Latin letters used to represent Greek words.
+  Only affects user input. The default is the standard “Beta code”
+  used for representing Greek words in Latin characters. “Greek
+  Keyboard” translates a standard QWERTY keyboard layout to a
+  standard Greek keyboard layout. Finally, with “Custom mapping,”
+  you can define your own style of Beta code. This is represented
+  with a list of strings, each corresponding to a Greek letter (use
+  the Customize interface to see which ones). Each string only
+  needs to be one character, but you can add more characters onto
+  the string if you want more than one key to enter the same
+  letter.
+
+  If setting this outside of Customize, be sure to run
+  ‘hrm-conv--set-beta-input-type’ afterward."
+    :type `(choice (const beta :tag "Beta code")
+                   (const greek-kbd :tag "Greek keyboard")
+                   (list :tag "Custom mapping"
+                         ,@(cl-loop for cg across hrm--greek-letters
+                                    for cb across hrm--beta-letters--standard
+                                    for sg = (if (eq cg ?ς)
+                                                "σ/ς"
+                                               (concat "  " (char-to-string cg)))
+                                    for sb = (char-to-string cb)
+                                    collect (list 'string :tag sg :value sb))))
+    :tag "Hermeneus — Beta code input type"
+    :set 'hrm-conv--set-beta-input-type
+    :group 'hermeneus)
+#+end_src
+** Convert by hash
+This may have to be recoded in such a way as to allow peeking at the next letter, to see if there’s a word boundary, for the sake of sigma normalization. Also, I should be thinking about iota-subscript stuff right now. Eeeegh…
+#+begin_src emacs-lisp
+  (defun hrm--convert-string-by-hash (string hash)
+    "Return STRING, translated according to HASH.
+  HASH should be a hash table where the keys are characters and the
+  values are characters or strings."
+    (cl-loop for l across string
+             for o = (or (gethash l hash) l)
+             concat (cl-etypecase o
+                      (string o)
+                      (character (char-to-string o)))))
+#+end_src
+** Normalize diacritics
+#+begin_src emacs-lisp
+  (defun hrm-conv--change-diacritics-placement (string)
+    (let ((rx (rx (group "*")
+                  (group (one-or-more (any ")(/\\=+|—^")))
+                  (group letter))))
+      (replace-regexp-in-string rx "\\1\\3\\2" string)))
+
+  (defun hrm-conv--dieresis-before-accent (string)
+    (let ((rx (rx (group (any "/\\"))
+                  (group "+" ))))
+      (replace-regexp-in-string rx "\\2\\1" string)))
+
+  (defun hrm-conv--capitalize-after-asterisk (string)
+    "If STRING contains an asterisk, return STRING with no asterisk
+  and with the first letter after it capitalized. Otherwise, return
+  STRING. (This also happens when no letters appear anywhere
+  following the asterisk.)"
+    (if-let ((astr-idx (string-match-p "\*" string))   ; “asterisk index”
+             (capt-idx (string-match-p (rx word-start) ; where to capitalize
+                                       string (1+ astr-idx))))
+        (concat (substring string 0 astr-idx)
+                (substring string (1+ astr-idx) capt-idx)
+                (char-to-string (upcase (elt string capt-idx)))
+                (substring string (1+ capt-idx)))
+      string))
+
+  (defun hrm-conv--normalize-beta-diacritics (string)
+    (thread-first string
+      (hrm-conv--change-diacritics-placement)
+      (hrm-conv--dieresis-before-accent)
+      (hrm-conv--capitalize-after-asterisk)))
+#+end_src
+** Normalize sigmas
+#+begin_src emacs-lisp
+  (defun hrm-conv--normalize-sigmas (string)
+    "Returns a copy of STRING, but with sigmas normalized.
+  Sigmas which end a word will be replaced with “ς”, while other sigmas
+  will be replaced with “σ”."
+    ;; This function used to look like this:
+    ;;
+    ;; (replace-regexp-in-string (rx "ς" (not word-boundary)) "σ" string))
+    ;;
+    ;; An elaborate rewrite was necessary because Emacs’s regexp engine
+    ;; now sees “σ” and “ς” as equivalent, which confuses the hell out
+    ;; of ‘replace-regexp-in-string’.
+    (let ((max (length string))
+          done i substrings sigma)
+      (while (not done)
+        (if-let ((sigma-idx (string-match-p "ς" string i)) ; the actual test
+                 (next-idx (1+ sigma-idx))
+                 (new-substring (substring string (or i 0) sigma-idx)))
+            ;; sigma is present
+            (progn
+              (setq sigma
+                    ;; does it end a word?
+                    (if (or (and (eq next-idx max) (setq done t))
+                            (not (eq (char-syntax (elt string next-idx)) ?w)))
+                        "ς" ; yes
+                      "σ")) ; no
+              (setq substrings
+                    (cons sigma (cons new-substring substrings)))
+              (setq i next-idx))
+           ;; no more sigmas
+          (if (not i) ; ‘i’ will be nil if the string had no sigmas at all
+              (setq done string)
+            (push (substring string i max) substrings)
+            (setq done t))))
+      (if (stringp done)
+          done
+        (apply #'concat (nreverse substrings)))))
+#+end_src
+** Conversion
+#+begin_src emacs-lisp
+  (defun hrm-beta-to-unicode (string &optional input-p match-p)
+      "Return STRING converted from Beta code to Unicode.
+    INPUT-P is whether or not the string should be interpreted as
+    user input. (The difference is that user input should be read
+    according to the option ‘hrm-conv-beta-input-type’; otherwise, it
+    should be read as standard Beta code, as used in the XML LSJ.)
+    MATCH-P should be non-nil when converting a string to be used
+    solely for matching (like in the function ‘hrm--re-builder’), in
+    which case sigma normalization is unnecessary."
+      (setq string
+            (thread-first string
+              (hrm-conv--normalize-beta-diacritics)
+              (hrm--convert-string-by-hash (if input-p
+                                               hrm--beta-hash--user
+                                             hrm--beta-hash--standard))
+              (ucs-normalize-NFC-string)))
+      (if match-p
+          string
+        (hrm-conv--normalize-sigmas string)))
+#+end_src
+** End matter
+:PROPERTIES:
+:ID:       TKR:843a4901-0bf6-4c9e-a709-c79b0a4195bc
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-conv)
+
+  ;;; hrm-conv.el ends here
+#+end_src
+* Matching
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle hrm-match.el
+:END:
+** Dependencies
+#+begin_src emacs-lisp
+  (require 'ucs-normalize)
+
+  (eval-when-compile (require 'rx)
+                     (require 'cl-macs)
+                     (require 'subr-x))
+
+  (require 'hrm-conv)
+#+end_src
+** Variables
+#+begin_src emacs-lisp
+  (hrm--make-regexp-versions defconst
+    hrm--lowercase-sigmas hrm--uppercase-sigmas hrm--all-sigmas)
+#+end_src
+** Functions
+*** Remove diacritics from Greek words
+:PROPERTIES:
+:ID:       TKR:36e58a64-4ada-426c-b9b8-cd7d76123bb2
+:END:
+#+begin_src emacs-lisp
+  (defun hrm-remove-diacritics (string)
+    "Return STRING, but with all diacritics removed."
+    (replace-regexp-in-string (rx (category combining-diacritic)) ""
+                              (ucs-normalize-NFD-string string)))
+#+end_src
+** Hash tables
+#+begin_src emacs-lisp
+  (defun hrm-normalize-greek-char (char)
+    (thread-first char
+      (char-to-string)
+      (hrm--remove-diacritics)
+      (string-to-char)))
+
+  (cl-defun hrm--get-letter-variants (char)
+    (when (stringp char)
+      (setq char (string-to-char char)))
+    ;; if it’s a sigma, return all sigmas of that case
+    (if (memq char (string-to-list hrm--all-sigmas))
+        (if (memq char (string-to-list hrm--lowercase-sigmas))
+            hrm--lowercase-sigmas
+          hrm--uppercase-sigmas)
+      ;; otherwise, look up variants in ‘hrm--greek-unicode-all’
+      (cl-loop for c across hrm--greek-unicode-all
+               if (eq (hrm--normalize-greek-char char)
+                      (hrm--normalize-greek-char c))
+               concat (char-to-string c))))
+
+  (defvar hrm--letter-variant-hash (make-hash-table :size (length hrm--greek-all)))
+  (defvar hrm--letter-variant-hash-case-folded (make-hash-table :size (length hrm--greek-all)))
+
+  (defun hrm--make-letter-variant-hashes ()
+    (cl-loop with letters = (thread-first hrm--greek-letters
+                              (concat hrm--all-sigmas)
+                              (string-to-list)
+                              (delete-dups))
+             for l in letters
+             for ld = (downcase l)
+             for lu = (upcase l)
+             for variants = (hrm--get-letter-variants l)
+             for casefold-variants = (if (eq ld lu)
+                                         variants
+                                       (concat (hrm--get-letter-variants ld)
+                                               (hrm--get-letter-variants lu)))
+             do (puthash l (hrm--regexp-bracket-quote variants)
+                         hrm--letter-variant-hash)
+                (puthash l (hrm--regexp-bracket-quote casefold-variants)
+                         hrm--letter-variant-hash-case-folded)))
+
+  (hrm--make-letter-variant-hashes)
+
+  (defvar hrm--case-fold-hash (make-hash-table :size (length hrm--greek-unicode-all)))
+
+  (defun hrm--make-case-fold-hash ()
+    (cl-loop for l across hrm--greek-unicode-all
+             for lu = (upcase l)
+             for ld = (downcase l)
+             if (memq l (string-to-list hrm--all-sigmas))
+             do (puthash l hrm--all-sigmas-regexp hrm--case-fold-hash)
+             else if (eq ld lu)
+             do (puthash l l hrm--case-fold-hash)
+             else do (puthash l (format "[%c%c]" ld lu)
+                              hrm--case-fold-hash)))
+
+  (hrm--make-case-fold-hash)
+
+  (defvar hrm--sigma-hash (make-hash-table :size (length hrm--all-sigmas)))
+
+  (defun hrm--make-sigma-hash ()
+    (cl-loop for l across hrm--lowercase-sigmas
+             do (puthash l hrm--lowercase-sigmas-regexp hrm--sigma-hash))
+    (cl-loop for l across hrm--uppercase-sigmas
+             do (puthash l hrm--uppercase-sigmas-regexp hrm--sigma-hash)))
+
+  (hrm--make-sigma-hash)
+#+end_src
+** Regex builder
+Watch out for:
+- Combining diacritics
+- Sigmas
+- Iotas, iota-subscript, and vowels that can potentially be followed by iota-subscript
+#+begin_src emacs-lisp
+  (defun hrm--re-builder (string)
+    ;; Decompose the string into letters and combining diacriticals, and
+    ;; translate any Beta code to Unicode
+    (setq string (ucs-normalize-NFD-string string))
+    (when (string-match-p hrm--beta-all--user-regexp string)
+      (setq string (thread-first string
+                     (hrm-conv--normalize-beta-diacritics)
+                     (hrm-beta-to-unicode t t))))
+    ;; Figure out if we need to fold accents or case
+    (let* ((fold-accents-p (not (string-match-p
+                                 (rx (category combining-diacritic))
+                                 string)))
+           (fold-case-p (or (and case-fold-search
+                                 (not (eq case-fold-search 'auto)))
+                            (and (eq case-fold-search 'auto)
+                                 (let ((case-fold-search nil))
+                                   (not (string-match-p (rx upper) string))))))
+           ;; Pick a hash to use for the translation
+           (hash (if fold-accents-p
+                     ;; Yes, folding accents
+                     (if fold-case-p
+                         hrm--letter-variant-hash-case-folded
+                       hrm--letter-variant-hash)
+                   ;; No, not folding accents
+                   (setq string (ucs-normalize-NFC-string string)) ; recompose accents
+                   (if fold-case-p
+                       hrm--case-fold-hash
+                     hrm--sigma-hash))))
+      (hrm--convert-string-by-hash string hash)))
+#+end_src
+** Matcher
+:PROPERTIES:
+:ID:       TKR:a4a164ae-0cb8-4e14-b4d1-77d311df2b71
+:END:
+Performance is insanely critical, here.
+#+begin_src emacs-lisp
+  (defun hrm--re-matcher (regexp candidates)
+    "Return all strings in CANDIDATES that match REGEXP.
+  Strings where the regexp matches at the beginning will be listed
+  earlier in the result than strings where the regexp matches
+  elsewhere."
+    (if (string-empty-p regexp)
+        candidates
+      (let (list-1 list-2)
+        (dolist (c (reverse candidates))
+          (when (string-match-p regexp c)
+            (if (string-match-p (concat "^" regexp) c)
+                (push c list-1)
+              (push c list-2))))
+        (append list-1 list-2))))
+#+end_src
+** End matter
+#+begin_src emacs-lisp
+  (provide 'hrm-match)
+
+  ;; hrm-match.el ends here
+#+end_src
+* XML
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle hrm-xml.el
+:END:
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:7a98e386-09fc-4f8a-8cbe-7719ed02b2c0
+:END:
+#+begin_src emacs-lisp
+  (require 'url-handlers)
+  (require 'url)
+  (require 'url-parse)
+  (require 'eieio-base)
+  (require 'cl-lib)
+  (require 'eieio)
+  (require 'anaphora)
+  (require 'dom)
+  (require 'nnheader)
+
+  (eval-when-compile (require 'subr-x)
+                     (require 'cl-macs))
+
+  (require 'hrm-conv)
+#+end_src
+** Utility functions
+*** Is file an URL?
+:PROPERTIES:
+:ID:       TKR:7510ef46-dc7c-46df-91d1-3a78ecc55553
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--url-p (path)
+    "Return non-nil if PATH is a valid URL.
+  Specifically, this will return a parsed URL object from
+  ‘url-generic-parse-url’, otherwise nil."
+    (let ((url (url-generic-parse-url path)))
+      (when (cl-struct-slot-value 'url 'type url)
+        url)))
+#+end_src
+*** Get the location of the next XML tag
+:PROPERTIES:
+:ID:       TKR:83796ca2-8149-4c43-8bdf-e89d91ab4a0c
+:END:
+#+begin_src emacs-lisp
+  (cl-defun hrm--get-next-tag (&optional (tag "entryFree"))
+    "Return start and end positions of the next instance of XML tag TAG
+   (defaults to “entryFree”). Move point to the end position."
+    (save-match-data
+      (when (search-forward (concat "<" tag) nil t)
+        (let* ((begin (goto-char (match-beginning 0)))
+               (end (progn (search-forward (concat "</" tag ">") nil t)
+                           (point))))
+          (list begin end)))))
+#+end_src
+*** Get a DOM from an XML file
+:PROPERTIES:
+:ID:       TKR:8a8cf7a7-ae76-46ec-9774-7930d5d0413a
+:END:
+#+begin_src emacs-lisp
+  (cl-defun hrm--get-dom-from-file (file &optional start end
+                                         &key plain-xml-p)
+    "Return a DOM sexp from the XML file FILE.
+  If keyword argument PLAIN-XML-P is non-nil, return plain XML instead."
+    (when (integerp file)
+      (setq file (nth file hrm-lsj-files)))
+    (with-temp-buffer
+      (hrm--insert-contents file)
+      (funcall (if plain-xml-p
+                   'buffer-substring
+                 'libxml-parse-xml-region)
+               (or start (point-min))
+               (or end (point-max)))))
+
+  (defun hrm--insert-contents (file)
+    "Insert contents of FILE into the current buffer.
+  FILE can be a local filename or an URL."
+    (if-let ((url (hrm--url-p file)))
+        (let ((buffer (url-retrieve-synchronously url nil t 60)))
+          (url-insert-buffer-contents buffer url)
+          (kill-buffer buffer))
+      (if (file-exists-p file)
+          (insert-file-contents file)
+        (error "File does not exist: %s" file))))
+#+end_src
+*** Get file sizes
+:PROPERTIES:
+:ID:       TKR:04b61a99-7801-424c-a895-f6a71e9601ac
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--get-file-sizes (list)
+    (let ((sizes '(42923474  5014862  4182729 14588543 40082401
+                      15614  1233434  2872155  4731605  4600309
+                   23622167  6753069 12285441  4142048   922716
+                   12279541 38221861   676533   670125  2249926
+                   22838928 11626884  9107698  8185312  6534345
+                    1596622  1656586)))
+      (cl-loop for l in list
+               for i from 1 to (length list)
+               if (hrm--url-p l)
+               collect (nth (1- i) sizes)
+               else
+               collect (nnheader-file-size l))))
+#+end_src
+** Variables
+:PROPERTIES:
+:ID:       TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737
+:END:
+#+begin_src emacs-lisp :tangle yes
+  (defvar hrm-lsj-files nil)
+
+  (cl-defun hrm--set-lsj-dir (&optional (symbol 'hrm-lsj-dir)
+                                        (value (if (boundp 'hrm-lsj-dir)
+                                                   hrm-lsj-dir
+                                                 hrm--git-lsj-dir)))
+    (set-default symbol value)
+    (setq hrm-lsj-files
+          (cl-loop for i from 1 to 27
+                   with expand-func = (if (hrm--url-p value)
+                                          'url-expand-file-name
+                                        'expand-file-name)
+                   collect (funcall expand-func
+                                    (format "grc.lsj.perseus-eng%s.xml" i)
+                                    value))))
+
+  (defcustom hrm-lsj-dir hrm--git-lsj-dir
+    "Directory where the LSJ Greek lexicon files can be found.
+  This can be an URL or a local file path. The files themselves should
+  be named in the format “grc.lsj.perseus-engXX.xml”, where XX is a
+  number from 1 to 27 (no padding).
+
+  If you set this outside of Customize, be sure to evaluate
+  ‘hrm--set-lsj-dir’."
+    :tag "Hermeneus — LSJ directory"
+    :type `(choice (const ,hrm--git-lsj-dir
+                          :tag "Perseus Digital Library’s Git repository")
+                   (directory :tag "local directory")
+                   (string :tag "URL"))
+    :set 'hrm--set-lsj-dir
+    :group 'hermeneus)
+
+  (defvar hrm-use-fonts t)
+#+end_src
+** Scan the LSJ - eieio-persistent style
+:PROPERTIES:
+:ID:       TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf
+:END:
+#+begin_src emacs-lisp 
+  (defun hrm-scan-lsj ()
+    (interactive)
+    (oset hrm-lsj entries (hrm-scan-entries))
+    (eieio-persistent-save hrm-lsj))
+
+  (defun hrm-scan-entries ()
+    "Scan over every lexicon entry in the LSJ, using ‘hrm-scan-entry’.
+  Return a hash table."
+    (interactive)
+    (let* ((hash (make-hash-table :test 'equal :size 116493))
+           (sizes (hrm--get-file-sizes hrm-lsj-files))
+           (total 0)
+           (prog-msg "Scanning Liddell and Scott")
+           (progress (make-progress-reporter prog-msg
+                                             0 (apply '+ sizes))))
+      (dotimes (i (length hrm-lsj-files))
+        (with-temp-buffer
+          (hrm--insert-contents (nth i hrm-lsj-files))
+          (let ((cur-size (pop sizes))
+                (max (point-max)))
+            (awhile (hrm--get-next-tag "entryFree")
+              (oset (hrm-scan-entry (apply 'libxml-parse-xml-region it) hash) loc (cons i it))
+              (progress-reporter-update progress (+ total
+                                                    (* cur-size
+                                                       (/ (float (cadr it))
+                                                          max)))))
+            (progress-reporter-update progress (cl-incf total cur-size)))))
+      (progress-reporter-done progress)
+      hash))
+
+  (defun hrm-scan-entry (entry &optional HASH)
+    "Scan ENTRY, a DOM sexp of an “entryFree” tag from the LSJ files.
+  Identify its headword and numeric ID. Create a word object. Add
+  the headword and object as a key-value pair in hash-table HASH,
+  if present. Run each function from ‘hrm-scan-entry-functions’
+  with two arguments, the word object and ENTRY. Finally, return
+  the object."
+    (let* ((key (hrm-beta-to-unicode (dom-attr entry 'key)))
+           (id (string-to-number
+                (string-remove-prefix "n" (dom-attr entry 'id))))
+           (obj (hrm-word :key key :id id)))
+      (when hash (puthash key obj hash))
+      (run-hook-with-args 'hrm-scan-entry-functions obj entry)
+      obj))
+#+end_src
+** Hook functions
+:PROPERTIES:
+:ID:       TKR:b8745465-2261-4607-aef9-af0a26ac6068
+:END:
+#+begin_src emacs-lisp
+#+end_src
+** Return all tag types found in the LSJ
+This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hrm-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
+#+begin_src emacs-lisp :tangle no :results replace list :load no
+  (defvar hrm--all-tag-types nil)
+  (defvar hrm--current-entry nil)
+  (defvar hrm--current-children nil)
+  (defvar hrm--tricky-bastards nil)
+
+  (defun hrm--get-tag-types (_obj dom)
+    (setq hrm--tricky-bastards nil)
+    (awhen (dom-attr dom 'key)
+      (setq hrm--current-entry it)
+      (setq hrm--current-children (dom-children dom)))
+    (let ((tags nil)
+          (children (dom-children dom)))
+  ;;    (when (equal (dom-attr dom 'key) "ei)/dw1")
+  ;;      (setq please-have-mercy-on-me children))
+      (cl-loop for elt in children
+               if (not (stringp elt))
+               do (prog1 (cl-pushnew (symbol-name (dom-tag elt)) hrm--all-tag-types)
+                    (if (> (length children) 32)
+                        (push elt hrm--tricky-bastards)
+                      (hrm--get-tag-types _obj children))))))
+
+  (add-hook 'hrm-scan-entry-functions 'hrm--get-tag-types)
+
+  (reverse hrm--all-tag-types)
+#+end_src
+
+#+RESULTS:
+- orth
+- gen
+- itype
+- sense
+- foreign
+- bibl
+- title
+- etym
+- pron
+- gramGrp
+- abbr
+- tns
+- pos
+- date
+- placeName
+- per
+- number
+- mood
+- name
+- pb
+- subc
+- cit
+- tr
+** End matter
+:PROPERTIES:
+:ID:       TKR:327d7216-5a65-4f76-b9fd-c2a2742c0ada
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-xml)
+
+  ;; hrm-xml.el ends here
+#+end_src
+* Completion
+:PROPERTIES:
+:ID:       TKR:49f3f037-acfd-414f-bc51-0a963faa0352
+:header-args:emacs-lisp: :tangle hrm-completion.el
+:END:
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:a33012b6-462c-44fd-b63f-65f07969227c
+:END:
+#+begin_src emacs-lisp
+  (require 'cl-extra)
+  (require 'custom)
+  (require 'eieio)
+  (require 'ucs-normalize)
+  (require 'rx)
+
+  (eval-when-compile (require 'cl-macs)
+                     (require 'subr-x))
+
+  (require 'hrm-conv)
+  (require 'hrm-match)
+#+end_src
+** Variables
+:PROPERTIES:
+:ID:       TKR:7f0bab31-c461-44f0-898d-a80deeefd174
+:END:
+#+begin_src emacs-lisp
+  (defcustom hrm-use-ivy (let ((libs '(ivy counsel)))
+                           (or (cl-every 'featurep libs)
+                               (cl-every 'package-installed-p libs)))
+    "Whether to use the ‘ivy’ package for ‘describe-greek-word’.
+  This allows two important features. The first is matching by Beta
+  code: if you type in Beta code (i.e. “i(ero/doulos” instead of
+  “ἱερόδουλος”), it will match as though you typed the Greek
+  Unicode equivalent. The second is diacritic-agnostic matching: if
+  you type in Greek with no diacritics into the ‘describe-greek-word’
+  prompt, it will match any combination of diacritics on the same
+  sequence of letters. This works whether you’re typing in Greek
+  Unicode or in Beta code: so, either “etaira” or “εταιρα” will
+  match “ἑταίρα”.
+
+  This option has no effect if Ivy is not installed. If Ivy is
+  installed, but this option is turned off (‘nil’), then the Ivy
+  version of ‘describe-greek-word’ is still available as the
+  command ‘counsel-greek-word’."
+    :type 'boolean
+    :group 'hermeneus)
+#+end_src
+** Describe Greek word
+:PROPERTIES:
+:ID:       TKR:4864efa6-7652-4504-b780-f06f24283984
+:END:
+#+begin_src emacs-lisp
+  (defun describe-greek-word (word)
+    (interactive
+     (list
+      (let ((entries (oref hrm-lsj entries)))
+        (if (and hrm-use-ivy (fboundp 'ivy-read))
+            (counsel-greek-word "Look up Greek word: " hrm-lsj)
+          (let ((default (hrm-greek-word-at-point)))
+            (completing-read (format "Look up Greek word%s: "
+                                     (if default
+                                         (format " (default: %s)" default)
+                                       ""))
+                             entries nil t nil nil default))))))
+    (unless (and hrm-use-ivy (fboundp 'ivy-read))
+      (hrm--display-word-buffer word)))
+#+end_src
+** Read word
+:PROPERTIES:
+:ID:       TKR:e488b337-55e7-4543-ae83-dfdedc268b8c
+:END:
+#+begin_src emacs-lisp
+  (cl-defun counsel-greek-word (&optional (prompt "Look up Greek word:")
+                                          (lexicon hrm-lsj) &rest kwargs)
+    "Read a Greek word from the LSJ, with Ivy completion.
+  COLLECTION should be a ‘hrm-lexicon’ object or a hash-table, and
+  defaults to the value of ‘hrm-lsj’. Any other arguments should be
+  keyword arguments, which are passed to ‘ivy-read’."
+    (unless (fboundp 'ivy-read)
+      (error "Ivy must be installed before using ‘counsel-greek-word’"))
+    (let ((collection
+           (cond ((hrm-lexicon-p lexicon)
+                  (oref lexicon entries))
+                 ((hash-table-p lexicon)
+                  lexicon)
+                 (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
+      (cl-flet ((kw-put (prop val)
+                       (unless (plist-member kwargs prop)
+                         (cl-callf plist-put kwargs prop val))))
+        (kw-put :action #'hrm--display-word-buffer)
+        (kw-put :re-builder #'hrm--re-builder)
+        (kw-put :matcher #'hrm--re-matcher)
+        (awhen (hrm-greek-word-at-point)
+          (kw-put :preselect it))
+      (apply 'ivy-read prompt collection kwargs))))
+#+end_src
+** Get Greek letter equivalents
+:PROPERTIES:
+:ID:       TKR:9804b1a7-dae0-4425-b671-2cdc3b604017
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--fold-case (string)
+    (cl-loop for l across (regexp-quote string)
+             if (memq l (string-to-list hrm--all-sigmas))
+             concat (format "[%s]" hrm--all-sigmas)
+             else
+             concat (let ((upr (upcase l))
+                          (lwr (downcase l)))
+                      (if (eq upr lwr)
+                          (char-to-string l)
+                        (format "[%c%c]" upr lwr)))))
+#+end_src
+** Greek word at point
+:PROPERTIES:
+:ID:       TKR:3d941c67-20eb-4ad6-9653-bc545e109827
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--bounds-of-chars (chars)
+    "Skip CHARS backwards and forwards, return a cons of each point.
+  CHARS is a string containing the characters to skip over. If
+  point is not adjacent to any characters in CHARS, return nil."
+    (let ((rtn (cons
+                (save-excursion (skip-chars-backward chars)
+                                (point))
+                (save-excursion (skip-chars-forward chars)
+                                (point)))))
+      (unless (eql (car rtn) (cdr rtn))
+        rtn)))
+
+  (defun hrm-bounds-of-greek-word-at-point ()
+    (or (hrm--bounds-of-chars (concat hrm--greek-unicode-all
+                                      hrm--greek-diacritics))
+        (hrm--bounds-of-chars (concat hrm--beta-letters--user ; TODO should check user and standard variants
+                                      hrm--beta-diacritics "*"))))
+
+  (defun hrm-greek-word-at-point ()
+    (when-let ((bounds (hrm-bounds-of-greek-word-at-point))
+               (word (buffer-substring-no-properties (car bounds) (cdr bounds)))
+               (obj (hrm--string-to-object word hrm-lsj)))
+      (oref obj key)))
+
+  (put (intern "greek-word") 'bounds-of-thing-at-point 'hrm-bounds-of-greek-word-at-point)
+#+end_src
+** Look up Greek word noninteractively
+:PROPERTIES:
+:ID:       TKR:03304dde-533f-41bb-937b-99e3f31ef2f1
+:END:
+#+begin_src emacs-lisp
+  (cl-defun hrm--string-to-object (string &optional (lexicon hrm-lsj))
+    "Retrieve the word-object in LEXICON corresponding to STRING.
+  The function ‘hrm--fuzzy-search’ is used when there isn’t an
+  exact match. If no result is found, return nil."
+    (unless (and (stringp string) (hrm-lexicon-p lexicon))
+      (error "Incorrect arguments for ‘hrm--string-to-object’: %s %s"
+             string lexicon))
+    (or (gethash string (oref lexicon entries))
+        (hrm--fuzzy-search string)
+        (hrm--fuzzy-search (string-trim string))
+        (hrm--fuzzy-search (hrm--trim-string-extra string))))
+
+  (cl-defun hrm--fuzzy-search (string &optional (lexicon hrm-lsj))
+    "Look up the word STRING in LEXICON (which defaults to the LSJ).
+  The functions ‘hrm--re-builder’ and ‘hrm--re-matcher’ are used to
+  provide fuzzy-matching. Returns a word-object."
+    (let* ((hrm-beta-input-type 'beta)
+           (re (hrm--re-builder string))
+           (entries (oref lexicon entries))
+           (matches (hrm--re-matcher re (hash-table-keys entries))))
+      (when matches
+        (gethash (car matches) entries))))
+#+end_src
+** Display word buffer
+:PROPERTIES:
+:ID:       TKR:bd16e1ce-fd2c-4c49-9a73-1d2038210079
+:END:
+#+begin_src emacs-lisp
+  (cl-defun hrm--display-word-buffer (word &optional (lexicon hrm-lsj))
+    "Display WORD, a string or word-object, from LEXICON (default: LSJ)."
+    (unless (hrm-word-p word)
+      (if (stringp word)
+          (setq word (hrm--string-to-object word lexicon))
+        (error "Argument is neither a ‘hrm-word’ object nor a string: %s"
+               word)))
+    (when word
+      (hrm--switch-buffer
+       (hrm--word-buffer word))))
+#+end_src
+** End matter
+:PROPERTIES:
+:ID:       TKR:ca2a0940-f58e-4c15-9904-a0889f15eb36
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-completion)
+
+  ;; hrm-completion.el ends here
+#+end_src
+* Storage
+:PROPERTIES:
+:ID:       TKR:517f86fc-db04-4e9d-8539-6111477bea54
+:header-args:emacs-lisp: :tangle hrm-storage.el
+:END:
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:76751cd5-569d-483b-a6e0-2050e9760bd7
+:END:
+#+begin_src emacs-lisp
+  (require 'eieio)
+  (require 'eieio-base)
+  (require 'cl-generic)
+
+  (require 'hrm-xml)
+#+end_src
+** Variables
+:PROPERTIES:
+:ID:       TKR:cc2d39d7-8b0f-4f8c-adfb-0d5e8d715cfd
+:END:
+#+begin_src emacs-lisp
+  (defvar hrm-storage-file (concat "lsj-cache" (when (executable-find "gzip") ".gz")))
+
+  (defcustom hrm-storage-dir (expand-file-name "var/hermeneus" user-emacs-directory)
+    "Directory in which to store files generated by Hermeneus.
+  At present, this means where to store the Hermeneus lexicon
+  cache. If you set this outside Customize, ensure that the
+  directory exists (creating it if necessary), and set
+  ‘hrm-storage-path’ to the value of calling ‘expand-file-name’
+  with the new ‘hrm-storage-dir’ value followed by
+  ‘hrm-storage-file’ as arguments."
+    :type 'directory
+    :tag "Hermeneus — storage directory"
+    :group 'hermeneus
+    :set (lambda (symbol value)
+           (unless (file-exists-p (directory-file-name value))
+             (make-directory (directory-file-name value) t))
+           (set-default symbol value)
+           (setq hrm-storage-path
+                 (expand-file-name hrm-storage-file value))))
+
+  (defvar hrm-storage-path (expand-file-name hrm-storage-file hrm-storage-dir))
+#+end_src
+** Objects
+:PROPERTIES:
+:ID:       TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8
+:END:
+#+begin_src emacs-lisp
+  (defclass hrm-word ()
+    ((key :type string
+          :initarg :key
+          :initform "")
+     (id :type integer
+         :initarg :id
+         :initform 0)
+     (loc :type (or cons null)
+          :initarg :loc
+          :initform nil))
+    :documentation "A Hermeneus object to represent one word.")
+
+  (defclass hrm-lexicon (eieio-persistent)
+    ((initialized-p :type boolean
+                    :initarg :initialized-p
+                    :initform nil)
+     (entries :type hash-table
+              :initarg :entries
+              :initform (make-hash-table :size 116493 :test 'equal))
+     ;; I have absolutely zero clue why (file :initform hrm-storage-path)
+     ;; results in an “invalid-slot-type” error, but this doesn’t:
+     (file :initform (symbol-value 'hrm-storage-path))
+     (file-header-line :initform ";; Hermeneus lexicon object"))
+    :documentation "A Hermeneus object to represent a lexicon of words.")
+#+end_src
+** Methods
+:PROPERTIES:
+:ID:       TKR:155090bb-4267-4ec2-be28-e402000a0a0e
+:END:
+#+begin_src emacs-lisp
+  (cl-defmethod make-instance ((cls (subclass hrm-lexicon)) &rest slots)
+    "When making a ‘hrm-lexicon’ object, try to read it from a file.
+  (The file’s path can be passed as a “:file” keyword argument, but
+  otherwise defaults to ‘hrm-storage-path’.) If the file doesn’t exist,
+  or otherwise can’t be used, move on."
+    (let ((path (or (plist-get slots :file)
+                    hrm-storage-path)))
+      (or (and (file-exists-p path)
+               (eieio-persistent-read path cls t))
+          (cl-call-next-method))))
+
+  (cl-defmethod initialize-instance :after ((this hrm-lexicon) &rest slots)
+    "After initializing a ‘hrm-lexicon’ object, populate its ‘entries’
+  hash-table with word-objects from the LSJ."
+    (let ((entries (oref this entries)))
+      ;; Don’t bother scanning the LSJ for entries if the
+      ;; ‘entries’ hash-table is already populated, or if
+      ;; slot ‘initialize-p’ is nil.
+      (unless (or (eq (hash-table-count entries) (hash-table-size entries))
+                  (oref this initialized-p))
+        (oset this entries (hrm-scan-entries))
+        (oset this initialized-p t)
+        (eieio-persistent-save this))))
+
+  (defvar hrm-lsj (hrm-lexicon nil))
+#+end_src
+** End matter
+:PROPERTIES:
+:ID:       TKR:bdfa271e-9060-4205-bd28-d168aef150d2
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-storage)
+
+  ;; hrm-storage.el ends here
+#+end_src
+* Tags
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle hrm-tags.el
+:END:
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:ef24da1a-db83-4fa2-8e50-04ed115b256a
+:END:
+#+begin_src emacs-lisp
+  (require 'gv)
+  (require 'seq)
+  (require 'shr)
+  (require 'dom)
+
+  (eval-when-compile (require 'cl-macs)
+                     (require 'subr-x))
+
+  (require 'hrm-conv)
+  (require 'hrm-render)
+#+end_src
+** Information on tags
+:PROPERTIES:
+:ID:       TKR:a677b07d-8387-4fff-82a4-3d0401409dee
+:END:
+These descriptions are taken from the [[https://tei-c.org/Vault/P4/][TEI P4 Guidelines]] (which is obsolete, but the LSJ XML files use it so we’ll use it too). There is some context missing: some tags are meant to be nested inside one or more other tags, but those groupings are not reflected in this simple list.
+In this list, items at list level 1 are citations, items at level 2 are tags, items at level 3 are attributes of the tag above it, and items at level 4 contain explanatory information.
+
+- [[https://tei-c.org/Vault/P4/doc/html/ST.html][Structure of the TEI Document Type Definition]]
+  - /(these can be used in any tag)/
+    - id :: provides a unique identifier for the element bearing the ID value.
+      - Values: any valid name. Default: #IMPLIED
+      - Example: <p id="names">Paragraph with the ID <mentioned>names</mentioned>.</p>  <p id="dates">Paragraph with the ID <mentioned>dates</mentioned>.</p> 
+      - Note: The id attribute may be used to specify a canonical reference for an element; see section 6.9 Reference Systems.
+    - n :: gives a number (or other label) for an element, which is not necessarily unique within the document.
+      - Values: any string of characters; often, but not necessarily, numeric.
+      - Default: #IMPLIED
+      - Note: The n attribute may be used to specify the numbering of chapters, sections, list items, etc.; it may also be used in the specification of a standard reference system for the text.
+    - lang :: indicates the language of the element content, usually using a two- or three-letter code from ISO 639.
+      - Values: The value must be the identifier of a <language> element supplied in the TEI Header of the current document; that element may also specify a writing system declaration by means of its wsd attribute, as described in section 5.4.2 Language Usage.
+      - Default: %INHERITED;
+      - Example:  <p lang="en">The only surviving work by <name>Ari</name> (died 1148) is the ten-page <title lang="is">slendingabk</title>  (<title lang="la">Libellus Islandorum</title>), written in the early twelfth century.</p>
+      - Note: If no value is specified for lang, the lang value for the immediately enclosing element is inherited; for this reason, a value should always be specified on the outermost element (<TEI.2>).
+    - rend :: indicates how the element in question was rendered or presented in the source text.
+      - Values: any string of characters; if the typographic rendition of a text is to be systematically recorded, a systematic set of values for the rend attribute should be defined.
+      - Default: #IMPLIED
+      - Note: These Guidelines make no binding recommendations for the values of the rend attribute; the characteristics of visual presentation vary too much from text to text and the decision to record or ignore individual characteristics varies too much from project to project. Some potentially useful conventions are noted from time to time at appropriate points in the Guidelines.
+- [[https://tei-c.org/Vault/P4/doc/html/CO.html][Elements Available in All TEI Documents]]
+  - <foreign> :: identifies a word or phrase as belonging to some language other than that of the surrounding text.
+  - <cit> :: A quotation from some other document, together with a bibliographic reference to its source.
+  - <name> :: contains a proper noun or noun phrase.
+    - type :: indicates the type of the object which is being named by the phrase.
+  - <abbr> :: contains an abbreviation of any sort.
+    - expan :: (expansion) gives an expansion of the abbreviation.
+    - resp :: (responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute.
+    - type :: allows the encoder to classify the abbreviation according to some convenient typology.
+    - cert :: (certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.
+  - <date> :: contains a date in any format.
+    - calendar :: indicates the system or calendar to which the date belongs.
+    - value :: gives the value of the date in some standard form, usually yyyy-mm-dd.
+    - certainty :: indicates the degree of precision to be attributed to the date.
+  - <pb> :: marks the boundary between one page of a text and the next in a standard reference system.
+    - ed :: (edition) indicates the edition or version in which the page break is located at this point.
+  - <bibl> :: contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.
+  - <biblScope> :: defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work.
+    - type :: identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.
+  - <title> :: contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles.
+    - level :: (bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material.
+    - type :: (type of title) classifies the title according to some convenient typology.
+  - <author> :: in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.
+- [[https://tei-c.org/Vault/P4/doc/html/DI.html][Print Dictionaries]]
+  - <entryFree> :: contains a dictionary entry which does not necessarily conform to the constraints imposed by the entry element
+  - <sense> :: groups together all information relating to one word sense in a dictionary entry (definitions, examples, translation equivalents, etc.)
+    - level :: gives the nesting depth of this sense.
+  - <gramGrp> :: groups morpho-syntactic information about a lexical item, e.g. pos, gen, number, case, or itype (inflectional class)
+  - <etym> :: encloses the etymological information in a dictionary entry.
+  - <orth> :: gives the orthographic form of a dictionary headword.
+    - type :: gives the type of spelling.
+    - extent :: gives the extent of the orthographic information provided.
+  - <pron> :: contains the pronunciation(s) of the word. /(Tina, get your mind out of the gutter)/
+    - extent :: indicates whether the pronunciation is for whole word or part.
+  - <gen> :: identifies the morphological gender of a lexical item, as given in the dictionary.
+  - <number> :: indicates grammatical number associated with a form, as given in a dictionary.
+  - <per> :: contains an indication of the grammatical person (1st, 2nd, 3rd, etc.) associated with a given inflected form in a dictionary.
+  - <tns> :: indicates the grammatical tense associated with a given inflected form in a dictionary.
+  - <mood> :: contains information about the grammatical mood of verbs (e.g. indicative, subjunctive, imperative)
+  - <itype> :: indicates the inflectional class associated with a lexical item.
+    - type :: indicates the type of indicator used to specify the inflection class, when it is necessary to distinguish between the usual abbreviated indications (e.g. ‘inv’) and other kinds of indicators, such as special codes referring to conjugation patterns, etc.
+  - <pos> :: Indicates the part of speech assigned to a dictionary headword (noun, verb, adjective, etc.)
+  - <subc> :: contains subcategorization information (transitive/intransitive, countable/non-countable, etc.)
+  - <tr> :: contains a translation of the headword or an example.
+- [[https://tei-c.org/Vault/P4/doc/html/ND.html][Names and Dates]]
+  - <placeName> :: contains an absolute or relative place name.
+** Variables
+:PROPERTIES:
+:ID:       TKR:a3a484db-d437-4e0f-8544-861f94061a64
+:END:
+#+begin_src emacs-lisp
+  (defface hrm-default-face '((t nil))
+    "Default face for Hermeneus text display."
+    :tag "Hermeneus — default face"
+    :group 'hrm-faces)
+
+  (defvar hrm-tei-tags '(foreign cit name abbr date pb bibl biblScope
+                                 title author entryFree sense gramGrp etym
+                                 orth pron gen number per tns mood itype pos
+                                 subc tr))
+
+  (defvar hrm--prev-tag nil)
+  (defvar hrm--prev-author nil)
+
+  (defvar hrm-defined-tags nil)
+
+  (defvar hrm--tag-keywords '(:attrs :face :render :doc-source))
+#+end_src
+*** Local variables
+:PROPERTIES:
+:ID:       TKR:036c52c4-109f-447d-a270-b93a2a48d8a7
+:END:
+#+begin_src emacs-lisp
+  (defvar-local hrm--word-obj nil)
+  (defvar-local hrm--word-dom nil)
+
+  (defvar-local hrm-doc-source nil)
+#+end_src
+** Functions
+:PROPERTIES:
+:ID:       TKR:170c9de8-c302-4f27-b7c6-46e2dc15372a
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--render-generic (dom &optional tag face)
+    (unless tag
+      (setq tag (dom-tag dom)))
+    (unless face
+      (setq face (intern-soft (format "hrm-face-%s" tag))))
+    (hrm--insert-space-maybe)
+    (shr-fontize-dom dom face)
+    (setq hrm--prev-tag tag))
+
+  (defun hrm--insert-space-maybe ()
+    (unless (or (bobp) (bolp)
+                (let ((cs (char-syntax (char-before))))
+                  (or (eq cs 32) (eq cs ?\())))
+      (shr-insert " ")))
+#+end_src
+** Buttons
+:PROPERTIES:
+:ID:       TKR:9807ac9b-f45b-4b1a-abbb-149cc3593b84
+:END:
+#+begin_src emacs-lisp
+  (defun hrm-greek-word-button-action (button)
+    (hrm--display-word-buffer (button-get button 'target)))
+
+  (define-button-type 'hrm-greek-word-button
+    'action #'hrm-greek-word-button-action
+    'target nil)
+#+end_src
+** Macro for defining tags
+:PROPERTIES:
+:ID:       TKR:c820e96c-8a31-4385-afb0-459476257285
+:END:
+#+begin_src emacs-lisp
+  ;; The reason for this function, and its use in Hermeneus macros, is
+  ;; to make it easier for non-Lisp people to make customizations.
+  ;; (i.e., learning Ancient Greek is hard enough without having to
+  ;; remember how Lisp plists work)
+  (defun hrm--normalize-keywords (list)
+    "Make a proper plist from a list of keyword arguments.
+  For example, “'(:hero sonic tails knuckles :villain eggman)”
+  will return “'(:hero (sonic tails knuckles) :villain eggman)”,
+  which is more readable to ‘plist-get’ and related functions."
+    (let (rtn)
+      (while list
+        (if (or (keywordp (car list))
+                (keywordp (cadr list))
+                (null (cadr list)))
+            (push (pop list) rtn)
+          (push (cl-loop repeat (length list)
+                         until (keywordp (car list))
+                         collect (pop list))
+                rtn)))
+      (nreverse rtn)))
+
+  (defun hrm--doc-concat (&rest strings)
+    (with-temp-buffer
+      (insert (apply 'concat strings))
+      (goto-char 1)
+      (while (not (eq (line-end-position) (point-max)))
+        (forward-line)
+        (unless (eq (line-beginning-position) (line-end-position))
+          (fill-region (line-beginning-position) (line-end-position))))
+      (buffer-string)))
+
+  (defun hrm--doc-source (doc-source)
+    (when (and (symbolp doc-source) (boundp doc-source))
+      (setq doc-source (symbol-value doc-source)))
+    (cond ((stringp doc-source)
+           (format "\n\nInformation from %s" doc-source))
+          ((and (listp doc-source)
+                (stringp (car doc-source)) (stringp (cadr doc-source)))
+           (format "\n\nInformation from “%s”\n%s" (cadr doc-source) (car doc-source)))))
+
+  (defun hrm--format-attrs (attrs)
+    (cl-loop while attrs
+             concat (let* ((attr (pop attrs))
+                           (desc (pop attrs)))
+                      (format "\n‘%s’ %s" attr desc))))
+
+  (cl-defmacro define-hrm-tag (tag &rest args)
+    "Macro for defining XML tags in Hermeneus."
+    (declare (advertised-calling-convention
+              (tag &optional docstring &key attrs face render doc-source &allow-other-keys) "")
+             (indent defun)
+             (doc-string 2))
+             ;; This doesn’t actually work, and the Edebug macro spec
+             ;; error messages are almost Microsoftian in their opacity.
+             ;; Let the record show that I tried.
+             ;; (debug (&define name [&optional stringp]
+             ;;                 &rest [&or [":render" def-body]
+             ;;                            [keywordp &rest [&not keywordp]]]))
+    ;; Get the keywords
+    (let* ((docstring (prog1 (when (stringp (car args)) (pop args))
+                        (while (not (or (null (car args))
+                                        (keywordp (car args))))
+                          (pop args))))
+           (kw-args (hrm--normalize-keywords args))
+           (kw-vals (mapcar (lambda (x) (plist-get kw-args x))
+                            hrm--tag-keywords)))
+      ;; (small exception for ‘doc-source’—if it’s not given as an
+      ;; argument, but ‘hrm-doc-source’ has a value outside the macro
+      ;; call, use that value instead of ‘nil’)
+      (when (and (not (plist-get kw-args :doc-source))
+                 (boundp 'hrm-doc-source))
+        (let ((ds-pos (seq-position hrm--tag-keywords :doc-source)))
+              (setf (elt kw-vals ds-pos) hrm-doc-source)))
+      ;; Bind the keywords locally
+      (cl-progv
+          (mapcar
+           (lambda (x) (thread-last x
+                         (symbol-name)
+                         (string-remove-prefix ":")
+                         (intern)))
+           hrm--tag-keywords)
+          kw-vals
+        ;; Finally, write out the definitions
+        (let ((face-name (intern (format "hrm-face-%s" tag))))
+          `(progn
+             (defface ,face-name
+               ,(if face
+                    `,@face
+                  `'((t (:inherit hrm-default-face))))
+               ,(hrm--doc-concat
+                 (format "Face used to render the XML tag ‘<%1$s>’.\n‘<%1$s>’ %2$s"
+                         tag docstring)
+                 (hrm--doc-source doc-source))
+               :tag ,(format "Hermeneus — face for XML tag <%s>" tag)
+               :group 'hrm-faces)
+             (defun ,(intern (format "hrm-render-%s" tag)) (dom)
+               ,(hrm--doc-concat
+                 (format "Rendering function for the XML tag ‘<%1$s>’.\n‘<%1$s>’ %2$s"
+                         tag docstring)
+                 (when attrs (concat "\n\nAttributes:"
+                                     (hrm--format-attrs attrs)))
+                 (hrm--doc-source doc-source))
+               ,@(if render
+                     `,@(if (or (atom render) (atom (car render)))
+                            (list render)
+                          render)
+                   (list `(hrm--render-generic dom ',tag ',face-name))))
+             ;; (I know that ‘add-to-list’ is supposed to be used
+             ;; sparingly in Lisp code, but the fact that ‘push’ would
+             ;; add to the front of the list here is just too much for
+             ;; my autistic sensibilities.)
+             (add-to-list 'hrm-defined-tags ',tag t))))))
+#+end_src
+** Tags
+*** Elements Available in All TEI Documents
+:PROPERTIES:
+:ID:       TKR:0cbf3bb6-a38b-4eb4-829e-72e1c51f596e
+:END:
+#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")
+  (define-hrm-tag foreign
+    "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
+
+  (define-hrm-tag cit
+    "A quotation from some other document, together with a bibliographic reference to its source.")
+
+  (define-hrm-tag name
+    "contains a proper noun or noun phrase."
+    :attrs
+    type "indicates the type of the object which is being named by the phrase.")
+
+  (define-hrm-tag abbr
+    "contains an abbreviation of any sort."
+    :attrs
+    expan "(expansion) gives an expansion of the abbreviation."
+    resp "(responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute."
+    type "allows the encoder to classify the abbreviation according to some convenient typology."
+    cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
+
+  (define-hrm-tag date
+    "contains a date in any format."
+    :attrs
+    calendar "indicates the system or calendar to which the date belongs."
+    value "gives the value of the date in some standard form, usually yyyy-mm-dd."
+    certainty "indicates the degree of precision to be attributed to the date.")
+
+  (define-hrm-tag pb
+    "marks the boundary between one page of a text and the next in a standard reference system."
+    :attrs
+    ed "(edition) indicates the edition or version in which the page break is located at this point.")
+
+  (define-hrm-tag bibl
+    "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
+
+  (define-hrm-tag biblScope
+    "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
+    :attrs
+    type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
+
+  (define-hrm-tag title
+    "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
+    :attrs
+    level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
+    type "(type of title) classifies the title according to some convenient typology.")
+
+  (define-hrm-tag author
+    "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.")
+#+end_src
+*** Print Dictionaries
+:PROPERTIES:
+:ID:       TKR:a805acf7-e2c2-4cfb-9911-2a8bb57eaccd
+:END:
+#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")
+  (define-hrm-tag entryFree
+    "contains a dictionary entry which does not necessarily conform to the constraints imposed by the entry element."
+    :render
+    (let* ((key (dom-attr dom 'key))
+           (id (dom-attr dom 'id))
+           (heading (dom-node nil nil (hrm-beta-to-unicode key))))
+      (shr-ensure-paragraph)
+      (shr-heading heading 'info-title-3)
+      (shr-fontize-dom dom 'hrm-face-entryFree)
+      (shr-ensure-paragraph))
+    (setq hrm--prev-tag 'entryFree))
+
+  (define-hrm-tag sense
+    "groups together all information relating to one word sense in a dictionary entry (definitions, examples, translation equivalents, etc.)"
+    :attrs
+    level "gives the nesting depth of this sense."
+    :render
+    (shr-ensure-newline)
+    (let ((start (point))
+          (start-pixel (hrm--pixel-column)))
+      (let* ((bullet (shr-insert (concat (dom-attr dom 'n) ". "))) ; bullet is inserted, here
+             (width (- (hrm--pixel-column) start-pixel))
+             (margin (* (string-to-number (dom-attr dom 'level))
+                        (hrm--margin-indent-width))))
+        (shr-mark-fill start)
+        (put-text-property start (1+ start)
+                           'shr-continuation-indentation margin)
+        (put-text-property start (1+ start) 'shr-indentation (- margin width))
+        (shr-fontize-dom dom 'hrm-face-sense)))
+    (unless (bolp)
+      (insert "\n"))
+    (setq hrm--prev-tag 'sense))
+
+  (define-hrm-tag gramGrp
+    "groups morpho-syntactic information about a lexical item, e.g. pos, gen, number, case, or itype (inflectional class).")
+
+  (define-hrm-tag etym
+    "encloses the etymological information in a dictionary entry.")
+
+  (define-hrm-tag xr
+    "contains a phrase, sentence, or icon referring the reader to some other location in this or another text."
+    :attrs
+    type "indicates the type of cross reference, using any convenient typology.")
+
+  (define-hrm-tag orth
+    "gives the orthographic form of a dictionary headword."
+    :attrs
+    type "gives the type of spelling."
+    extent "gives the extent of the orthographic information provided.")
+
+  (define-hrm-tag pron           ; Tina, get your mind out of the gutter
+    "contains the pronunciation(s) of the word."
+    :attrs
+    extent "indicates whether the pronunciation is for whole word or part.")
+
+  (define-hrm-tag lbl
+    "in dictionaries, contains a label for a form, example, translation, or other piece of information, e.g. abbreviation for, contraction of, literally, approximately, synonyms:, etc."
+    :attrs
+    type "classifies the label using any convenient typology.")
+
+  (define-hrm-tag gen
+    "identifies the morphological gender of a lexical item, as given in the dictionary.")
+
+  (define-hrm-tag number
+    "indicates grammatical number associated with a form, as given in a dictionary.")
+
+  (define-hrm-tag per
+    "contains an indication of the grammatical person (1st, 2nd, 3rd, etc.) associated with a given inflected form in a dictionary.")
+
+  (define-hrm-tag tns
+    "indicates the grammatical tense associated with a given inflected form in a dictionary.")
+
+  (define-hrm-tag mood
+    "contains information about the grammatical mood of verbs (e.g. indicative, subjunctive, imperative)")
+
+  (define-hrm-tag itype
+    "indicates the inflectional class associated with a lexical item."
+    :attrs
+    type "indicates the type of indicator used to specify the inflection class, when it is necessary to distinguish between the usual abbreviated indications (e.g. ‘inv’) and other kinds of indicators, such as special codes referring to conjugation patterns, etc.")
+
+  (define-hrm-tag pos
+    "Indicates the part of speech assigned to a dictionary headword (noun, verb, adjective, etc.)")
+
+  (define-hrm-tag subc
+    "contains subcategorization information (transitive/intransitive, countable/non-countable, etc.)")
+
+  (define-hrm-tag tr
+    "contains a translation of the headword or an example.")
+#+end_src
+*** Linking, Segmentation, and Alignment
+:PROPERTIES:
+:ID:       TKR:16b30fea-d72a-46ed-8d7b-3ad080969fd1
+:END:
+#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment")
+  (define-hrm-tag ref
+    "defines a reference to another location in the current document, in terms of one or more identifiable elements, possibly modified by additional text or comment."
+    :face
+    '((t . (:inherit shr-link)))
+    :render
+    (if-let ((string1 (car (dom-strings dom)))
+           
+             ;; not sure how we will handle links to prefixes/suffixes,
+             ;; so they are disabled for now
+             ((not (string-prefix-p "-" (string-trim string1))))
+             ((not (string-suffix-p "-" (string-trim string1))))
+           
+             (entries (oref hrm-lsj entries))
+             (target (hrm--string-to-object string1)))
+        (progn (hrm--insert-space-maybe)
+               (let ((start (point)))
+                 (hrm--render-generic dom 'ref 'hrm-face-ref)
+                 (make-button start (point)
+                              :type 'hrm-greek-word-button
+                              'target target)))
+      (hrm--render-generic dom 'ref 'hrm-default-face))
+    :attrs
+    target "specifies the destination of the reference by supplying the value of the id attribute on one or more other elements in the current document."
+    type "categorizes the pointer in some respect, using any convenient set of categories.
+  Values: The type should indicate the intended function of the pointer, or the rhetorical relationship between its source and the target.
+  Default: #IMPLIED"
+    resp "specifies the creator of the pointer.
+  Values: any string of characters, usually the initials or name of the creator.
+  Default: #IMPLIED"
+    crdate "specifies when the pointer was created.
+  Values: A date in ISO 8601 format, generally yyyy-mm-dd.
+  Default: #IMPLIED"
+    targType "specifies the kinds of elements to which this pointer may point.
+  Values: A list of valid element names declared in the DTD of the current document.
+  Default: #IMPLIED
+  Note: If this attribute is supplied, every element specified as a target must be of one or other of the types specified. An application may choose whether or not to report failures to satisfy this constraint as errors, but may not access an element of the right identifier but the wrong type."
+    targOrder "where more than one identifier is supplied as the value of the target attribute, this attribute specifies whether the order in which they are supplied is significant.
+  Legal values are:
+  Y	Yes: the order in which IDREF values are specified as the value of a target attribute should be followed when combining the targeted elements.
+  N	No: the order in which IDREF values are specified as the value of a target attribute has no significance when combining the targeted elements.
+  U	Unspecified: the order in which IDREF values are specified as the value of a target attribute may or may not be significant.
+  Default: U"
+    evaluate "specifies the intended meaning when the target of a pointer is itself a pointer.
+  Legal values are:
+  all	if the element pointed to is itself a pointer, then the target of that pointer will be taken, and so on, until an element is found which is not a pointer.
+  one	if the element pointed to is itself a pointer, then its target (whether a pointer or not) is taken as the target of this pointer.
+  none	no further evaluation of targets is carried out beyond that needed to find the element specified in the pointer's target.
+  Default: #IMPLIED
+  Note: If no value is given, the application program is responsible for deciding (possibly on the basis of user input) how far to trace a chain of pointers.")
+#+end_src
+*** Names and Dates
+:PROPERTIES:
+:ID:       TKR:87ee579a-cc46-4178-ab45-82a5c9cf108d
+:END:
+#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates")
+  (define-hrm-tag placeName
+    "contains an absolute or relative place name.")
+#+end_src
+** End matter
+:PROPERTIES:
+:ID:       TKR:e6beb538-1f11-4102-b744-0f9a6c7a9980
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-tags)
+
+  ;; hrm-tags.el ends here
+#+end_src
+* Renderer
+:PROPERTIES:
+:ID:       TKR:255fa4f5-47e9-4b9c-9cca-2ad83135842d
+:header-args:emacs-lisp: :tangle hrm-render.el
+:END:
+Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ as though they were HTML documents.
+** Dependencies
+:PROPERTIES:
+:ID:       TKR:aad6b242-9100-4505-9739-dbcfc187c036
+:END:
+#+begin_src emacs-lisp
+  (require 'gv)
+  (require 'widget)
+  (require 'tree-widget)
+  (require 'anaphora)
+  (require 'shr)
+  (require 'dom)
+  (require 'hrm-xml)
+  (require 'eieio)
+  (require 'seq)
+
+  (eval-when-compile (require 'cl-macs)
+                     (require 'rx)
+                     (require 'subr-x))
+
+  (require 'hrm-conv)
+  (require 'hrm-xml)
+#+end_src
+** Variables
+:PROPERTIES:
+:ID:       TKR:6cfdaa3c-43a4-4acc-ac6f-ec4c0f33091c
+:END:
+#+begin_src emacs-lisp
+  (defcustom hrm-show-entry-source nil
+    "Whether to show the document source after a word definition.
+  This affects the word defintiions displayed by ‘describe-greek-word’
+  and ‘counsel-greek-word’.
+
+  When this is set to “XML” (symbol ‘xml’), then any definition
+  displayed will be followed by the definition’s original XML
+  source. When this is set to “DOM sexp” (symbol ‘sexp’), the
+  source will be displayed in the form of the DOM sexp that was
+  generated from the XML by ‘libxml-parse-xml-region’ and used by
+  Hermeneus to interpret and render the definition. When this is
+  set to “both” (symbol ‘both’, or t), then the source will be
+  displayed as XML and as a DOM sexp. When this is set to
+  “no” (nil), the default, then no source will be displayed below
+  the definition."
+    :type '(choice (const xml :tag "XML")
+                   (const sexp :tag "DOM sexp")
+                   (const both :tag "both")
+                   (const nil :tag "no"))
+    :tag "Hermeneus — show entry source?"
+    :group 'hermeneus)
+
+  (defcustom hrm-show-entry-source-tidy-p t
+    "Whether to tidy the displayed XML source using Tidy.
+  Tidy is an external program that makes XML sources easier to
+  read. If it is not installed, or if “Hermeneus — show entry
+  source?” (‘hrm-show-entry-source-p’) is nil, this option is
+  ignored.
+
+  Find out more about Tidy at http://www.html-tidy.org"
+    :type 'boolean
+    :tag "Hermeneus — tidy entry source?"
+    :group 'hermeneus)
+
+  (defcustom hrm-show-entry-source-tidy-config
+    (expand-file-name "hrm-tidy.conf" (file-name-directory
+                                       (locate-library "hermeneus")))
+    "Configuration file to use with Tidy when tidying XML sources.
+  See options “Hermeneus — show entry source?” (‘hrm-show-entry-source-p’)
+  and “Hermeneus — tidy entry source?” (‘hrm-show-entry-source-tidy’).
+
+  Find out more about Tidy at http://www.html-tidy.org"
+    :type 'file
+    :tag "Hermeneus — Tidy config file"
+    :group 'hermeneus)
+#+end_src
+** Functions
+:PROPERTIES:
+:ID:       TKR:40231884-7d27-4fa7-a8a5-52bbab041a20
+:END:
+#+begin_src emacs-lisp
+(defun hrm--roman-numeral-p (string)
+    "A limited test for whether STRING represents a Roman numeral.
+  This is to allow proper spacing for Roman-numbered list bullets.
+  The limitation is that it can’t tell when a single letter (“I”, “V”,
+  “X”, etc.) is supposed to be a Roman numeral or not, and in those
+  cases it will return nil."
+    (when (> (length string) 1)
+      (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
+
+  (defun hrm--margin-indent-width ()
+    (shr-string-pixel-width
+     (propertize "XIII " :face 'hrm-default-face)))
+
+  (defun hrm--pixel-column ()
+    (let ((pos (point)))
+      (prog1 (shr-pixel-column)
+        (goto-char pos))))
+#+end_src
+** Widgets
+:PROPERTIES:
+:ID:       TKR:8fcb947d-de04-41e0-9bd4-c9861511da2b
+:END:
+#+begin_src emacs-lisp
+  (defvar hrm--tree-depth 0)
+  (defvar hrm--parent-tree nil)
+
+  (define-widget 'hrm-tree-widget 'tree-widget
+    "A tree widget for displaying XML sources and DOM trees."
+    :action 'hrm-tree-widget-action
+    :expander 'hrm-tree-widget-expander)
+
+  (defun hrm--tree-icon-width (&optional icon-sym)
+    (with-temp-buffer
+      (widget-create (or icon-sym 'tree-widget-open-icon))
+      (hrm--pixel-column)))
+
+  (defun hrm--get-dom-tree-widget (value &rest kwargs)
+    (if (consp value)
+        `(hrm-tree-widget :tag ,(when-let ((tag (dom-tag value)))
+                                  (propertize (symbol-name (dom-tag value))
+                                              'face 'bold))
+                          :hrm-value ,value
+                          ,@kwargs)
+      `(item :value ,(propertize (format "\"%s\"" value)
+                                 'hrm--tree hrm--parent-tree
+                                 'face 'font-lock-string-face))))
+
+  (defun hrm-tree-widget-expander (tree)
+    (let* ((value (widget-get tree :hrm-value))
+           (attrs-string (awhen (dom-attributes value)
+                           (thread-first it
+                             (pp-to-string)
+                             (string-trim-right)
+                             (propertize 'hrm--tree tree)))))
+      (append (when attrs-string
+                `((item :value ,attrs-string)))
+              (awhen (dom-children value)
+                (let ((hrm--parent-tree tree))
+                  (cl-loop for c in it
+                           for i from (length it) downto 1
+                           if (or (> i 1) (not (stringp c)))
+                           collect (hrm--get-dom-tree-widget c)
+                           else
+                           collect (hrm--get-dom-tree-widget
+                                    (propertize
+                                     c 'hrm--tree-last-sibling t))))))))
+
+  (defun hrm-tree-widget-action (tree &optional event)
+    (unwind-protect
+        (progn
+          (advice-add 'princ :before-until 'hrm--well-excuse-me-princ)
+          (tree-widget-action tree event))
+      (advice-remove 'princ 'hrm--well-excuse-me-princ)))
+
+  (defun hrm--tree-insert-guides (tree &optional icon-width last-sibling-p)
+    (let ((flags    (aif (widget-get tree :tree-widget--guide-flags)
+                        (append (list t) it)
+                      (if last-sibling-p
+                          (list nil)
+                        (list t))))
+          (guide    (widget-get tree :guide))
+          (noguide  (widget-get tree :no-guide))
+          (guidi    (tree-widget-find-image "guide"))
+          (noguidi  (tree-widget-find-image "no-guide"))
+          (nohandle (widget-get tree :no-handle))
+          (nohandli (tree-widget-find-image "no-handle")))
+      ;; From ‘tree-widget.el’.
+      (dolist (f (reverse flags))
+        (widget-create-child-and-convert
+         tree (if f guide noguide)
+         :tag-glyph (if f guidi noguidi))
+        (widget-create-child-and-convert
+         tree nohandle :tag-glyph nohandli))
+      (insert (propertize " " 'display
+                          `(space :width (,(or icon-width
+                                               (hrm--tree-icon-width))))))))
+
+  (defun hrm--well-excuse-me-princ (object &optional printcharfun)
+    "Function with which to override ‘princ’ to preserve text properties.
+  Well excu-u-u-u-use me, ‘princ’!"
+    ;; This function is meant to be used as ‘before-until’ advice.
+    (when (and (stringp object) (bufferp printcharfun))
+      (when-let ((tree (get-text-property 0 'hrm--tree object))
+                 (wrap (with-temp-buffer
+                         (hrm--tree-insert-guides tree)
+                         (hrm--pixel-column))))
+        (cl-callf propertize object 'wrap-prefix `(space :width (,wrap)))
+        (if-let ((first-line-end (string-match-p "\n" object))
+                 (first-line     (substring object 0 (1+ first-line-end)))
+                 (rest-lines     (substring object (1+ first-line-end)))
+                 (icon-width     (hrm--tree-icon-width)))
+            (let ((last-sibling-p (get-text-property 1 'hrm--tree-last-sibling object)))
+              (with-current-buffer printcharfun
+                (insert first-line)
+                (dolist (l (split-string rest-lines "\n"))
+                  (hrm--tree-insert-guides tree icon-width last-sibling-p)
+                  (insert l ?\n))
+                (delete-char -1)))
+          (insert object))
+        object)))
+#+end_src
+** Help buffers
+:PROPERTIES:
+:ID:       TKR:fc1834d0-b144-4892-88ba-59ce73dd836d
+:END:
+TODO: We need something to clear out old Hermeneus buffers
+#+begin_src emacs-lisp
+  (defun hrm--word-buffer (obj)
+    (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
+      (hermeneus-mode)
+      (setq hrm--word-obj obj
+            hrm--word-dom (apply 'hrm--get-dom-from-file (oref obj loc)))
+      (hrm--dom-convert-betacode hrm--word-dom)
+      (hrm-buffer-update)
+      (current-buffer)))
+
+  (defun hrm--dom-convert-betacode (dom)
+    "Destructively convert all Greek Betacode text in DOM to Unicode."
+    (cl-loop for elt in-ref (dom-elements dom 'lang "greek")
+             do (cl-loop for child in-ref (dom-children elt)
+                         if (and (stringp child)
+                                 (not (string-match-p
+                                       (rx (category greek)) child)))
+                         do (cl-callf hrm-beta-to-unicode child))))
+
+  (defun hrm--get-rendering-functions-alist ()
+    (cl-loop for tag in hrm-defined-tags
+             collect (cons tag (intern-soft (format "hrm-render-%s" tag)))))
+
+  (defun hrm-buffer-update ()
+    (interactive)
+    (let ((shr-external-rendering-functions
+           (hrm--get-rendering-functions-alist))
+          (inhibit-read-only t)
+          (pos (point)))
+      (with-silent-modifications
+        (erase-buffer)
+        (shr-insert-document hrm--word-dom)
+        (when hrm-show-entry-source
+          (insert "\n══════════════════════╡ Source ╞══════════════════════\n\n"))
+        (when (memq hrm-show-entry-source '(xml both t))
+          (let ((widget `(hrm-tree-widget :tag "XML source")))
+            (widget-put widget :args `((item :value ,(propertize
+                                                      (hrm--get-entry-source hrm--word-obj)
+                                                      'hrm--tree widget
+                                                      'hrm--tree-last-sibling t))))
+            (widget-create widget)))
+        (when (memq hrm-show-entry-source '(sexp both t))
+          (widget-create
+           `(hrm-tree-widget :tag "DOM tree"
+                             :hrm-value ,hrm--word-dom)))
+        (goto-char pos))))
+#+end_src
+*** Switch buffer
+:PROPERTIES:
+:ID:       TKR:2c8fd835-90e1-4e54-a923-2da89407f579
+:END:
+#+begin_src emacs-lisp
+  (defun hrm--switch-buffer (buffer)
+    ;; Is the current window a Hermeneus buffer? Switch in the same window.
+    (if (eq major-mode 'hermeneus-mode)
+        (pop-to-buffer-same-window buffer)
+      ;; Is any window on the current frame a Hermeneus buffer? Switch in that window.
+      (if-let ((window (cl-loop for x in (window-list)
+                                if (eq (with-selected-window x major-mode) 'hermeneus-mode)
+                                return x)))
+          (progn (select-window window) (pop-to-buffer-same-window buffer))
+        ;; Otherwise, use ‘pop-to-buffer’.
+        (pop-to-buffer buffer))))
+#+end_src
+*** Get entry source
+:PROPERTIES:
+:ID:       TKR:2e7d2ea0-72e2-4903-80ac-2ac3f2980f71
+:END:
+#+begin_src emacs-lisp
+  (cl-defun hrm--get-entry-source (&optional (obj hrm--word-obj))
+    (seq-let (i begin end) (oref obj loc)
+      (let ((bufstr (hrm--get-dom-from-file i begin end :plain-xml-p t)))
+        (with-temp-buffer
+          (insert bufstr)
+          (hrm-tidy-xml-buffer)
+          (hrm-indent-xml-buffer)
+          ;; fontify the source—thanks go to Wilfred Hughes’s
+          ;; ‘helpful’ package for a good example of how to do this
+          ;; (in function ‘helpful--syntax-highlight’)
+          (delay-mode-hooks
+            (if (fboundp 'xml-mode)
+                (nxml-mode)
+              (xml-mode)))
+          (if (fboundp 'font-lock-ensure)
+              (font-lock-ensure)
+            (with-no-warnings
+              (font-lock-fontify-buffer)))
+          (buffer-string)))))
+
+  ;; (cl-defun hrm--get-entry-sexp (&optional (obj hrm--word-obj))
+  ;;   (seq-let (i begin end) (oref obj loc)
+  ;;     (let ((bufstr (hrm--get-dom-from-file i begin end)))
+  ;;       (with-temp-buffer
+  ;;         (pp bufstr (current-buffer))
+  ;;         (delay-mode-hooks (emacs-lisp-mode))
+  ;;         (when (fboundp 'rainbow-delimiters-mode)
+  ;;           (rainbow-delimiters-mode))
+  ;;         (if (fboundp 'font-lock-ensure)
+  ;;             (font-lock-ensure)
+  ;;           (with-no-warnings
+  ;;             (font-lock-fontify-buffer)))
+  ;;         (buffer-string)))))
+#+end_src
+*** Tidying
+:PROPERTIES:
+:ID:       TKR:4d3df8d9-777d-4421-ad3a-a10912a34890
+:END:
+#+begin_src emacs-lisp
+  (defun hrm-tidy-xml-buffer ()
+    (interactive)
+    (if (and hrm-show-entry-source-tidy-p (executable-find "tidy"))
+        (call-process-region 1 (point-max) "tidy" t t nil
+                             "-config" hrm-show-entry-source-tidy-config "-")))
+
+  (defun hrm-indent-xml-buffer ()
+    (interactive)
+    ;; Tidy and ‘nxml-mode’ both royally fail at
+    ;; indenting the LSJ’s XML properly, so we’ll
+    ;; press ‘sgml-mode’ into service.
+    (when (fboundp 'sgml-mode)
+      (let ((mode major-mode))
+        (delay-mode-hooks (sgml-mode))
+        (goto-char (point-min))
+        (while (< (point) (point-max))
+          (sgml-indent-line)
+          (forward-line))
+        (funcall mode))))
+#+end_src
+** Abbreviations
+#+begin_src emacs-lisp :tangle no :load no
+  (defvar hrm-author-abbr-hash (make-hash-table :test 'equal))
+
+  (defvar hrm-title-abbr-hash (make-hash-table :test 'equal))
+
+  (defvar hrm--abbrs-dom
+    (with-temp-buffer
+      (insert "<body>")
+      (insert-file-contents
+       (expand-file-name "abbreviations.xml"
+                         (file-name-directory
+                          (locate-library "hermeneus"))))
+      (goto-char (point-max))
+      (insert "</body>")
+      (libxml-parse-xml-region 1 (point-max))))
+
+  (defun hrm-get-abbrs ()
+    (lööp for dom in (cdddr hrm--abbrs-dom)
+          for ni from 1 to (length (cdddr hrm--abbrs-dom))
+          if (eq ni 1)
+          do (hrm-get-author-abbrs dom)))
+
+  (defun hrm--title-abbr-from-string (string)
+    (awhen (string-match-p " = " string)
+      (list (substring string 0 it)
+            (substring string (+ it 3)))))
+#+end_src
+*** Abbreviations from list I
+:PROPERTIES:
+:ID:       TKR:2378b010-a69c-4f2a-88f6-85bcf7d8302c
+:END:
+This one takes the form:
+#+begin_example xml
+  <item>Ben
+    <hi>Urich</hi> Journalistus [B.Ur.]
+    <date>xx A.D.</date>Ed. J. Jonah Jameson, Daily Bugle (DBG)
+    <title>Leg.Ev. = Legacy of Evil</title>, ed. Joe Robertson,
+    <title>The Pulse</title>, Daily Bugle (DBG), p.616.</item>
+#+end_example
+
+#+begin_src emacs-lisp
+  (defun hrm-get-author-abbrs (dom)
+    (cl-loop for m in (dom-by-tag dom 'item)
+             do (let* ((prename (when (stringp (nth 2 m))
+                                  (string-trim-right (nth 2 m))))
+                       (name-elt (if prename
+                                     (nth 3 m)
+                                   (nth 2 m)))
+                       (postname-elt (if prename
+                                         (nth 4 m)
+                                       (nth 3 m))))
+                  (when-let ((name (when (and (eq (car name-elt) 'hi)
+                                              (stringp (caddr name-elt)))
+                                     (concat prename
+                                             (when (and prename
+                                                        (not (string-suffix-p "-" prename))
+                                                        " "))
+                                             (caddr name-elt))))
+                             (abbr-begin (and (stringp postname-elt)
+                                              (string-match "\\[.*\\]" postname-elt)))
+                             (abbr-end (1- (match-end 0)))
+                             (postname (string-trim (substring postname-elt 0 abbr-begin)))
+                             (abbr (substring postname-elt (1+ abbr-begin) abbr-end)))
+                    ;; Sometimes, multiple authors have the same name
+                    ;; AND abbreviation. In those cases, just move on.
+                    (unless (gethash abbr hrm-author-abbr-hash)
+                      ;; But if this author has a different abbreviation
+                      ;; yet the same name as another author, then add
+                      ;; the postname to differentiate.
+                      (when (member name (hash-table-values hrm-author-abbr-hash))
+                        (setq name (format "%s (%s)" name postname)))
+                      (puthash abbr name hrm-author-abbr-hash))
+                    (message "%s: %s" abbr name)))))
+#+end_src
+*** Abbreviations from list II–IV
+:PROPERTIES:
+:ID:       TKR:1fc6e789-8fec-434d-885b-30de62961970
+:END:
+#+begin_example xml
+  <item>
+    <title>Ia.Rel. = Iacon Relics</title>, ed. Orion Pax</item>
+#+end_example
+or
+#+begin_example xml
+  <item>
+    <title>Cov.Pri.</title>= Alpha Trion,
+    <title>Covenant of Primus</title></item>
+#+end_example
+
+#+begin_src emacs-lisp
+#+end_src
+** End matter
+:PROPERTIES:
+:ID:       TKR:62892e62-3cf5-4ebb-8622-83ad6021d9d3
+:END:
+#+begin_src emacs-lisp
+  (provide 'hrm-render)
+
+  ;; hrm-render.el ends here
+#+end_src
+* End matter
+:PROPERTIES:
+:ID:       TKR:ea04e9be-aeef-48ed-88eb-f885d3304129
+:END:
+#+begin_src emacs-lisp
+  (require 'hrm-conv)
+  (require 'hrm-xml)
+  (require 'hrm-completion)
+  (require 'hrm-storage)
+  (require 'hrm-tags)
+  (require 'hrm-render)
+
+  (provide 'hermeneus)
+
+  ;; hermeneus.el ends here
+#+end_src
