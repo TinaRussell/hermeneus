@@ -16,14 +16,14 @@
 (defun hrm--url-p (path)
   "Return non-nil if PATH is a valid URL.
 Specifically, this will return a parsed URL object from
-‘url-generic-parse-url’, otherwise nil."
+  ‘url-generic-parse-url’, otherwise nil."
   (let ((url (url-generic-parse-url path)))
     (when (cl-struct-slot-value 'url 'type url)
       url)))
 
 (cl-defun hrm--get-next-tag (&optional (tag "entryFree"))
   "Return start and end positions of the next instance of XML tag TAG
- (defaults to “entryFree”). Move point to the end position."
+(defaults to “entryFree”). Move point to the end position."
   (save-match-data
     (when (search-forward (concat "<" tag) nil t)
       (let* ((begin (goto-char (match-beginning 0)))
@@ -58,11 +58,11 @@ FILE can be a local filename or an URL."
 
 (defun hrm--get-file-sizes (list)
   (let ((sizes '(42923474  5014862  4182729 14588543 40082401
-                    15614  1233434  2872155  4731605  4600309
-                 23622167  6753069 12285441  4142048   922716
-                 12279541 38221861   676533   670125  2249926
-                 22838928 11626884  9107698  8185312  6534345
-                  1596622  1656586)))
+                             15614  1233434  2872155  4731605  4600309
+                          23622167  6753069 12285441  4142048   922716
+                          12279541 38221861   676533   670125  2249926
+                          22838928 11626884  9107698  8185312  6534345
+                           1596622  1656586)))
     (cl-loop for l in list
              for i from 1 to (length list)
              if (hrm--url-p l)
@@ -70,6 +70,7 @@ FILE can be a local filename or an URL."
              else
              collect (nnheader-file-size l))))
 
+;;;###autoload
 (defun hrm-scan-lsj ()
   (interactive)
   (oset hrm-lsj entries (hrm-scan-entries))

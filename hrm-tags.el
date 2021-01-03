@@ -100,17 +100,74 @@ which is more readable to ‘plist-get’ and related functions."
                     (format "\n‘%s’ %s" attr desc))))
 
 (cl-defmacro define-hrm-tag (tag &rest args)
-  "Macro for defining XML tags in Hermeneus."
+  "Macro for defining XML tags in Hermeneus.
+TAG is the unquoted name of the tag in question.
+
+DOCSTRING is an optional description that, when given, will be
+prepended with the name of the tag and used in docstrings for
+constructs defined by ‘define-hrm-tag’. e.g. the docstring used
+in the ‘define-hrm-tag’ definition for <name> is \"contains a
+proper noun or noun phrase.\", and the docstring generated for
+the function ‘hrm-render-name’ includes \"‘<name>’ contains a
+proper noun or noun phrase.\" Do not use line breaks to wrap the
+string; line breaks will be added automatically to the generated
+docstrings.
+
+‘define-hrm-tag’ accepts the following keyword arguments:
+
+ATTRS is a list (though it can be expressed inline; see the
+function ‘hrm---normalize-keywords’) of tag attributes, in the
+form \"ATTR DOCSTRING ATTR DOCSTRING …\". Each ATTR is the
+unquoted name of an attribute specific to this tag, and each
+DOCSTRING is a short string describing the preceding attribute.
+Like with the main docstring for the tag, do not use line breaks
+for wrapping, and expect each string to be prepended with the
+name of the attribute.
+
+FACE is a quoted face specification which Hermeneus will use when
+displaying the tag. See Info node ‘(elisp)Defining Faces’. The
+resulting face will be named in the format ‘hrm-face-TAG’. If
+FACE is not given, then no special face will be used for
+displaying the tag.
+
+RENDER is a series of sexps which will be used to define a
+function for rendering the tag’s contents. The function will be
+named in the format `hrm-render-TAG’ and will be given one
+argument, ‘dom’, which is the DOM of the tag being rendered (see
+Info node ‘(elisp)Document Object Model’). If RENDER is absent,
+then the special function ‘hrm--render-generic’ will be used to
+render the tag.
+Note that if you define your own rendering function using RENDER,
+any face spec defined using FACE will have to be manually taken
+into account by your function definition. Remember, such a face
+is named in the format ‘hrm-face-TAG’.
+
+DOC-SOURCE is a symbol, a string, or a list of two strings which
+serves as a citation for the information contained in DOCSTRING
+and ATTRS. Use this if you copied such information from somewhere
+else, i.e. a specification like the TEI P4 Guidelines. If
+DOC-SOURCE is a bound symbol, it will be set to that symbol’s
+value as a variable. If DOC-SOURCE is a string, it will be
+interpreted generically (adding \"Information from \" followed by
+DOC-SOURCE to the docstrings of relevant constructs), and if
+DOC-SOURCE is a list of two strings, it will be interpreted as
+the URL of a publication followed by its title.
+If DOC-SOURCE is not given, then the value of ‘hrm-doc-source’
+will be used instead. If that value is nil (the default), then no
+citation will appear in the relevant docstrings."
+  ;; Note that I’m not sure if that last part actually works, urgh
   (declare (advertised-calling-convention
             (tag &optional docstring &key attrs face render doc-source &allow-other-keys) "")
            (indent defun)
-           (doc-string 2))
-           ;; This doesn’t actually work, and the Edebug macro spec
-           ;; error messages are almost Microsoftian in their opacity.
+           (doc-string 2)
+           ;; The following debug spec doesn’t actually work, and
+           ;; Edebug’s error messages on the matter are almost
+           ;; Microsoftian in their opacity.
            ;; Let the record show that I tried.
            ;; (debug (&define name [&optional stringp]
            ;;                 &rest [&or [":render" def-body]
            ;;                            [keywordp &rest [&not keywordp]]]))
+           )
   ;; Get the keywords
   (let* ((docstring (prog1 (when (stringp (car args)) (pop args))
                       (while (not (or (null (car args))
@@ -125,7 +182,7 @@ which is more readable to ‘plist-get’ and related functions."
     (when (and (not (plist-get kw-args :doc-source))
                (boundp 'hrm-doc-source))
       (let ((ds-pos (seq-position hrm--tag-keywords :doc-source)))
-            (setf (elt kw-vals ds-pos) hrm-doc-source)))
+        (setf (elt kw-vals ds-pos) hrm-doc-source)))
     ;; Bind the keywords locally
     (cl-progv
         (mapcar
@@ -166,57 +223,57 @@ which is more readable to ‘plist-get’ and related functions."
            ;; my autistic sensibilities.)
            (add-to-list 'hrm-defined-tags ',tag t))))))
 
-(let ((hrm-doc-source (quote ("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents"))))
-(define-hrm-tag foreign
-  "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
+(let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")))
+  (define-hrm-tag foreign
+    "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
 
-(define-hrm-tag cit
-  "A quotation from some other document, together with a bibliographic reference to its source.")
+  (define-hrm-tag cit
+    "A quotation from some other document, together with a bibliographic reference to its source.")
 
-(define-hrm-tag name
-  "contains a proper noun or noun phrase."
-  :attrs
-  type "indicates the type of the object which is being named by the phrase.")
+  (define-hrm-tag name
+    "contains a proper noun or noun phrase."
+    :attrs
+    type "indicates the type of the object which is being named by the phrase.")
 
-(define-hrm-tag abbr
-  "contains an abbreviation of any sort."
-  :attrs
-  expan "(expansion) gives an expansion of the abbreviation."
-  resp "(responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute."
-  type "allows the encoder to classify the abbreviation according to some convenient typology."
-  cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
+  (define-hrm-tag abbr
+    "contains an abbreviation of any sort."
+    :attrs
+    expan "(expansion) gives an expansion of the abbreviation."
+    resp "(responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute."
+    type "allows the encoder to classify the abbreviation according to some convenient typology."
+    cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
 
-(define-hrm-tag date
-  "contains a date in any format."
-  :attrs
-  calendar "indicates the system or calendar to which the date belongs."
-  value "gives the value of the date in some standard form, usually yyyy-mm-dd."
-  certainty "indicates the degree of precision to be attributed to the date.")
+  (define-hrm-tag date
+    "contains a date in any format."
+    :attrs
+    calendar "indicates the system or calendar to which the date belongs."
+    value "gives the value of the date in some standard form, usually yyyy-mm-dd."
+    certainty "indicates the degree of precision to be attributed to the date.")
 
-(define-hrm-tag pb
-  "marks the boundary between one page of a text and the next in a standard reference system."
-  :attrs
-  ed "(edition) indicates the edition or version in which the page break is located at this point.")
+  (define-hrm-tag pb
+    "marks the boundary between one page of a text and the next in a standard reference system."
+    :attrs
+    ed "(edition) indicates the edition or version in which the page break is located at this point.")
 
-(define-hrm-tag bibl
-  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
+  (define-hrm-tag bibl
+    "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
 
-(define-hrm-tag biblScope
-  "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
-  :attrs
-  type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
+  (define-hrm-tag biblScope
+    "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
+    :attrs
+    type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
 
-(define-hrm-tag title
-  "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
-  :attrs
-  level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
-  type "(type of title) classifies the title according to some convenient typology.")
+  (define-hrm-tag title
+    "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
+    :attrs
+    level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
+    type "(type of title) classifies the title according to some convenient typology.")
 
-(define-hrm-tag author
-  "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.")
+  (define-hrm-tag author
+    "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.")
 )
 
-(let ((hrm-doc-source (quote ("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries"))))
+(let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")))
 (define-hrm-tag entryFree
   "contains a dictionary entry which does not necessarily conform to the constraints imposed by the entry element."
   :render
@@ -307,19 +364,19 @@ which is more readable to ‘plist-get’ and related functions."
   "contains a translation of the headword or an example.")
 )
 
-(let ((hrm-doc-source (quote ("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment"))))
+(let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment")))
 (define-hrm-tag ref
   "defines a reference to another location in the current document, in terms of one or more identifiable elements, possibly modified by additional text or comment."
   :face
   '((t . (:inherit shr-link)))
   :render
   (if-let ((string1 (car (dom-strings dom)))
-
+           
            ;; not sure how we will handle links to prefixes/suffixes,
            ;; so they are disabled for now
            ((not (string-prefix-p "-" (string-trim string1))))
            ((not (string-suffix-p "-" (string-trim string1))))
-
+           
            (entries (oref hrm-lsj entries))
            (target (hrm--string-to-object string1)))
       (progn (hrm--insert-space-maybe)
@@ -359,7 +416,7 @@ Default: #IMPLIED
 Note: If no value is given, the application program is responsible for deciding (possibly on the basis of user input) how far to trace a chain of pointers.")
 )
 
-(let ((hrm-doc-source (quote ("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates"))))
+(let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates")))
 (define-hrm-tag placeName
   "contains an absolute or relative place name.")
 )

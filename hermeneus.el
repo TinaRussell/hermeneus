@@ -37,16 +37,22 @@
 (defconst hrm--all-sigmas (concat hrm--lowercase-sigmas
                                   hrm--uppercase-sigmas)
   "Every sigma. All of them.
-  You need a lowercase word-ending sigma? Consider it done. How
-  about a capital reverse dotted lunate sigma? We’ve got you
-  covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
+You need a lowercase word-ending sigma? Consider it done. How
+about a capital reverse dotted lunate sigma? We’ve got you
+covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
 
-(defconst hrm--git-lsj-dir "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/")
+(defconst hrm--git-lsj-dir
+  "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
+  "Location of the LSJ within the PerseusDL “lexica” repository.")
 
 (defun hrm-alist-to-local-vars (alist &optional prefix)
+  "Convert each key in an alist to a local variable.
+Each variable will have the name and value of the relevant key.
+If PREFIX is a string, it will be added to the beginning of each
+variable name (with a hyphen in between)."
   (let (rtn)
     (dolist (a alist (nreverse rtn))
-      (let* ((var-sym (if prefix
+      (let* ((var-sym (if (stringp prefix)
                           (intern (concat prefix "-" (symbol-name (car a))))
                         (car a)))
              (var (make-local-variable var-sym)))
@@ -57,6 +63,7 @@
   (make-symbol (concat ":" (symbol-name symbol))))
 
 (defun hrm--get-slot-default-value (class slot)
+  "Return the default value of SLOT in CLASS."
   (thread-first (cl-loop for slot in (eieio-class-slots class)
                          if (eq (cl--slot-descriptor-name slot) 'object-name)
                          return slot)
@@ -64,6 +71,9 @@
     (eieio-default-eval-maybe)))
 
 (defun hrm--trim-string-extra (string)
+  "Trim a string more aggressively than the function ‘string-trim’.
+Returns STRING, with whitespace and punctuation characters found
+at each end removed."
   (let ((trim (rx (one-or-more (any blank punctuation ?\n)))))
     (string-trim string trim trim)))
 
@@ -124,6 +134,7 @@ If you set this outside of Customize, be sure to evaluate
 (defvar hrm-use-fonts t)
 
 (require 'hrm-conv)
+(require 'hrm-match)
 (require 'hrm-xml)
 (require 'hrm-completion)
 (require 'hrm-storage)

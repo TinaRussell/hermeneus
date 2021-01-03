@@ -17,7 +17,7 @@
 (defun hrm-normalize-greek-char (char)
   (thread-first char
     (char-to-string)
-    (hrm--remove-diacritics)
+    (hrm-remove-diacritics)
     (string-to-char)))
 
 (cl-defun hrm--get-letter-variants (char)
@@ -30,8 +30,8 @@
         hrm--uppercase-sigmas)
     ;; otherwise, look up variants in ‘hrm--greek-unicode-all’
     (cl-loop for c across hrm--greek-unicode-all
-             if (eq (hrm--normalize-greek-char char)
-                    (hrm--normalize-greek-char c))
+             if (eq (hrm-normalize-greek-char char)
+                    (hrm-normalize-greek-char c))
              concat (char-to-string c))))
 
 (defvar hrm--letter-variant-hash (make-hash-table :size (length hrm--greek-all)))
@@ -127,6 +127,6 @@ elsewhere."
             (push c list-2))))
       (append list-1 list-2))))
 
-(provide 'hrm-match)
+  (provide 'hrm-match)
 
-;; hrm-match.el ends here
+  ;; hrm-match.el ends here

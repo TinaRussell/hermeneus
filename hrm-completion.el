@@ -18,7 +18,7 @@ This allows two important features. The first is matching by Beta
 code: if you type in Beta code (i.e. “i(ero/doulos” instead of
 “ἱερόδουλος”), it will match as though you typed the Greek
 Unicode equivalent. The second is diacritic-agnostic matching: if
-you type in Greek with no diacritics into the ‘describe-greek-word’
+you type Greek with no diacritics into the ‘describe-greek-word’
 prompt, it will match any combination of diacritics on the same
 sequence of letters. This works whether you’re typing in Greek
 Unicode or in Beta code: so, either “etaira” or “εταιρα” will
@@ -31,6 +31,7 @@ command ‘counsel-greek-word’."
   :type 'boolean
   :group 'hermeneus)
 
+;;;###autoload
 (defun describe-greek-word (word)
   (interactive
    (list
@@ -61,14 +62,14 @@ keyword arguments, which are passed to ‘ivy-read’."
                 lexicon)
                (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
     (cl-flet ((kw-put (prop val)
-                     (unless (plist-member kwargs prop)
-                       (cl-callf plist-put kwargs prop val))))
+                      (unless (plist-member kwargs prop)
+                        (cl-callf plist-put kwargs prop val))))
       (kw-put :action #'hrm--display-word-buffer)
       (kw-put :re-builder #'hrm--re-builder)
       (kw-put :matcher #'hrm--re-matcher)
       (awhen (hrm-greek-word-at-point)
         (kw-put :preselect it))
-    (apply 'ivy-read prompt collection kwargs))))
+      (apply 'ivy-read prompt collection kwargs))))
 
 (defun hrm--fold-case (string)
   (cl-loop for l across (regexp-quote string)

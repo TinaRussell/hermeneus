@@ -64,7 +64,7 @@ or otherwise can’t be used, move on."
 
 (cl-defmethod initialize-instance :after ((this hrm-lexicon) &rest slots)
   "After initializing a ‘hrm-lexicon’ object, populate its ‘entries’
-hash-table with word-objects from the LSJ."
+  hash-table with word-objects from the LSJ."
   (let ((entries (oref this entries)))
     ;; Don’t bother scanning the LSJ for entries if the
     ;; ‘entries’ hash-table is already populated, or if

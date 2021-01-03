@@ -62,22 +62,22 @@ Find out more about Tidy at http://www.html-tidy.org"
   :group 'hermeneus)
 
 (defun hrm--roman-numeral-p (string)
-    "A limited test for whether STRING represents a Roman numeral.
-  This is to allow proper spacing for Roman-numbered list bullets.
-  The limitation is that it can’t tell when a single letter (“I”, “V”,
-  “X”, etc.) is supposed to be a Roman numeral or not, and in those
-  cases it will return nil."
-    (when (> (length string) 1)
-      (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
+  "A limited test for whether STRING represents a Roman numeral.
+This is to allow proper spacing for Roman-numbered list bullets.
+The limitation is that it can’t tell when a single letter (“I”, “V”,
+“X”, etc.) is supposed to be a Roman numeral or not, and in those
+cases it will return nil."
+  (when (> (length string) 1)
+    (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
 
-  (defun hrm--margin-indent-width ()
-    (shr-string-pixel-width
-     (propertize "XIII " :face 'hrm-default-face)))
+(defun hrm--margin-indent-width ()
+  (shr-string-pixel-width
+   (propertize "XIII " :face 'hrm-default-face)))
 
-  (defun hrm--pixel-column ()
-    (let ((pos (point)))
-      (prog1 (shr-pixel-column)
-        (goto-char pos))))
+(defun hrm--pixel-column ()
+  (let ((pos (point)))
+    (prog1 (shr-pixel-column)
+      (goto-char pos))))
 
 (defvar hrm--tree-depth 0)
 (defvar hrm--parent-tree nil)
