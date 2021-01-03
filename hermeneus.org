@@ -181,6 +181,7 @@ from the XML element itself."
 :header-args:emacs-lisp: :tangle hrm-conv.el
 :END:
 This section exists for converting Latin letters representing Greek letters (i.e. “Beta code”) into proper, godly Greek Unicode characters.
+
 Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hrm-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom definition, but well worth it for increasing the international utility of Hermeneus.
 ** Dependencies
 :PROPERTIES:
@@ -1271,6 +1272,7 @@ or otherwise can’t be used, move on."
 :ID:       TKR:a677b07d-8387-4fff-82a4-3d0401409dee
 :END:
 These descriptions are taken from the [[https://tei-c.org/Vault/P4/][TEI P4 Guidelines]] (which is obsolete, but the LSJ XML files use it so we’ll use it too). There is some context missing: some tags are meant to be nested inside one or more other tags, but those groupings are not reflected in this simple list.
+
 In this list, items at list level 1 are citations, items at level 2 are tags, items at level 3 are attributes of the tag above it, and items at level 4 contain explanatory information.
 
 - [[https://tei-c.org/Vault/P4/doc/html/ST.html][Structure of the TEI Document Type Definition]]
