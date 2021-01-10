@@ -2041,18 +2041,18 @@ Well excu-u-u-u-use me, ‘princ’!"
       (erase-buffer)
       (shr-insert-document hrm--word-dom)
       (when hrm-show-entry-source
-        (insert "\n══════════════════════╡ Source ╞══════════════════════\n\n"))
-      (when (memq hrm-show-entry-source '(xml both t))
-        (let ((widget `(hrm-tree-widget :tag "XML source")))
-          (widget-put widget :args `((item :value ,(propertize
-                                                    (hrm--get-entry-source hrm--word-obj)
-                                                    'hrm--tree widget
-                                                    'hrm--tree-last-sibling t))))
-          (widget-create widget)))
-      (when (memq hrm-show-entry-source '(sexp both t))
-        (widget-create
-         `(hrm-tree-widget :tag "DOM tree"
-                           :hrm-value ,hrm--word-dom)))
+        (insert "\n══════════════════════╡ Source ╞══════════════════════\n\n")
+        (when (memq hrm-show-entry-source '(xml both t))
+          (let ((widget `(hrm-tree-widget :tag "XML source")))
+            (widget-put widget :args `((item :value ,(propertize
+                                                      (hrm--get-entry-source hrm--word-obj)
+                                                      'hrm--tree widget
+                                                      'hrm--tree-last-sibling t))))
+            (widget-create widget)))
+        (when (memq hrm-show-entry-source '(sexp both t))
+          (widget-create
+           `(hrm-tree-widget :tag "DOM tree"
+                             :hrm-value ,hrm--word-dom))))
       (goto-char pos))))
 #+end_src
 *** Switch buffer

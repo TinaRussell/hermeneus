@@ -99,40 +99,6 @@ from the XML element itself."
 
 (define-key hermeneus-mode-map "g" 'hrm-buffer-update)
 
-(defvar hrm-lsj-files nil)
-
-(cl-defun hrm--set-lsj-dir (&optional (symbol 'hrm-lsj-dir)
-                                      (value (if (boundp 'hrm-lsj-dir)
-                                                 hrm-lsj-dir
-                                               hrm--git-lsj-dir)))
-  (set-default symbol value)
-  (setq hrm-lsj-files
-        (cl-loop for i from 1 to 27
-                 with expand-func = (if (hrm--url-p value)
-                                        'url-expand-file-name
-                                      'expand-file-name)
-                 collect (funcall expand-func
-                                  (format "grc.lsj.perseus-eng%s.xml" i)
-                                  value))))
-
-(defcustom hrm-lsj-dir hrm--git-lsj-dir
-  "Directory where the LSJ Greek lexicon files can be found.
-This can be an URL or a local file path. The files themselves should
-be named in the format “grc.lsj.perseus-engXX.xml”, where XX is a
-number from 1 to 27 (no padding).
-
-If you set this outside of Customize, be sure to evaluate
-‘hrm--set-lsj-dir’."
-  :tag "Hermeneus — LSJ directory"
-  :type `(choice (const ,hrm--git-lsj-dir
-                        :tag "Perseus Digital Library’s Git repository")
-                 (directory :tag "local directory")
-                 (string :tag "URL"))
-  :set 'hrm--set-lsj-dir
-  :group 'hermeneus)
-
-(defvar hrm-use-fonts t)
-
 (require 'hrm-conv)
 (require 'hrm-match)
 (require 'hrm-xml)
