@@ -1,4 +1,4 @@
-# -*- mode: org; org-src-preserve-indentation: t; eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
+# -*- mode: org; org-src-preserve-indentation: t; org-blank-before-new-entry: '((heading . t) (plain-list-item . auto)); eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
 
 #+TITLE: Hermeneus
 
@@ -782,7 +782,7 @@ FILE can be a local filename or an URL."
 :PROPERTIES:
 :ID:       TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737
 :END:
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp
 (defvar hrm-lsj-files nil)
 
 (cl-defun hrm--set-lsj-dir (&optional (symbol 'hrm-lsj-dir)
@@ -2008,7 +2008,6 @@ Well excu-u-u-u-use me, ‘princ’!"
 :PROPERTIES:
 :ID:       TKR:fc1834d0-b144-4892-88ba-59ce73dd836d
 :END:
-TODO: We need something to clear out old Hermeneus buffers
 #+begin_src emacs-lisp
 (defun hrm--word-buffer (obj)
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
@@ -2136,6 +2135,9 @@ TODO: We need something to clear out old Hermeneus buffers
         (sgml-indent-line)
         (forward-line))
       (funcall mode))))
+#+end_src
+*** TODO Clear out old Hermeneus buffers
+#+begin_src emacs-lisp
 #+end_src
 ** Abbreviations
 #+begin_src emacs-lisp :tangle no :load no
