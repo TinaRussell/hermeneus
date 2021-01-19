@@ -291,41 +291,6 @@ Well excu-u-u-u-use me, ‘princ’!"
 
 
 
-(defun hrm-get-author-abbrs (dom)
-  (cl-loop for m in (dom-by-tag dom 'item)
-           do (let* ((prename (when (stringp (nth 2 m))
-                                (string-trim-right (nth 2 m))))
-                     (name-elt (if prename
-                                   (nth 3 m)
-                                 (nth 2 m)))
-                     (postname-elt (if prename
-                                       (nth 4 m)
-                                     (nth 3 m))))
-                (when-let ((name (when (and (eq (car name-elt) 'hi)
-                                            (stringp (caddr name-elt)))
-                                   (concat prename
-                                           (when (and prename
-                                                      (not (string-suffix-p "-" prename))
-                                                      " "))
-                                           (caddr name-elt))))
-                           (abbr-begin (and (stringp postname-elt)
-                                            (string-match "\\[.*\\]" postname-elt)))
-                           (abbr-end (1- (match-end 0)))
-                           (postname (string-trim (substring postname-elt 0 abbr-begin)))
-                           (abbr (substring postname-elt (1+ abbr-begin) abbr-end)))
-                  ;; Sometimes, multiple authors have the same name
-                  ;; AND abbreviation. In those cases, just move on.
-                  (unless (gethash abbr hrm-author-abbr-hash)
-                    ;; But if this author has a different abbreviation
-                    ;; yet the same name as another author, then add
-                    ;; the postname to differentiate.
-                    (when (member name (hash-table-values hrm-author-abbr-hash))
-                      (setq name (format "%s (%s)" name postname)))
-                    (puthash abbr name hrm-author-abbr-hash))
-                  (message "%s: %s" abbr name)))))
-
-
-
 (provide 'hrm-render)
 
 ;; hrm-render.el ends here

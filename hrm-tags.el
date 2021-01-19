@@ -8,6 +8,7 @@
 
 (require 'hrm-conv)
 (require 'hrm-render)
+(require 'hrm-abbr) ; standalone file
 
 (defface hrm-default-face '((t nil))
   "Default face for Hermeneus text display."
@@ -30,6 +31,17 @@
 (defvar-local hrm--word-dom nil)
 
 (defvar-local hrm-doc-source nil)
+
+(defcustom hrm-expand-abbreviations t
+  "Whether abbreviations in definitions should be expanded.
+If non-nil, Hermeneus will attempt to expand abbreviations (of
+authors, works, etc.) found when displaying a definition. The
+abbreviation will be available as the ‘help-echo’ (“tooltip”)
+property of the expanded text. If nil, abbreviations will remain,
+with expansions written as ‘help-echo’ properties."
+  :type 'boolean
+  :tag "Hermeneus — expand abbreviations"
+  :group 'hermeneus)
 
 (defun hrm--render-generic (dom &optional tag face)
   (unless tag

@@ -1326,6 +1326,7 @@ or otherwise can’t be used, move on."
 
 (require 'hrm-conv)
 (require 'hrm-render)
+(require 'hrm-abbr) ; standalone file
 #+end_src
 
 ** Information on tags
@@ -1435,6 +1436,20 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
 (defvar-local hrm--word-dom nil)
 
 (defvar-local hrm-doc-source nil)
+#+end_src
+
+** Options
+#+begin_src emacs-lisp
+(defcustom hrm-expand-abbreviations t
+  "Whether abbreviations in definitions should be expanded.
+If non-nil, Hermeneus will attempt to expand abbreviations (of
+authors, works, etc.) found when displaying a definition. The
+abbreviation will be available as the ‘help-echo’ (“tooltip”)
+property of the expanded text. If nil, abbreviations will remain,
+with expansions written as ‘help-echo’ properties."
+  :type 'boolean
+  :tag "Hermeneus — expand abbreviations"
+  :group 'hermeneus)
 #+end_src
 
 ** Functions
@@ -2221,98 +2236,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 *** TODO Clear out old Hermeneus buffers
 #+begin_src emacs-lisp
 #+end_src
-** Abbreviations
-#+begin_src emacs-lisp :tangle no :load no
-(defvar hrm-author-abbr-hash (make-hash-table :test 'equal))
 
-(defvar hrm-title-abbr-hash (make-hash-table :test 'equal))
-
-(defvar hrm--abbrs-dom
-  (with-temp-buffer
-    (insert "<body>")
-    (insert-file-contents
-     (expand-file-name "abbreviations.xml"
-                       (file-name-directory
-                        (locate-library "hermeneus"))))
-    (goto-char (point-max))
-    (insert "</body>")
-    (libxml-parse-xml-region 1 (point-max))))
-
-(defun hrm-get-abbrs ()
-  (lööp for dom in (cdddr hrm--abbrs-dom)
-        for ni from 1 to (length (cdddr hrm--abbrs-dom))
-        if (eq ni 1)
-        do (hrm-get-author-abbrs dom)))
-
-(defun hrm--title-abbr-from-string (string)
-  (awhen (string-match-p " = " string)
-    (list (substring string 0 it)
-          (substring string (+ it 3)))))
-#+end_src
-*** Abbreviations from list I
-:PROPERTIES:
-:ID:       TKR:2378b010-a69c-4f2a-88f6-85bcf7d8302c
-:END:
-This one takes the form:
-#+begin_example xml
-<item>Ben
-  <hi>Urich</hi> Journalistus [B.Ur.]
-  <date>xx A.D.</date>Ed. J. Jonah Jameson, Daily Bugle (DBG)
-  <title>Leg.Ev. = Legacy of Evil</title>, ed. Joe Robertson,
-  <title>The Pulse</title>, Daily Bugle (DBG), p.616.</item>
-#+end_example
-
-#+begin_src emacs-lisp
-(defun hrm-get-author-abbrs (dom)
-  (cl-loop for m in (dom-by-tag dom 'item)
-           do (let* ((prename (when (stringp (nth 2 m))
-                                (string-trim-right (nth 2 m))))
-                     (name-elt (if prename
-                                   (nth 3 m)
-                                 (nth 2 m)))
-                     (postname-elt (if prename
-                                       (nth 4 m)
-                                     (nth 3 m))))
-                (when-let ((name (when (and (eq (car name-elt) 'hi)
-                                            (stringp (caddr name-elt)))
-                                   (concat prename
-                                           (when (and prename
-                                                      (not (string-suffix-p "-" prename))
-                                                      " "))
-                                           (caddr name-elt))))
-                           (abbr-begin (and (stringp postname-elt)
-                                            (string-match "\\[.*\\]" postname-elt)))
-                           (abbr-end (1- (match-end 0)))
-                           (postname (string-trim (substring postname-elt 0 abbr-begin)))
-                           (abbr (substring postname-elt (1+ abbr-begin) abbr-end)))
-                  ;; Sometimes, multiple authors have the same name
-                  ;; AND abbreviation. In those cases, just move on.
-                  (unless (gethash abbr hrm-author-abbr-hash)
-                    ;; But if this author has a different abbreviation
-                    ;; yet the same name as another author, then add
-                    ;; the postname to differentiate.
-                    (when (member name (hash-table-values hrm-author-abbr-hash))
-                      (setq name (format "%s (%s)" name postname)))
-                    (puthash abbr name hrm-author-abbr-hash))
-                  (message "%s: %s" abbr name)))))
-#+end_src
-*** Abbreviations from list II–IV
-:PROPERTIES:
-:ID:       TKR:1fc6e789-8fec-434d-885b-30de62961970
-:END:
-#+begin_example xml
-<item>
-  <title>Ia.Rel. = Iacon Relics</title>, ed. Orion Pax</item>
-#+end_example
-or
-#+begin_example xml
-<item>
-  <title>Cov.Pri.</title>= Alpha Trion,
-  <title>Covenant of Primus</title></item>
-#+end_example
-
-#+begin_src emacs-lisp
-#+end_src
 ** End matter
 :PROPERTIES:
 :ID:       TKR:62892e62-3cf5-4ebb-8622-83ad6021d9d3
