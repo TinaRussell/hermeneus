@@ -137,10 +137,10 @@ for wrapping, and expect each string to be prepended with the
 name of the attribute.
 
 FACE is a quoted face specification which Hermeneus will use when
-displaying the tag. See Info node ‘(elisp)Defining Faces’. The
-resulting face will be named in the format ‘hrm-face-TAG’. If
-FACE is not given, then no special face will be used for
-displaying the tag.
+displaying the tag. See Info node ‘(elisp)Defining Faces’. If
+FACE is not given, then a generic face will be created which by
+default inherits from ‘hrm-default-face’. Either way, the
+resulting face will be named in the format ‘hrm-face-TAG’.
 
 RENDER is a series of sexps which will be used to define a
 function for rendering the tag’s contents. The function will be
@@ -150,9 +150,9 @@ Info node ‘(elisp)Document Object Model’). If RENDER is absent,
 then the special function ‘hrm--render-generic’ will be used to
 render the tag.
 Note that if you define your own rendering function using RENDER,
-any face spec defined using FACE will have to be manually taken
-into account by your function definition. Remember, such a face
-is named in the format ‘hrm-face-TAG’.
+then any rendering it does must manually take into account the
+tag’s face, which (as you may recall) is named in the format
+‘hrm-face-TAG’.
 
 DOC-SOURCE is a symbol, a string, or a list of two strings which
 serves as a citation for the information contained in DOCSTRING
@@ -236,53 +236,70 @@ citation will appear in the relevant docstrings."
            (add-to-list 'hrm-defined-tags ',tag t))))))
 
 (let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")))
-  (define-hrm-tag foreign
-    "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
+(define-hrm-tag foreign
+  "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
 
-  (define-hrm-tag cit
-    "A quotation from some other document, together with a bibliographic reference to its source.")
+(define-hrm-tag cit
+  "A quotation from some other document, together with a bibliographic reference to its source.")
 
-  (define-hrm-tag name
-    "contains a proper noun or noun phrase."
-    :attrs
-    type "indicates the type of the object which is being named by the phrase.")
+(define-hrm-tag name
+  "contains a proper noun or noun phrase."
+  :attrs
+  type "indicates the type of the object which is being named by the phrase.")
 
-  (define-hrm-tag abbr
-    "contains an abbreviation of any sort."
-    :attrs
-    expan "(expansion) gives an expansion of the abbreviation."
-    resp "(responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute."
-    type "allows the encoder to classify the abbreviation according to some convenient typology."
-    cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
+(define-hrm-tag abbr
+  "contains an abbreviation of any sort."
+  :attrs
+  expan "(expansion) gives an expansion of the abbreviation."
+  resp "(responsibility) signifies the editor or transcriber responsible for supplying the expansion of the abbreviation held as the value of the expan attribute."
+  type "allows the encoder to classify the abbreviation according to some convenient typology."
+  cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
 
-  (define-hrm-tag date
-    "contains a date in any format."
-    :attrs
-    calendar "indicates the system or calendar to which the date belongs."
-    value "gives the value of the date in some standard form, usually yyyy-mm-dd."
-    certainty "indicates the degree of precision to be attributed to the date.")
+(define-hrm-tag date
+  "contains a date in any format."
+  :attrs
+  calendar "indicates the system or calendar to which the date belongs."
+  value "gives the value of the date in some standard form, usually yyyy-mm-dd."
+  certainty "indicates the degree of precision to be attributed to the date.")
 
-  (define-hrm-tag pb
-    "marks the boundary between one page of a text and the next in a standard reference system."
-    :attrs
-    ed "(edition) indicates the edition or version in which the page break is located at this point.")
+(define-hrm-tag pb
+  "marks the boundary between one page of a text and the next in a standard reference system."
+  :attrs
+  ed "(edition) indicates the edition or version in which the page break is located at this point.")
 
-  (define-hrm-tag bibl
-    "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
+(define-hrm-tag bibl
+  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
 
-  (define-hrm-tag biblScope
-    "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
-    :attrs
-    type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
+(define-hrm-tag biblScope
+  "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
+  :attrs
+  type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
 
-  (define-hrm-tag title
-    "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
-    :attrs
-    level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
-    type "(type of title) classifies the title according to some convenient typology.")
+(define-hrm-tag title
+  "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
+  :attrs
+  level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
+  type "(type of title) classifies the title according to some convenient typology.")
 
-  (define-hrm-tag author
-    "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.")
+(define-hrm-tag author
+  "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item."
+  :render
+  (let* ((new-dom (copy-seq dom))
+         (text (car (nthcdr (1- (safe-length new-dom)) new-dom)))
+         (expansion (and (stringp text)
+                         (gethash text hrm-author-abbr-hash))))
+
+    (when hrm-expand-abbreviations
+      (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
+
+    (let ((start (point)))
+      (hrm--render-generic new-dom 'author 'hrm-face-author)
+      (when expansion
+        (add-text-properties start (point)
+                             (list 'help-echo
+                                   (if hrm-expand-abbreviations
+                                       text
+                                     expansion)))))))
 )
 
 (let ((hrm-doc-source '("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")))
