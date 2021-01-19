@@ -448,10 +448,11 @@ following the asterisk.)"
   (if-let ((astr-idx (string-match-p "\*" string))   ; “asterisk index”
            (capt-idx (string-match-p (rx word-start) ; where to capitalize
                                      string (1+ astr-idx))))
-      (concat (substring string 0 astr-idx)
-              (substring string (1+ astr-idx) capt-idx)
-              (char-to-string (upcase (elt string capt-idx)))
-              (substring string (1+ capt-idx)))
+      (progn (setq string (concat (substring string 0 astr-idx)
+                                  (substring string (1+ astr-idx) capt-idx)
+                                  (char-to-string (upcase (elt string capt-idx)))
+                                  (substring string (1+ capt-idx))))
+             (hrm-conv--capitalize-after-asterisk string))
     string))
 
 (defun hrm-conv--normalize-beta-diacritics (string)
