@@ -10,12 +10,16 @@ As a priestess of Aphrodite, I want to learn the language of the ancients. The t
 Truth be told, as I began learning Ancient Greek (thank you, Schoeder and Horrigan), I noticed its similarity to a computer language. Programming languages are more strict about order, of course, but they have the explicit quality of Ancient Greek, where adjectives and modifiers are attached to the relevant words with pinpoint precision, where subject-verb agreement is more like a diplomatic summit. My modern brain, accustomed to the European clusterfuck that is English, has a hard time holding in all that information; but, what programmer can hold all the intricacies of one’s language at the top of one’s own head? No, we use IDEs, and Emacs, with its text-is-magic philosophy, has always been king of the IDEs.
 
 My original vision for Hermeneus is thus: use the kind of data on Ancient Greek assembled by heroes at places like Perseus to create an Ancient Greek learning and processing environment, so that writing and reading Ancient Greek is made easier in the way that Emacs makes writing and reading Python or C++ easier. Right now, I am focusing on the task of creating a searchable database of Ancient Greek words, so you can look up a Greek word as easily as you look up an Emacs Lisp symbol. I would love to have it do more, though, such as lemmatizing and conjugation. If you are interested in this, please feel free to contribute! Also, Hermeneus is designed to be as modular as possible, so if you want to make your own package that takes advantage of the Hermeneus database of ancient words, you are absolutely welcome to do so. Like any good Emacs package, Hermeneus is about extending the utility of Emacs, not locking you into one usage pattern.
+
 * Dedication
 Dedicated to Aphrodite, goddess of love and beauty, and to Hermes, her eloquent friend-with-benefits.
+
 * Installation
 Download this repository to a directory on your computer. Make sure that directory is present in the variable ~load-path~. After restarting Emacs (or using M-x ~load-library~ ~hermeneus~), use the command ~hrm-scan-lsj~ to begin creating the database of Greek words that Hermeneus requires.
+
 * Usage
 Right now, the primary way to use Hermeneus is the command ~describe-greek-word~, which lets you look up any Ancient Greek word (in its dictionary form) with completion. You’ll want to have [[https://github.com/abo-abo/swiper][Ivy]] installed to take advantage of the full power of Hermeneus completion; see the option ~hrm-use-ivy~ for details.
+
 ** Advanced usage/technical stuff
 Hermeneus uses the Perseus Project’s [[https://github.com/PerseusDL/lexica][excellent XML version]] of the Liddell-Scott-Jones Greek-English Lexicon, a.k.a. “the LSJ” (or “Liddell & Scott”). All word-objects are derived from entries in this lexicon; first, Hermeneus scans the entire LSJ through the process defined in ~hrm-scan-entries~, and then caches the resulting objects to a file. (See the variables ~hrm-storage-dir~ and ~hrm-storage-file~ if you want to change where this file is located/named; the default is the value of ~user-emacs-directory~ plus ~var/hermeneus/lsj-cache~, with ~.gz~ at the end if the ~gzip~ executable is installed on your machine.)
 
@@ -24,17 +28,22 @@ Hermeneus should be able to scan the LSJ remotely from the Git repository, but i
 When the LSJ is being scanned, it calls each function in ~hrm-scan-entry-functions~ with two arguments: the generated word object, and the raw DOM from the entry’s XML (as parsed by ~libxml-parse-xml-region~). This way, users and developers can easily create functions which take information from a word’s LSJ entry and add it (in some fashion or another) to the relevant word object.
 
 When a word is selected via ~describe-greek-word~, the entry is displayed using the Simple HTML Renderer, with custom tag definitions fitting the XML schema used by the XML LSJ. To add new tag definitions, use the macro ~define-hrm-tag~; for more information on defining tags, see that macro’s documentation, and for examples, see [[file:hermeneus.org::*Tag definitions][Tag definitions]].
+
 * Contributing
 Some notes on contributing:
+
 ** Literate Elisp
 This is a literate Emacs Lisp project; the code is written in an Org file, [[file:hermeneus.org][hermeneus.org]], then exported (“tangled”) to a series of Emacs Lisp files. To learn more about literate programming in Elisp, see [[https://orgmode.org/worg/org-contrib/babel/intro.html][Babel: Introduction]] over at [[https://orgmode.org/worg/][Worg]]. Be sure to edit the code in the Org file and, before committing, use ~org-babel-tangle~ to produce the updated ~.el~ files.
 # maybe I should mention my efforts to use the literate-elisp package to streamline this; those efforts are kind of on hold, though, as I figure out how to do Emacs packaging in the first place
+
 ** Object-oriented programming
 This project uses EIEIO, the Emacs implementation of the Common Lisp Object System. Do not fear: this does not mean the project is an object-oriented nightmare. CLOS is like the happy alternate future of object-oriented programming that we didn’t get because of grumble grumble decline of Lisp, AI winter, JavaScript blah blah. In CLOS/EIEIO, methods are not attached to objects; instead, they simply define what function definition a “generic function” (a sort of placeholder) should use depending on how it’s called. So, depending on the methods assigned to it, a generic function ~frambulate~ might have a different definition depending on whether it was called as ~(frambulate foo)~, ~(frambulate foo bar)~, ~(frambulate 17)~, etc. Read more about this style here: [[https://ericabrahamsen.net/tech/2016/feb/bbdb-eieio-object-oriented-elisp.html][BBDB on EIEIO – An Introduction to Object-Oriented Emacs Lisp]], or read the [[info:eieio][EIEIO manual]] ([[https://www.gnu.org/software/emacs/manual/html_node/eieio/][online]]), or watch this [[https://www.youtube.com/watch?v=IrmHp1rRQ68][long but excellent video]] from 1987 which, no matter when you were born, will make you nostalgic for better days for Lisp (sob).
 
 In Hermeneus, each word in the LSJ is defined as an EIEIO object. I figured this was best as this allows for Hermeneus to be more sophisticated and more open-ended: this or another package might define or modify a function differently depending on whether the word passed to it is a verb or an adjective, whether the word is conjugated in the second or third declension, etc. If my ultimate dream comes to pass and we make Hermeneus aware of the underlying grammar of Ancient Greek, that sort of flexibility will be essential.
+
 ** Libraries
 This project uses the Common Lisp library (~cl-lib~) as well as ~subr-x.el~ macros. These are preferred to third-party libraries like ~dash~, which would add dependencies. I’m fine with adding new dependencies, however, if the result is to add significant functionality and/or drastically improve code readability for Hermeneus.
+
 ** Custom definitions
 Code in the header to the main ~hermeneus.org~ file checks to see if certain symbols are bound and, if so, adds their functions to different hooks. You do not need to run this code, and if those symbols are not bound, the code will do nothing. The functions referenced are simply for my convenience. Still, in case you are curious, here are those functions as defined in my personal Emacs configuration:
 #+begin_src emacs-lisp :tangle no
@@ -81,13 +90,17 @@ Code in the header to the main ~hermeneus.org~ file checks to see if certain sym
     (tina/org-add-end-matter (concat (file-name-base) ".el"))
     (org-scan-tags 'tina/org-add-end-matter t nil 1)))
 #+end_src
+
 ** My coding style
 I’ll try not to be too much of a hardass about coding style; mostly, I’m just happy to have people contribute. So, these are just notes to help if you want to get your contributions merged faster and/or more seamlessly:
+
 *** Indentation
 This project uses standard Emacs indentation. The older “zigzag” style I find difficult to read and understand. The rare exceptions made to the standard ~lisp-indent-region~ indentation are for minor aesthetic reasons (read: I’m autistic).
 
 Also, this project uses spaces for indentation. I have no dog in the fight between tabs and spaces; I just figure this choice will get fewer people mad at me!
+
 *** Unicode
 I’m a weird person who uses Unicode curly quotes, emdashes, and all the other lovely things you probably don’t have on your keyboard layout. So, you’ll find them throughout strings and comments in the code, including docstrings (where Unicode single quotes serve the same ultimate purpose as the more standard backtick and straight single quote). Don’t worry if strings/comments in your code don’t use these special characters. Just make sure you edit the code in something aware of Unicode (like, say, Emacs) so the existing characters don’t get messed up.
+
 *** The eighty-column rule
 I’m not the world’s biggest fan of the eighty-column rule (the programming convention which holds that no line should run longer than 80 columns), but I try to respect the convention in docstrings and comments (use the command ~fill-paragraph~, normally bound to M-q (Alt+Q), to make this easier). (The exception to this is the documentation strings used in ~define-hrm-tag~ macro calls; those should not have line breaks for wrapping, as they are used to generate docstrings for other constructs, and those docstrings will have line-breaking applied automatically.) Elsewhere, I tend to think of the eighty-column rule as simply a guideline for formatting readable code: if a line reaches beyond eighty characters, it’s a good sign you should add some line breaks to make the code easier to understand. If adding line breaks would make the code /less/ easy to understand, however, there’s no need to bother.

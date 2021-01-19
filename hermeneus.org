@@ -21,6 +21,7 @@
                    (require 'rx)
                    (require 'cl-macs))
 #+end_src
+
 ** Constants
 :PROPERTIES:
 :ID:       TKR:476d569a-11f6-4c85-9c83-286ab6af8fec
@@ -63,6 +64,7 @@ covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
   "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
   "Location of the LSJ within the PerseusDL “lexica” repository.")
 #+end_src
+
 ** Utility functions
 :PROPERTIES:
 :ID:       TKR:033a6ce1-0d17-431f-921d-75c4ed9bd8d9
@@ -85,6 +87,7 @@ variable name (with a hyphen in between)."
 (defun hrm--make-keyword (symbol)
   (make-symbol (concat ":" (symbol-name symbol))))
 #+end_src
+
 *** Get default value of class slot
 :PROPERTIES:
 :ID:       TKR:48d94516-5ea7-456d-b072-2666f4600d71
@@ -98,6 +101,7 @@ variable name (with a hyphen in between)."
     (cl--slot-descriptor-initform)
     (eieio-default-eval-maybe)))
 #+end_src
+
 *** Which words have combining diacriticals that won’t… combine?
 #+begin_src emacs-lisp :tangle no :results replace list :load no
 (let (current-word)
@@ -124,6 +128,7 @@ variable name (with a hyphen in between)."
 - *)ra=ros ⇒ Ρ̓Α͂Ρος
 - *)ra/rion ⇒ Ρ̓ΆΡιον
 - w)|o=fage/w ⇒ ᾠο͂φαγέω
+
 *** Trim a string
 #+begin_src emacs-lisp
 (defun hrm--trim-string-extra (string)
@@ -133,6 +138,7 @@ at each end removed."
   (let ((trim (rx (one-or-more (any blank punctuation ?\n)))))
     (string-trim string trim trim)))
 #+end_src
+
 ** Options
 :PROPERTIES:
 :ID:       TKR:feba7f56-ff49-4ed3-9db0-f6602296810a
@@ -148,6 +154,7 @@ at each end removed."
   :tag "Hermeneus faces"
   :group 'hermeneus)
 #+end_src
+
 *** Hooks
 :PROPERTIES:
 :ID:       TKR:d47a2a83-a109-4534-927f-b93831bb9cbe
@@ -161,6 +168,7 @@ from the XML element itself."
   :type 'hook
   :group 'hermeneus)
 #+end_src
+
 ** Modes
 :PROPERTIES:
 :ID:       TKR:e540ec29-199d-4eaa-86e5-fb355dd51938
@@ -168,6 +176,7 @@ from the XML element itself."
 #+begin_src emacs-lisp
 (define-derived-mode hermeneus-mode special-mode "Hermeneus")
 #+end_src
+
 ** Keys
 :PROPERTIES:
 :ID:       TKR:057b84a7-d596-45d7-ab34-ce9b509049a7
@@ -175,6 +184,7 @@ from the XML element itself."
 #+begin_src emacs-lisp
 (define-key hermeneus-mode-map "g" 'hrm-buffer-update)
 #+end_src
+
 * Conversion
 :PROPERTIES:
 :ID:       TKR:a5c757b2-ff0f-4c62-957d-8d8dc8da62a1
@@ -183,6 +193,7 @@ from the XML element itself."
 This section exists for converting Latin letters representing Greek letters (i.e. “Beta code”) into proper, godly Greek Unicode characters.
 
 Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hrm-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom definition, but well worth it for increasing the international utility of Hermeneus.
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:91c60345-0a80-4c03-8984-9a02ff01186d
@@ -196,6 +207,7 @@ Now, Beta code, as it exists in this program, takes two forms: the standard Beta
   (require 'cl-macs)
   (require 'subr-x))
 #+end_src
+
 ** Utility functions
 #+begin_src emacs-lisp
 (defun hrm--regexp-bracket-quote (string)
@@ -207,6 +219,7 @@ of input STRING."
       (concat "[" (regexp-quote string) "]")
     (regexp-quote string)))
 #+end_src
+
 ** Macros
 #+begin_src emacs-lisp
 (defmacro hrm--make-regexp-versions (def-form &rest string-vars)
@@ -221,6 +234,7 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
               collect (list def-form (intern (concat (symbol-name var) "-regexp"))
                             (hrm--regexp-bracket-quote (symbol-value var))))))
 #+end_src
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:c056d1e0-5c34-41de-89de-94d388c5285f
@@ -265,6 +279,7 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
                  (delete-dups (append (string-to-list hrm--greek-letters)
                                       (string-to-list hrm--all-sigmas))))))
 #+end_src
+
 ** Options
 #+begin_src emacs-lisp
 (defun hrm--make-beta-hash-1 (input-letters output-letters hash)
@@ -397,6 +412,7 @@ If setting this outside of Customize, be sure to run
   :set 'hrm-conv--set-beta-input-type
   :group 'hermeneus)
 #+end_src
+
 ** Convert by hash
 This may have to be recoded in such a way as to allow peeking at the next letter, to see if there’s a word boundary, for the sake of sigma normalization. Also, I should be thinking about iota-subscript stuff right now. Eeeegh…
 #+begin_src emacs-lisp
@@ -410,6 +426,7 @@ This may have to be recoded in such a way as to allow peeking at the next letter
                     (string o)
                     (character (char-to-string o)))))
 #+end_src
+
 ** Normalize diacritics
 #+begin_src emacs-lisp
 (defun hrm-conv--change-diacritics-placement (string)
@@ -443,6 +460,7 @@ following the asterisk.)"
     (hrm-conv--dieresis-before-accent)
     (hrm-conv--capitalize-after-asterisk)))
 #+end_src
+
 ** Normalize sigmas
 #+begin_src emacs-lisp
 (defun hrm-conv--normalize-sigmas (string)
@@ -482,6 +500,7 @@ will be replaced with “σ”."
         done
       (apply #'concat (nreverse substrings)))))
 #+end_src
+
 ** Conversion
 #+begin_src emacs-lisp
 (defun hrm-beta-to-unicode (string &optional input-p match-p)
@@ -504,6 +523,7 @@ which case sigma normalization is unnecessary."
       string
     (hrm-conv--normalize-sigmas string)))
 #+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:843a4901-0bf6-4c9e-a709-c79b0a4195bc
@@ -513,10 +533,12 @@ which case sigma normalization is unnecessary."
 
   ;;; hrm-conv.el ends here
 #+end_src
+
 * Matching
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-match.el
 :END:
+
 ** Dependencies
 #+begin_src emacs-lisp
 (require 'ucs-normalize)
@@ -527,12 +549,15 @@ which case sigma normalization is unnecessary."
 
 (require 'hrm-conv)
 #+end_src
+
 ** Variables
 #+begin_src emacs-lisp
 (hrm--make-regexp-versions defconst
   hrm--lowercase-sigmas hrm--uppercase-sigmas hrm--all-sigmas)
 #+end_src
+
 ** Functions
+
 *** Remove diacritics from Greek words
 :PROPERTIES:
 :ID:       TKR:36e58a64-4ada-426c-b9b8-cd7d76123bb2
@@ -543,6 +568,7 @@ which case sigma normalization is unnecessary."
   (replace-regexp-in-string (rx (category combining-diacritic)) ""
                             (ucs-normalize-NFD-string string)))
 #+end_src
+
 ** Hash tables
 #+begin_src emacs-lisp
 (defun hrm-normalize-greek-char (char)
@@ -613,6 +639,7 @@ which case sigma normalization is unnecessary."
 
 (hrm--make-sigma-hash)
 #+end_src
+
 ** Regex builder
 Watch out for:
 - Combining diacritics
@@ -649,6 +676,7 @@ Watch out for:
                    hrm--sigma-hash))))
     (hrm--convert-string-by-hash string hash)))
 #+end_src
+
 ** Matcher
 :PROPERTIES:
 :ID:       TKR:a4a164ae-0cb8-4e14-b4d1-77d311df2b71
@@ -670,16 +698,19 @@ elsewhere."
             (push c list-2))))
       (append list-1 list-2))))
 #+end_src
+
 ** End matter
 #+begin_src emacs-lisp
   (provide 'hrm-match)
 
   ;; hrm-match.el ends here
 #+end_src
+
 * XML
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-xml.el
 :END:
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:7a98e386-09fc-4f8a-8cbe-7719ed02b2c0
@@ -700,7 +731,9 @@ elsewhere."
 
 (require 'hrm-conv)
 #+end_src
+
 ** Utility functions
+
 *** Is file an URL?
 :PROPERTIES:
 :ID:       TKR:7510ef46-dc7c-46df-91d1-3a78ecc55553
@@ -714,6 +747,7 @@ Specifically, this will return a parsed URL object from
     (when (cl-struct-slot-value 'url 'type url)
       url)))
 #+end_src
+
 *** Get the location of the next XML tag
 :PROPERTIES:
 :ID:       TKR:83796ca2-8149-4c43-8bdf-e89d91ab4a0c
@@ -729,6 +763,7 @@ Specifically, this will return a parsed URL object from
                          (point))))
         (list begin end)))))
 #+end_src
+
 *** Get a DOM from an XML file
 :PROPERTIES:
 :ID:       TKR:8a8cf7a7-ae76-46ec-9774-7930d5d0413a
@@ -759,6 +794,7 @@ FILE can be a local filename or an URL."
         (insert-file-contents file)
       (error "File does not exist: %s" file))))
 #+end_src
+
 *** Get file sizes
 :PROPERTIES:
 :ID:       TKR:04b61a99-7801-424c-a895-f6a71e9601ac
@@ -778,6 +814,7 @@ FILE can be a local filename or an URL."
              else
              collect (nnheader-file-size l))))
 #+end_src
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737
@@ -817,6 +854,7 @@ If you set this outside of Customize, be sure to evaluate
 
 (defvar hrm-use-fonts t)
 #+end_src
+
 ** Scan the LSJ - eieio-persistent style
 :PROPERTIES:
 :ID:       TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf
@@ -868,12 +906,14 @@ the object."
     (run-hook-with-args 'hrm-scan-entry-functions obj entry)
     obj))
 #+end_src
+
 ** Hook functions
 :PROPERTIES:
 :ID:       TKR:b8745465-2261-4607-aef9-af0a26ac6068
 :END:
 #+begin_src emacs-lisp
 #+end_src
+
 ** Return all tag types found in the LSJ (for reference; does not tangle)
 This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hrm-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
 #+begin_src emacs-lisp :tangle no :results replace list :load no
@@ -927,6 +967,7 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 - subc
 - cit
 - tr
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:327d7216-5a65-4f76-b9fd-c2a2742c0ada
@@ -936,11 +977,13 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 
 ;; hrm-xml.el ends here
 #+end_src
+
 * Completion
 :PROPERTIES:
 :ID:       TKR:49f3f037-acfd-414f-bc51-0a963faa0352
 :header-args:emacs-lisp: :tangle hrm-completion.el
 :END:
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:a33012b6-462c-44fd-b63f-65f07969227c
@@ -958,6 +1001,7 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 (require 'hrm-conv)
 (require 'hrm-match)
 #+end_src
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:7f0bab31-c461-44f0-898d-a80deeefd174
@@ -984,6 +1028,7 @@ command ‘counsel-greek-word’."
   :type 'boolean
   :group 'hermeneus)
 #+end_src
+
 ** Describe Greek word
 :PROPERTIES:
 :ID:       TKR:4864efa6-7652-4504-b780-f06f24283984
@@ -1005,6 +1050,7 @@ command ‘counsel-greek-word’."
   (unless (and hrm-use-ivy (fboundp 'ivy-read))
     (hrm--display-word-buffer word)))
 #+end_src
+
 ** Read word
 :PROPERTIES:
 :ID:       TKR:e488b337-55e7-4543-ae83-dfdedc268b8c
@@ -1034,6 +1080,7 @@ keyword arguments, which are passed to ‘ivy-read’."
         (kw-put :preselect it))
       (apply 'ivy-read prompt collection kwargs))))
 #+end_src
+
 ** Get Greek letter equivalents
 :PROPERTIES:
 :ID:       TKR:9804b1a7-dae0-4425-b671-2cdc3b604017
@@ -1050,6 +1097,7 @@ keyword arguments, which are passed to ‘ivy-read’."
                         (char-to-string l)
                       (format "[%c%c]" upr lwr)))))
 #+end_src
+
 ** Greek word at point
 :PROPERTIES:
 :ID:       TKR:3d941c67-20eb-4ad6-9653-bc545e109827
@@ -1081,6 +1129,7 @@ point is not adjacent to any characters in CHARS, return nil."
 
 (put (intern "greek-word") 'bounds-of-thing-at-point 'hrm-bounds-of-greek-word-at-point)
 #+end_src
+
 ** Look up Greek word noninteractively
 :PROPERTIES:
 :ID:       TKR:03304dde-533f-41bb-937b-99e3f31ef2f1
@@ -1109,6 +1158,7 @@ provide fuzzy-matching. Returns a word-object."
     (when matches
       (gethash (car matches) entries))))
 #+end_src
+
 ** Display word buffer
 :PROPERTIES:
 :ID:       TKR:bd16e1ce-fd2c-4c49-9a73-1d2038210079
@@ -1125,6 +1175,7 @@ provide fuzzy-matching. Returns a word-object."
     (hrm--switch-buffer
      (hrm--word-buffer word))))
 #+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:ca2a0940-f58e-4c15-9904-a0889f15eb36
@@ -1134,11 +1185,13 @@ provide fuzzy-matching. Returns a word-object."
 
 ;; hrm-completion.el ends here
 #+end_src
+
 * Storage
 :PROPERTIES:
 :ID:       TKR:517f86fc-db04-4e9d-8539-6111477bea54
 :header-args:emacs-lisp: :tangle hrm-storage.el
 :END:
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:76751cd5-569d-483b-a6e0-2050e9760bd7
@@ -1150,6 +1203,7 @@ provide fuzzy-matching. Returns a word-object."
 
 (require 'hrm-xml)
 #+end_src
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:cc2d39d7-8b0f-4f8c-adfb-0d5e8d715cfd
@@ -1177,6 +1231,7 @@ with the new ‘hrm-storage-dir’ value followed by
 
 (defvar hrm-storage-path (expand-file-name hrm-storage-file hrm-storage-dir))
 #+end_src
+
 ** Objects
 :PROPERTIES:
 :ID:       TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8
@@ -1207,6 +1262,7 @@ with the new ‘hrm-storage-dir’ value followed by
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.")
 #+end_src
+
 ** Methods
 :PROPERTIES:
 :ID:       TKR:155090bb-4267-4ec2-be28-e402000a0a0e
@@ -1238,6 +1294,7 @@ or otherwise can’t be used, move on."
 
 (defvar hrm-lsj (hrm-lexicon nil))
 #+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:bdfa271e-9060-4205-bd28-d168aef150d2
@@ -1247,10 +1304,12 @@ or otherwise can’t be used, move on."
 
 ;; hrm-storage.el ends here
 #+end_src
+
 * Tags
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-tags.el
 :END:
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:ef24da1a-db83-4fa2-8e50-04ed115b256a
@@ -1267,6 +1326,7 @@ or otherwise can’t be used, move on."
 (require 'hrm-conv)
 (require 'hrm-render)
 #+end_src
+
 ** Information on tags
 :PROPERTIES:
 :ID:       TKR:a677b07d-8387-4fff-82a4-3d0401409dee
@@ -1340,6 +1400,7 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
   - <tr> :: contains a translation of the headword or an example.
 - [[https://tei-c.org/Vault/P4/doc/html/ND.html][Names and Dates]]
   - <placeName> :: contains an absolute or relative place name.
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:a3a484db-d437-4e0f-8544-861f94061a64
@@ -1358,10 +1419,12 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
 (defvar hrm--prev-tag nil)
 (defvar hrm--prev-author nil)
 
+
 (defvar hrm-defined-tags nil)
 
 (defvar hrm--tag-keywords '(:attrs :face :render :doc-source))
 #+end_src
+
 *** Local variables
 :PROPERTIES:
 :ID:       TKR:036c52c4-109f-447d-a270-b93a2a48d8a7
@@ -1372,6 +1435,7 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
 
 (defvar-local hrm-doc-source nil)
 #+end_src
+
 ** Functions
 :PROPERTIES:
 :ID:       TKR:170c9de8-c302-4f27-b7c6-46e2dc15372a
@@ -1392,6 +1456,7 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
                 (or (eq cs 32) (eq cs ?\())))
     (shr-insert " ")))
 #+end_src
+
 ** Buttons
 :PROPERTIES:
 :ID:       TKR:9807ac9b-f45b-4b1a-abbb-149cc3593b84
@@ -1579,7 +1644,9 @@ citation will appear in the relevant docstrings."
            ;; my autistic sensibilities.)
            (add-to-list 'hrm-defined-tags ',tag t))))))
 #+end_src
+
 ** Tag definitions
+
 *** Elements Available in All TEI Documents
 :PROPERTIES:
 :ID:       TKR:0cbf3bb6-a38b-4eb4-829e-72e1c51f596e
@@ -1633,6 +1700,7 @@ citation will appear in the relevant docstrings."
   (define-hrm-tag author
     "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item.")
 #+end_src
+
 *** Print Dictionaries
 :PROPERTIES:
 :ID:       TKR:a805acf7-e2c2-4cfb-9911-2a8bb57eaccd
@@ -1727,6 +1795,7 @@ citation will appear in the relevant docstrings."
 (define-hrm-tag tr
   "contains a translation of the headword or an example.")
 #+end_src
+
 *** Linking, Segmentation, and Alignment
 :PROPERTIES:
 :ID:       TKR:16b30fea-d72a-46ed-8d7b-3ad080969fd1
@@ -1782,6 +1851,7 @@ none	no further evaluation of targets is carried out beyond that needed to find 
 Default: #IMPLIED
 Note: If no value is given, the application program is responsible for deciding (possibly on the basis of user input) how far to trace a chain of pointers.")
 #+end_src
+
 *** Names and Dates
 :PROPERTIES:
 :ID:       TKR:87ee579a-cc46-4178-ab45-82a5c9cf108d
@@ -1790,6 +1860,7 @@ Note: If no value is given, the application program is responsible for deciding 
 (define-hrm-tag placeName
   "contains an absolute or relative place name.")
 #+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:e6beb538-1f11-4102-b744-0f9a6c7a9980
@@ -1799,12 +1870,14 @@ Note: If no value is given, the application program is responsible for deciding 
 
 ;; hrm-tags.el ends here
 #+end_src
+
 * Renderer
 :PROPERTIES:
 :ID:       TKR:255fa4f5-47e9-4b9c-9cca-2ad83135842d
 :header-args:emacs-lisp: :tangle hrm-render.el
 :END:
 Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ as though they were HTML documents.
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:aad6b242-9100-4505-9739-dbcfc187c036
@@ -1827,6 +1900,7 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
 (require 'hrm-conv)
 (require 'hrm-xml)
 #+end_src
+
 ** Variables
 :PROPERTIES:
 :ID:       TKR:6cfdaa3c-43a4-4acc-ac6f-ec4c0f33091c
@@ -1878,6 +1952,7 @@ Find out more about Tidy at http://www.html-tidy.org"
   :tag "Hermeneus — Tidy config file"
   :group 'hermeneus)
 #+end_src
+
 ** Functions
 :PROPERTIES:
 :ID:       TKR:40231884-7d27-4fa7-a8a5-52bbab041a20
@@ -1901,6 +1976,7 @@ cases it will return nil."
     (prog1 (shr-pixel-column)
       (goto-char pos))))
 #+end_src
+
 ** Widgets
 :PROPERTIES:
 :ID:       TKR:8fcb947d-de04-41e0-9bd4-c9861511da2b
@@ -2004,6 +2080,7 @@ Well excu-u-u-u-use me, ‘princ’!"
         (insert object))
       object)))
 #+end_src
+
 ** Help buffers
 :PROPERTIES:
 :ID:       TKR:fc1834d0-b144-4892-88ba-59ce73dd836d
@@ -2055,6 +2132,7 @@ Well excu-u-u-u-use me, ‘princ’!"
                              :hrm-value ,hrm--word-dom))))
       (goto-char pos))))
 #+end_src
+
 *** Switch buffer
 :PROPERTIES:
 :ID:       TKR:2c8fd835-90e1-4e54-a923-2da89407f579
@@ -2072,6 +2150,7 @@ Well excu-u-u-u-use me, ‘princ’!"
       ;; Otherwise, use ‘pop-to-buffer’.
       (pop-to-buffer buffer))))
 #+end_src
+
 *** Get entry source
 :PROPERTIES:
 :ID:       TKR:2e7d2ea0-72e2-4903-80ac-2ac3f2980f71
@@ -2111,6 +2190,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 ;;             (font-lock-fontify-buffer)))
 ;;         (buffer-string)))))
 #+end_src
+
 *** Tidying
 :PROPERTIES:
 :ID:       TKR:4d3df8d9-777d-4421-ad3a-a10912a34890
@@ -2136,6 +2216,7 @@ Well excu-u-u-u-use me, ‘princ’!"
         (forward-line))
       (funcall mode))))
 #+end_src
+
 *** TODO Clear out old Hermeneus buffers
 #+begin_src emacs-lisp
 #+end_src
@@ -2240,6 +2321,7 @@ or
 
 ;; hrm-render.el ends here
 #+end_src
+
 * End matter
 :PROPERTIES:
 :ID:       TKR:ea04e9be-aeef-48ed-88eb-f885d3304129
