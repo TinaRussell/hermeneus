@@ -181,7 +181,7 @@ Well excu-u-u-u-use me, ‘princ’!"
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
     (hermeneus-mode)
     (setq hrm--word-obj obj
-          hrm--word-dom (apply 'hrm--get-dom-from-file (oref obj loc)))
+          hrm--word-dom (hrm--get-dom-from-word obj))
     (hrm--dom-convert-betacode hrm--word-dom)
     (hrm-buffer-update)
     (current-buffer)))

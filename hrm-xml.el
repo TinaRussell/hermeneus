@@ -25,7 +25,7 @@ Specifically, this will return a parsed URL object from
   "Return start and end positions of the next instance of XML tag TAG
 (defaults to “entryFree”). Move point to the end position."
   (save-match-data
-    (when (search-forward (concat "<" tag) nil t)
+    (when (re-search-forward (concat "<" tag (rx word-end)) nil t)
       (let* ((begin (goto-char (match-beginning 0)))
              (end (progn (search-forward (concat "</" tag ">") nil t)
                          (point))))

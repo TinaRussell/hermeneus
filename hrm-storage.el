@@ -51,6 +51,10 @@ with the new ‘hrm-storage-dir’ value followed by
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.")
 
+(defun hrm--get-dom-from-word (word)
+  "Return the DOM from the XML LSJ definition of word-object WORD."
+  (apply #'hrm--get-dom-from-file (oref word loc)))
+
 (cl-defmethod make-instance ((cls (subclass hrm-lexicon)) &rest slots)
   "When making a ‘hrm-lexicon’ object, try to read it from a file.
 (The file’s path can be passed as a “:file” keyword argument, but

@@ -758,7 +758,7 @@ Specifically, this will return a parsed URL object from
   "Return start and end positions of the next instance of XML tag TAG
 (defaults to “entryFree”). Move point to the end position."
   (save-match-data
-    (when (search-forward (concat "<" tag) nil t)
+    (when (re-search-forward (concat "<" tag (rx word-end)) nil t)
       (let* ((begin (goto-char (match-beginning 0)))
              (end (progn (search-forward (concat "</" tag ">") nil t)
                          (point))))
@@ -1263,7 +1263,13 @@ with the new ‘hrm-storage-dir’ value followed by
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.")
 #+end_src
+** Functions
 
+#+begin_src emacs-lisp
+(defun hrm--get-dom-from-word (word)
+  "Return the DOM from the XML LSJ definition of word-object WORD."
+  (apply #'hrm--get-dom-from-file (oref word loc)))
+#+end_src
 ** Methods
 :PROPERTIES:
 :ID:       TKR:155090bb-4267-4ec2-be28-e402000a0a0e
@@ -1640,6 +1646,7 @@ with expansions written as ‘help-echo’ properties."
   'action #'hrm-greek-word-button-action
   'target nil)
 #+end_src
+
 ** Macro for defining tags
 :PROPERTIES:
 :ID:       TKR:c820e96c-8a31-4385-afb0-459476257285
