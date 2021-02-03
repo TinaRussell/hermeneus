@@ -104,6 +104,7 @@ from the XML element itself."
 (require 'hrm-xml)
 (require 'hrm-completion)
 (require 'hrm-storage)
+(require 'hrm-cts)
 (require 'hrm-tags)
 (require 'hrm-render)
 

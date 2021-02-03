@@ -1306,6 +1306,158 @@ or otherwise can’t be used, move on."
 ;; hrm-storage.el ends here
 #+end_src
 
+* Canonical Text Services
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle hrm-cts.el
+:END:
+Most of these code blocks do not tangle, because at present most of this is stuff I used when manually generating ~hrm-abbr.el~ (which contains variables used when expanding abbreviations during the rendering of a lexicon entry). But, given that every work referenced in the LSJ has a Canonical Text Services URN, and the Scaife CTS API is emerging as the primary way to interact programmatically with the Perseus Project catalog of ancient works, I decided Hermeneus needed its own section for dealing with URNs, CTS, and whatnot.
+
+** Variables
+#+begin_src emacs-lisp
+(defvar hrm-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
+  "The URL for the Perseus Project’s Scaife CTS API.")
+#+end_src
+** Functions
+*** Convert URNs
+#+begin_src emacs-lisp
+(defun hrm-urn-to-base (urn)
+  "Return URN with the passage component, if present, removed.
+E.g., “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195” will be
+returned as “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1”.
+URN should be in the Canonical Text Services URN format. See
+https://github.com/cite-architecture/ctsurn_spec/blob/master/md/specification.md"
+  (save-match-data
+    (if (and urn
+             (string-match
+              (rx (= 4 (one-or-more
+                        (not (any control ":" "\\" "\"" "&" "<" ">" "^" "`" "|" "{" "}" "~")))
+                     ":"))
+              urn))
+        (substring urn 0 (1- (match-end 0)))
+      urn)))
+
+(defun hrm-urn-to-work (urn)
+  "Return URN shortened to the work part of the work component.
+E.g., “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195” will be
+returned as “urn:cts:greekLit:tlg0020.tlg001”.
+URN should be in the Canonical Text Services URN format. See
+https://github.com/cite-architecture/ctsurn_spec/blob/master/md/specification.md"
+  (setq urn (hrm-urn-to-base urn))
+  (save-match-data
+    (if (and urn (string-match
+                  (rx (= 3 (one-or-more
+                            (not (any control ":" "\\" "\"" "&" "<" ">" "^" "`" "|" "{" "}" "~")))
+                         ":")
+                      (= 2 (one-or-more
+                            (not (any control "." "\\" "\"" "&" "<" ">" "^" "`" "|" "{" "}" "~")))
+                         "."))
+                  urn))
+        (substring urn 0 (1- (match-end 0)))
+      urn)))
+
+(defun hrm-urn-to-url (urn &optional atom)
+  "Return the canonical Perseus Catalog URL for URN.
+If ATOM is non-nil, return the URL for the Atom version."
+  (concat "http://data.perseus.org/catalog/" (hrm-urn-to-base urn)
+          (when atom "/atom")))
+
+#+end_src
+*** Return all URNs in LSJ
+#+begin_src emacs-lisp :tangle no :load no
+(cl-defun hrm--get-all-urns (&optional (files hrm-lsj-files))
+  (cl-loop with urns
+           for file in files
+           do (with-temp-buffer
+                (insert-file-contents file)
+                (goto-char 1)
+                (save-match-data 
+                  (while (re-search-forward
+                          (rx "<bibl" word-end
+                              (* (not ">"))
+                              "n=\""
+                              (group "urn:cts:"
+                                     (* (not (any ":" ">")))
+                                     ":"
+                                     (* (not (any ":" ">" ".")))
+                                     "."
+                                     (* (not (any ":" ">" ".")))))
+                          nil t)
+                    (cl-pushnew (match-string 1) urns :test #'equal))))
+           finally return (nreverse urns)))
+
+(defvar hrm--all-urns (hrm--get-all-urns))
+
+(cl-defun hrm--insert-all-urns (&optional (urns hrm--all-urns))
+  (interactive)
+  (cl-loop for urn in urns
+           with add-newline-p
+           initially do (insert "'(")
+           do (insert "\"" urn "\"")
+              (if add-newline-p
+                  (progn (setq add-newline-p nil) (insert 10))
+                (setq add-newline-p t)
+                (insert " "))
+           finally do (backward-delete-char 1)
+              (insert ")")
+              (save-buffer)))
+#+end_src
+*** Return title from URN
+#+begin_src emacs-lisp :tangle no :results no
+(require 'request)
+(eval-when-compile (require 'subr-x))
+
+(defun hrm--get-title-from-urn (urn)
+  (let ((response
+         (request-response-data
+          (request hrm-scaife-api-url :params `((request . "GetLabel")
+                                                (urn . ,urn))
+                   :parser #'xml-parse-region
+                   :sync t
+                   :error #'ignore
+                   :timeout 3))))
+    (when response
+      (thread-first response
+        (dom-child-by-tag 'reply)
+        (dom-child-by-tag 'label)
+        (dom-child-by-tag 'title)
+        (dom-text)))))
+
+(cl-defun hrm--make-title-hash (&optional (urns hrm--all-urns))
+  (cl-loop for urn in urns
+           for title = (hrm--get-title-from-urn urn)
+           with hash = (make-hash-table :test #'equal)
+           if (not (string-blank-p title))
+           do (puthash urn title hash)
+           finally return hash))
+
+(cl-defun hrm--insert-title-hash (&optional (urns hrm--all-urns)
+                                            &aux (size 0) size-pos)
+  (interactive)
+  (insert "(defvar hrm-title-hash\n"
+          "#s(hash-table size ")
+  (setq size-pos (point))
+  (insert " test equal rehash-size 1.5 rehash-threshold 0.8125 data\n(")
+  (cl-loop for urn in urns
+           for title = (hrm--get-title-from-urn urn)
+           if (and title (not (string-blank-p title)))
+           do (insert (format "%S %S\n" urn title))
+              (setq size (1+ size)))
+  (save-excursion
+    (goto-char size-pos)
+    (insert (format "%d" size)))
+  (insert ")))"))
+
+
+;; (hrm--get-title-from-urn (cadr hrm--all-urns))
+
+;; (defvar hrm-title-hash (hrm--make-title-hash))
+#+end_src
+** End matter
+#+begin_src emacs-lisp
+  (provide 'hrm-cts)
+
+  ;; hrm-cts.el ends here
+#+end_src
 * Tags
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-tags.el
@@ -1421,6 +1573,9 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
 (defvar hrm--prev-tag nil)
 (defvar hrm--prev-author nil)
 
+(defvar hrm--bibl-urn nil
+  "The CTS URN cited by the current bibl tag.
+Should be nil if Hermeneus is not currently rendering a bibl tag.")
 
 (defvar hrm-defined-tags nil)
 
@@ -1700,7 +1855,10 @@ citation will appear in the relevant docstrings."
   ed "(edition) indicates the edition or version in which the page break is located at this point.")
 
 (define-hrm-tag bibl
-  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
+  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged."
+  :render
+  (let ((hrm--bibl-urn (hrm-urn-to-work (dom-attr dom 'n))))
+    (hrm--render-generic dom)))
 
 (define-hrm-tag biblScope
   "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
@@ -1711,7 +1869,28 @@ citation will appear in the relevant docstrings."
   "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
   :attrs
   level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
-  type "(type of title) classifies the title according to some convenient typology.")
+  type "(type of title) classifies the title according to some convenient typology."
+  :render
+  ;; a lot of this is copied from ‘author’ below; if anything else
+  ;; copies this, refactoring may be in order
+  (let* ((new-dom (copy-seq dom))
+         (text (car (nthcdr (1- (safe-length new-dom)) new-dom)))
+         (expansion (and (stringp text)
+                         (gethash hrm--bibl-urn hrm-title-hash))))
+
+    (message "URN: %s text: %s title: %s" hrm--bibl-urn text expansion)
+
+    (when (and expansion hrm-expand-abbreviations)
+      (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
+
+    (let ((start (point)))
+      (hrm--render-generic new-dom)
+      (when expansion
+        (add-text-properties start (point)
+                             (list 'help-echo
+                                   (if hrm-expand-abbreviations
+                                       text
+                                     expansion)))))))
 
 (define-hrm-tag author
   "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item."
@@ -1721,11 +1900,11 @@ citation will appear in the relevant docstrings."
          (expansion (and (stringp text)
                          (gethash text hrm-author-abbr-hash))))
 
-    (when hrm-expand-abbreviations
+    (when (and expansion hrm-expand-abbreviations)
       (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
 
     (let ((start (point)))
-      (hrm--render-generic new-dom 'author 'hrm-face-author)
+      (hrm--render-generic new-dom)
       (when expansion
         (add-text-properties start (point)
                              (list 'help-echo
@@ -2123,7 +2302,7 @@ Well excu-u-u-u-use me, ‘princ’!"
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
     (hermeneus-mode)
     (setq hrm--word-obj obj
-          hrm--word-dom (apply 'hrm--get-dom-from-file (oref obj loc)))
+          hrm--word-dom (hrm--get-dom-from-word obj))
     (hrm--dom-convert-betacode hrm--word-dom)
     (hrm-buffer-update)
     (current-buffer)))
@@ -2274,6 +2453,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 (require 'hrm-xml)
 (require 'hrm-completion)
 (require 'hrm-storage)
+(require 'hrm-cts)
 (require 'hrm-tags)
 (require 'hrm-render)
 

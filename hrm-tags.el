@@ -23,6 +23,10 @@
 (defvar hrm--prev-tag nil)
 (defvar hrm--prev-author nil)
 
+(defvar hrm--bibl-urn nil
+  "The CTS URN cited by the current bibl tag.
+Should be nil if Hermeneus is not currently rendering a bibl tag.")
+
 (defvar hrm-defined-tags nil)
 
 (defvar hrm--tag-keywords '(:attrs :face :render :doc-source))
@@ -268,7 +272,10 @@ citation will appear in the relevant docstrings."
   ed "(edition) indicates the edition or version in which the page break is located at this point.")
 
 (define-hrm-tag bibl
-  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged.")
+  "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged."
+  :render
+  (let ((hrm--bibl-urn (hrm-urn-to-work (dom-attr dom 'n))))
+    (hrm--render-generic dom)))
 
 (define-hrm-tag biblScope
   "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
@@ -279,7 +286,28 @@ citation will appear in the relevant docstrings."
   "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
   :attrs
   level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
-  type "(type of title) classifies the title according to some convenient typology.")
+  type "(type of title) classifies the title according to some convenient typology."
+  :render
+  ;; a lot of this is copied from ‘author’ below; if anything else
+  ;; copies this, refactoring may be in order
+  (let* ((new-dom (copy-seq dom))
+         (text (car (nthcdr (1- (safe-length new-dom)) new-dom)))
+         (expansion (and (stringp text)
+                         (gethash hrm--bibl-urn hrm-title-hash))))
+
+    (message "URN: %s text: %s title: %s" hrm--bibl-urn text expansion)
+
+    (when (and expansion hrm-expand-abbreviations)
+      (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
+
+    (let ((start (point)))
+      (hrm--render-generic new-dom)
+      (when expansion
+        (add-text-properties start (point)
+                             (list 'help-echo
+                                   (if hrm-expand-abbreviations
+                                       text
+                                     expansion)))))))
 
 (define-hrm-tag author
   "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item."
@@ -289,11 +317,11 @@ citation will appear in the relevant docstrings."
          (expansion (and (stringp text)
                          (gethash text hrm-author-abbr-hash))))
 
-    (when hrm-expand-abbreviations
+    (when (and expansion hrm-expand-abbreviations)
       (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
 
     (let ((start (point)))
-      (hrm--render-generic new-dom 'author 'hrm-face-author)
+      (hrm--render-generic new-dom)
       (when expansion
         (add-text-properties start (point)
                              (list 'help-echo
