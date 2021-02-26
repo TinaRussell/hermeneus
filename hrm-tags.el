@@ -295,8 +295,6 @@ citation will appear in the relevant docstrings."
          (expansion (and (stringp text)
                          (gethash hrm--bibl-urn hrm-title-hash))))
 
-    (message "URN: %s text: %s title: %s" hrm--bibl-urn text expansion)
-
     (when (and expansion hrm-expand-abbreviations)
       (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
 
