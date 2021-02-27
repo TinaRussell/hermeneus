@@ -2,8 +2,6 @@
 (require 'eieio-base)
 (require 'cl-generic)
 
-(require 'hrm-xml)
-
 (defvar hrm-storage-file (concat "lsj-cache" (when (executable-find "gzip") ".gz")))
 
 (defcustom hrm-storage-dir (expand-file-name "var/hermeneus" user-emacs-directory)
@@ -50,10 +48,6 @@ with the new ‘hrm-storage-dir’ value followed by
    (file :initform (symbol-value 'hrm-storage-path))
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.")
-
-(defun hrm--get-dom-from-word (word)
-  "Return the DOM from the XML LSJ definition of word-object WORD."
-  (apply #'hrm--get-dom-from-file (oref word loc)))
 
 (cl-defmethod make-instance ((cls (subclass hrm-lexicon)) &rest slots)
   "When making a ‘hrm-lexicon’ object, try to read it from a file.

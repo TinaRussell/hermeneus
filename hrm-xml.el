@@ -56,6 +56,10 @@ FILE can be a local filename or an URL."
         (insert-file-contents file)
       (error "File does not exist: %s" file))))
 
+(defun hrm--get-dom-from-word (word)
+  "Return the DOM from the XML LSJ definition of word-object WORD."
+  (apply #'hrm--get-dom-from-file (oref word loc)))
+
 (defun hrm--get-file-sizes (list)
   (let ((sizes '(42923474  5014862  4182729 14588543 40082401
                              15614  1233434  2872155  4731605  4600309
@@ -106,13 +110,15 @@ If you set this outside of Customize, be sure to evaluate
 
 ;;;###autoload
 (defun hrm-scan-lsj ()
+  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
   (interactive)
   (oset hrm-lsj entries (hrm-scan-entries))
   (eieio-persistent-save hrm-lsj))
 
 (defun hrm-scan-entries ()
   "Scan over every lexicon entry in the LSJ, using ‘hrm-scan-entry’.
-Return a hash table."
+Return a hash table mapping each headword (expressed as a string)
+to its corresponding word object."
   (interactive)
   (let* ((hash (make-hash-table :test 'equal :size 116493))
          (sizes (hrm--get-file-sizes hrm-lsj-files))
