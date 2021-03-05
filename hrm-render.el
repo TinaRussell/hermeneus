@@ -1,3 +1,5 @@
+;;; hrm-render.el --- -*- lexical-binding: t -*-
+
 (require 'gv)
 (require 'widget)
 (require 'tree-widget)
@@ -293,4 +295,4 @@ Well excu-u-u-u-use me, ‘princ’!"
 
 (provide 'hrm-render)
 
-;; hrm-render.el ends here
+;;; hrm-render.el ends here

@@ -1,3 +1,5 @@
+;;; hrm-completion.el --- -*- lexical-binding: t -*-
+
 (require 'cl-extra)
 (require 'custom)
 (require 'eieio)
@@ -144,4 +146,4 @@ provide fuzzy-matching. Returns a word-object."
 
 (provide 'hrm-completion)
 
-;; hrm-completion.el ends here
+;;; hrm-completion.el ends here

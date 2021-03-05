@@ -6,6 +6,12 @@
 #+PROPERTY: header-args:emacs-lisp :lexical t
 
 * Early definitions
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hermeneus.el --- -*- lexical-binding: t -*-
+#+end_src
+
 ** Dependencies
 :PROPERTIES:
 :ID:       TKR:b4c7fe07-d157-4832-94c7-2be9bf65d6d9
@@ -193,6 +199,11 @@ from the XML element itself."
 This section exists for converting Latin letters representing Greek letters (i.e. “Beta code”) into proper, godly Greek Unicode characters.
 
 Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but, I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hrm-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom setter function, but well worth it for increasing the international utility of Hermeneus.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-conv.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -532,7 +543,7 @@ which case sigma normalization is unnecessary."
 #+begin_src emacs-lisp
 (provide 'hrm-conv)
 
-  ;;; hrm-conv.el ends here
+;;; hrm-conv.el ends here
 #+end_src
 
 * Matching
@@ -540,6 +551,11 @@ which case sigma normalization is unnecessary."
 :header-args:emacs-lisp: :tangle hrm-match.el
 :END:
 Here we have everything to do with matching one string to another. This is mainly used for completion, so performance is critical.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-match.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 #+begin_src emacs-lisp
@@ -704,9 +720,9 @@ elsewhere."
 
 ** End matter
 #+begin_src emacs-lisp
-  (provide 'hrm-match)
+(provide 'hrm-match)
 
-  ;; hrm-match.el ends here
+;;; hrm-match.el ends here
 #+end_src
 
 * Storage
@@ -715,6 +731,11 @@ elsewhere."
 :header-args:emacs-lisp: :tangle hrm-storage.el
 :END:
 This section contains the ~hrm-word~ and ~hrm-lexicon~ objects, used for storing the results of ~hrm-scan-lsj~ (see [[XML]]). ~hrm-lexicon~ uses ~eieio-persistent~ to store the data long-term.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-storage.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -824,7 +845,7 @@ or otherwise can’t be used, move on."
 #+begin_src emacs-lisp
 (provide 'hrm-storage)
 
-;; hrm-storage.el ends here
+;;; hrm-storage.el ends here
 #+end_src
 
 * XML
@@ -836,6 +857,11 @@ This section has everything to do with parsing XML, specifically, [[https://gith
 The main function here is ~hrm-scan-lsj~ (in [[Scan the LSJ]]), which parses the entire LSJ, creates a word object (see [[id:TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8][Objects]] over in [[Storage]]) for each entry, and stores the word objects in the lexicon object ~hrm-lsj~. (Within the lexicon object, the words are stored in a hash table for speedy access.)
 
 If you’d like, you can write a function (whose arguments are a word-object and its XML entry’s DOM) and add it to the hook ~hrm-scan-entry-functions~ (see [[id:TKR:d47a2a83-a109-4534-927f-b93831bb9cbe][Hooks]] in [[Early definitions]]), and the function will be run with every word scanned. You can use this, for instance, to modify the object based on information found in the entry.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-xml.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -856,7 +882,6 @@ If you’d like, you can write a function (whose arguments are a word-object and
                    (require 'cl-macs))
 
 (require 'hrm-conv)
-(require 'hrm-xml)
 #+end_src
 
 ** Utility functions
@@ -1113,7 +1138,7 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 #+begin_src emacs-lisp
 (provide 'hrm-xml)
 
-;; hrm-xml.el ends here
+;;; hrm-xml.el ends here
 #+end_src
 
 * Completion
@@ -1122,6 +1147,11 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 :header-args:emacs-lisp: :tangle hrm-completion.el
 :END:
 This section handles completion (via ~completing-read~ or Ivy) and contains functions for looking up words.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-completion.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -1322,7 +1352,7 @@ provide fuzzy-matching. Returns a word-object."
 #+begin_src emacs-lisp
 (provide 'hrm-completion)
 
-;; hrm-completion.el ends here
+;;; hrm-completion.el ends here
 #+end_src
 
 * Canonical Text Services
@@ -1331,6 +1361,10 @@ provide fuzzy-matching. Returns a word-object."
 :END:
 Most of these code blocks do not tangle, because at present most of this section is stuff I used when manually generating ~hrm-abbr.el~ (which contains variables used when expanding abbreviations during the rendering of a lexicon entry). But, given that every work referenced in the LSJ has a Canonical Text Services URN, and the Scaife CTS API is emerging as the primary way to interact programmatically with the Perseus Project catalog of ancient works, I decided Hermeneus needed its own section for dealing with URNs, CTS, and whatnot.
 
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-cts.el --- -*- lexical-binding: t -*-
+#+end_src
 ** Variables
 #+begin_src emacs-lisp
 (defvar hrm-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
@@ -1473,15 +1507,20 @@ If ATOM is non-nil, return the URL for the Atom version."
 #+end_src
 ** End matter
 #+begin_src emacs-lisp
-  (provide 'hrm-cts)
+(provide 'hrm-cts)
 
-  ;; hrm-cts.el ends here
+;;; hrm-cts.el ends here
 #+end_src
 * Tags
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-tags.el
 :END:
 This handles all the many types of tags found in the XML version of the LSJ, how they are interpreted, rendered, etc. See ~define-hrm-tag~ in [[Macro for defining tags]] for information on how to make your own tag definitions.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-tags.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -2099,7 +2138,7 @@ Note: If no value is given, the application program is responsible for deciding 
 #+begin_src emacs-lisp
 (provide 'hrm-tags)
 
-;; hrm-tags.el ends here
+;;; hrm-tags.el ends here
 #+end_src
 
 * Renderer
@@ -2108,6 +2147,11 @@ Note: If no value is given, the application program is responsible for deciding 
 :header-args:emacs-lisp: :tangle hrm-render.el
 :END:
 Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ as though they were HTML documents.
+
+** Front matter
+#+begin_src emacs-lisp
+;;; hrm-render.el --- -*- lexical-binding: t -*-
+#+end_src
 
 ** Dependencies
 :PROPERTIES:
@@ -2459,7 +2503,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+begin_src emacs-lisp
 (provide 'hrm-render)
 
-;; hrm-render.el ends here
+;;; hrm-render.el ends here
 #+end_src
 
 * End matter
@@ -2478,5 +2522,5 @@ Well excu-u-u-u-use me, ‘princ’!"
 
 (provide 'hermeneus)
 
-;; hermeneus.el ends here
+;;; hermeneus.el ends here
 #+end_src

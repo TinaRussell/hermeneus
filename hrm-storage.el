@@ -1,3 +1,5 @@
+;;; hrm-storage.el --- -*- lexical-binding: t -*-
+
 (require 'eieio)
 (require 'eieio-base)
 (require 'cl-generic)
@@ -77,4 +79,4 @@ or otherwise can’t be used, move on."
 
 (provide 'hrm-storage)
 
-;; hrm-storage.el ends here
+;;; hrm-storage.el ends here

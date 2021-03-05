@@ -1,3 +1,5 @@
+;;; hrm-conv.el --- -*- lexical-binding: t -*-
+
 (require 'cl-lib)
 (require 'ucs-normalize)
 
@@ -297,4 +299,4 @@ which case sigma normalization is unnecessary."
 
 (provide 'hrm-conv)
 
-  ;;; hrm-conv.el ends here
+;;; hrm-conv.el ends here

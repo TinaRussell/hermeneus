@@ -1,3 +1,5 @@
+;;; hrm-match.el --- -*- lexical-binding: t -*-
+
 (require 'ucs-normalize)
 
 (eval-when-compile (require 'rx)
@@ -127,6 +129,6 @@ elsewhere."
             (push c list-2))))
       (append list-1 list-2))))
 
-  (provide 'hrm-match)
+(provide 'hrm-match)
 
-  ;; hrm-match.el ends here
+;;; hrm-match.el ends here

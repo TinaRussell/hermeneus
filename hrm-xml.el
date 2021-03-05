@@ -1,3 +1,5 @@
+;;; hrm-xml.el --- -*- lexical-binding: t -*-
+
 (require 'url-handlers)
 (require 'url)
 (require 'url-parse)
@@ -160,4 +162,4 @@ the object."
 
 (provide 'hrm-xml)
 
-;; hrm-xml.el ends here
+;;; hrm-xml.el ends here

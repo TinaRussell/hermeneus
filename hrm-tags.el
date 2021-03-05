@@ -1,3 +1,5 @@
+;;; hrm-tags.el --- -*- lexical-binding: t -*-
+
 (require 'gv)
 (require 'seq)
 (require 'shr)
@@ -478,4 +480,4 @@ Note: If no value is given, the application program is responsible for deciding 
 
 (provide 'hrm-tags)
 
-;; hrm-tags.el ends here
+;;; hrm-tags.el ends here

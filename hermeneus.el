@@ -1,3 +1,5 @@
+;;; hermeneus.el --- -*- lexical-binding: t -*-
+
 (require 'eieio-core)
 (require 'cl-preloaded)
 (require 'eieio)
@@ -110,4 +112,4 @@ from the XML element itself."
 
 (provide 'hermeneus)
 
-;; hermeneus.el ends here
+;;; hermeneus.el ends here
