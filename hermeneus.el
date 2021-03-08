@@ -1,4 +1,34 @@
-;;; hermeneus.el --- -*- lexical-binding: t -*-
+;;; hermeneus.el --- Ancient Greek word lookup tool -*- lexical-binding: t -*-
+
+;; Author: Tina Russell
+;; Maintainer: Tina Russell
+;; Version: 0.1
+;; Package-Requires: ((emacs "25.1") (anaphora "1.0.4"))
+;; Homepage: https://github.com/TinaRussell/hermeneus
+;; Keywords: greek language reference
+
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
+
+
+;;; Commentary:
+
+;; see readme.org
+
+;;; Code:
 
 (require 'eieio-core)
 (require 'cl-preloaded)
@@ -82,7 +112,8 @@ at each end removed."
 (defgroup hermeneus nil
   "Options for Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus"
-  :group 'applications)
+  :group 'applications
+  :prefix "hrm-")
 
 (defgroup hrm-faces nil
   "Faces used in Hermeneus, the Ancient Greek word utility."
