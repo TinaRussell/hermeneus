@@ -32,5 +32,7 @@ jobs:
     - uses: conao3/setup-cask@master
       with:
         version: 'snapshot'
+    - name: Install dependencies
+      run: cask install
     - name: Byte-compile
       run: emacs -Q -batch -L . -f batch-byte-compile *.el
