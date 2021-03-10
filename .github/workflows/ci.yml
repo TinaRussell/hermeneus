@@ -35,4 +35,4 @@ jobs:
     - name: Install dependencies
       run: cask install
     - name: Byte-compile
-      run: emacs -Q --eval "(progn (require 'package) (package-initialize))" -batch -L . -f batch-byte-compile *.el
+      run: cask build
