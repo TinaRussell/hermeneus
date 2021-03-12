@@ -8,6 +8,13 @@
   (require 'cl-macs)
   (require 'subr-x))
 
+(defvar hrm--greek-letters)
+(defvar hrm--greek-punctuation)
+(defvar hrm--greek-diacritics)
+(defvar hrm--all-sigmas)
+(defvar hrm-beta-input-type)
+(defvar hrm--beta-letters-user)
+
 (defun hrm--regexp-bracket-quote (string)
   "Return STRING, regexp-quoted and, if necessary, in square brackets.
 This exists for when a regexp being generated may need to match

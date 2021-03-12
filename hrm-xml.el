@@ -15,6 +15,8 @@
 
 (require 'hrm-conv)
 
+(defvar hrm--greek-punctuation)
+
 (defun hrm--url-p (path)
   "Return non-nil if PATH is a valid URL.
 Specifically, this will return a parsed URL object from

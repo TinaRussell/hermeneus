@@ -17,6 +17,8 @@
 (require 'hrm-conv)
 (require 'hrm-xml)
 
+(defvar hrm--greek-punctuation)
+
 (defcustom hrm-show-entry-source nil
   "Whether to show the document source after a word definition.
 This affects the word defintiions displayed by ‘describe-greek-word’

@@ -12,6 +12,8 @@
 (require 'hrm-render)
 (require 'hrm-abbr) ; standalone file
 
+(defvar hrm--greek-punctuation)
+
 (defface hrm-default-face '((t nil))
   "Default face for Hermeneus text display."
   :tag "Hermeneus — default face"

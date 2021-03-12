@@ -8,6 +8,8 @@
 
 (require 'hrm-conv)
 
+(defvar hrm--greek-punctuation)
+
 (hrm--make-regexp-versions defconst
   hrm--lowercase-sigmas hrm--uppercase-sigmas hrm--all-sigmas)
 

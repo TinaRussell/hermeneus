@@ -12,6 +12,8 @@
 (require 'hrm-conv)
 (require 'hrm-match)
 
+(defvar hrm--greek-punctuation)
+
 (defcustom hrm-use-ivy (let ((libs '(ivy counsel)))
                          (or (cl-every 'featurep libs)
                              (cl-every 'package-installed-p libs)))
