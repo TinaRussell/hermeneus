@@ -725,9 +725,12 @@ Here we have everything to do with matching one string to another. This is mainl
 
 ** Regex builder
 Watch out for:
+
 - Combining diacritics
 - Sigmas
 - Iotas, iota-subscript, and vowels that can potentially be followed by iota-subscript
+
+  Of these, “vowels that can potentially be followed by iota-subscript” remains unimplemented. I’m thinking of doing it this way: if accents are folded, check to see if there’s an alpha, eta, or omega followed by an iota anywhere in the word, and if so, use a text property to mark each such iota as “possibly an iota-subscript”; then, as the regexp is being built, mark the iota as being possibly not present in the matched string at all (the existing regexp-building functionality takes care of equivocating α with ᾳ, η with ῃ, and ω with ῳ).
 #+begin_src emacs-lisp
 (defun hrm--re-builder (string)
   ;; Decompose the string into letters and combining diacriticals, and
