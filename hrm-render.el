@@ -19,6 +19,19 @@
 
 (defvar hrm--greek-punctuation)
 
+(defcustom hrm-max-buffers 8
+  "The maximum number of open Hermeneus word buffers.
+If there are this many buffers open, then opening a new Hermeneus
+word buffer will close the least recently visited one. Nil means
+no Hermeneus buffers will be closed upon opening a new one.
+
+(Note that quitting such a buffer with ‘quit-window’, ordinarily
+set to the letter q, will send it to the back of the line; i.e.,
+it will be first to be closed when opening a new word buffer.)"
+  :type '(choice (const nil) integer)
+  :tag "Hermeneus — maximum number of buffers"
+  :group 'hermeneus)
+
 (defcustom hrm-show-entry-source nil
   "Whether to show the document source after a word definition.
 This affects the word defintiions displayed by ‘describe-greek-word’
@@ -182,6 +195,7 @@ Well excu-u-u-u-use me, ‘princ’!"
       object)))
 
 (defun hrm--word-buffer (obj)
+  "Get or create a Hermeneus buffer for word-object OBJ and return it."
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
     (hermeneus-mode)
     (setq hrm--word-obj obj
@@ -293,7 +307,20 @@ Well excu-u-u-u-use me, ‘princ’!"
         (forward-line))
       (funcall mode))))
 
-
+(defun hrm--clear-old-buffers ()
+  "Clear out old Hermeneus buffers to satisfy ‘hrm-max-buffers’."
+  ;; with acknowledgement to Wilfred Hughes’s ‘helpful’ package
+  ;; and the function ‘helpful--buffer’
+  (when (numberp hrm-max-buffers)
+    (let* ((hermeneus-buffers
+            (seq-filter (lambda (x) (with-current-buffer x
+                                      (eq major-mode 'hermeneus-mode)))
+                        (buffer-list)))
+           ;; The result of the function ‘buffer-list’ is ordered by
+           ;; most recently visited first; so, define everything past
+           ;; the ‘hrm-max-buffers’ limit as excess
+           (excess-buffers (nthcdr hrm-max-buffers hermeneus-buffers)))
+      (mapc #'kill-buffer excess-buffers))))
 
 (provide 'hrm-render)
 

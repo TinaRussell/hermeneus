@@ -144,8 +144,9 @@ provide fuzzy-matching. Returns a word-object."
       (error "Argument is neither a ‘hrm-word’ object nor a string: %s"
              word)))
   (when word
-    (hrm--switch-buffer
-     (hrm--word-buffer word))))
+    (prog1 (hrm--switch-buffer
+            (hrm--word-buffer word))
+      (hrm--clear-old-buffers))))
 
 (provide 'hrm-completion)
 
