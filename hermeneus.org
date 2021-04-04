@@ -225,6 +225,12 @@ from the XML element itself."
 (define-key hermeneus-mode-map "g" 'hrm-buffer-update)
 #+end_src
 
+** Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+;;; hrm-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
+#+end_src
+
 * Conversion
 :PROPERTIES:
 :ID:       TKR:a5c757b2-ff0f-4c62-957d-8d8dc8da62a1
@@ -577,6 +583,22 @@ which case sigma normalization is unnecessary."
     (hrm-conv--normalize-sigmas string)))
 #+end_src
 
+** Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+(ert-deftest conv-test "Test Beta to Unicode conversion"
+  (should (equal (hrm-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
+  (should (let ((hrm-beta-input-type 'greek-kbd))
+            (hrm-conv--set-beta-input-type)
+            (equal (hrm-beta-to-unicode "*)odyssey/w" t) "Ὀδυσσεύς")))
+  (should (let ((hrm-beta-input-type '("o" "d" "y" "b" "z" "`"  "e" "s" "w" "i" "ĳ" "k" "l" "m"
+                                       "n" "j" "a" "p" "r" "hu" "t" "g" "f" "x" "c" "v"
+                                       "O" "D" "Y" "B" "Z" "~"  "E" "S" "W" "I" "Ĳ" "K" "L" "M"
+                                       "N" "J" "A" "P" "R" "HU" "T" "G" "F" "X" "C" "V")))
+            (hrm-conv--set-beta-input-type)
+            (equal (hrm-beta-to-unicode "*)abghhzg/u" t) "Ὀδυσσεύς"))))
+#+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:843a4901-0bf6-4c9e-a709-c79b0a4195bc
@@ -761,6 +783,67 @@ elsewhere."
       (append list-1 list-2))))
 #+end_src
 
+** Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+(ert-deftest match-test ()
+  "Test the results of the regexp matcher."
+  ;; This is the sexp used to create ‘wordlist’:
+  ;; (cl-loop for string in (hash-table-keys (oref hrm-lsj entries)) if (string-match-p (hrm--re-builder "αφρο") string) collect string)
+  (should (let ((wordlist '("ἀκαταφρόνητος" "ἀναφροδισία"
+                            "ἀναφρόδιτος" "ἀναφρονέω" "ἀναφροντίζω"
+                            "ἄναφρος" "ἀνεπαφροδισία" "ἀνεπαφρόδιτος"
+                            "ἀντικαταφρονέω" "ἀξιοκαταφρόνητος"
+                            "ἀφρόγαλα" "ἀφρογένεια" "Ἀφροδίσια"
+                            "Ἀφροδισιάζω" "Ἀφροδισιακός" "Ἀφροδισιάς"
+                            "Ἀφροδισιασμός" "Ἀφροδισιαστής"
+                            "Ἀφροδισιαστικός" "Ἀφροδίσιος"
+                            "Ἀφροδισιών" "Ἀφροδιταρίδιον"
+                            "Ἀφροδιτάριον" "Ἀφροδίτη" "ἀφρόκομος"
+                            "ἀφρόλιτρον" "ἀφρονεύομαι" "ἀφρόνευσις"
+                            "ἀφρονέω" "ἀφρόνη" "ἀφρόνησις" "ἀφρονίζω"
+                            "ἀφρονικός" "ἀφρόνιτρον" "ἄφροντις"
+                            "ἀφροντιστέω" "ἀφροντιστητέον"
+                            "ἀφροντιστί" "ἀφροντιστία" "ἀφρόντιστος"
+                            "ἀφρόομαι" "ἀφρός" "ἀφροσέληνος"
+                            "ἀφροσιβόμβαξ" "ἀφρόσκορδον" "ἀφροσύνη"
+                            "ἀφροτόκος" "ἀφρουρέω" "ἀφρούρητος"
+                            "ἄφρουρος" "ἀφροφυής" "δειλοκαταφρονητής"
+                            "διαφρονέω" "διαφροντίζω" "διαφρος"
+                            "διαφρουρέω" "δυσκαταφρόνητος"
+                            "ἐλαφρόγειος" "ἐλαφρόνοος" "ἐλαφρός"
+                            "ἐλαφρότης" "ἐλαφροτοκία" "ἐλαφρόω"
+                            "ἐναφροδισιάζω" "ἐξαφρόομαι" "ἐπαφροδισία"
+                            "ἐπαφρόδιτος" "ἔπαφρος" "Ἑρμαφρόδιτος"
+                            "εὐαφρόδιτος" "εὐκαταφρόνητος"
+                            "εὐκαταφρόντιστος" "καταφρονέω"
+                            "καταφρόνημα" "καταφρόνησις"
+                            "καταφρονητέον" "καταφρονητής"
+                            "καταφρονητικός" "καταφρόνητος"
+                            "καταφροντίζω" "Κουραφροδίτη" "ναφρόν"
+                            "πανεπαφροδισία" "παραφρονέω" "παραφρονία"
+                            "παραφρόνιμος" "παραφροσύνη" "παραφρουρέω"
+                            "προσκαταφρονέω" "ταφροβολέω" "ταφροειδής"
+                            "ταφροποιέω" "τάφρος" "ὕπαφρος"
+                            "ὑπελαφρός" "ὑπερέλαφρος"
+                            "ὑποκαταφρονέω"))
+                (expected-result '("Ἀφροδίσια" "Ἀφροδισιάζω"
+                                   "Ἀφροδισιακός" "Ἀφροδισιάς"
+                                   "Ἀφροδισιασμός" "Ἀφροδισιαστής"
+                                   "Ἀφροδισιαστικός" "Ἀφροδίσιος"
+                                   "Ἀφροδισιών" "Ἀφροδιταρίδιον"
+                                   "Ἀφροδιτάριον" "Ἀφροδίτη"
+                                   "ἀναφροδισία" "ἀναφρόδιτος"
+                                   "ἀνεπαφροδισία" "ἀνεπαφρόδιτος"
+                                   "ἐναφροδισιάζω" "ἐπαφροδισία"
+                                   "ἐπαφρόδιτος" "Ἑρμαφρόδιτος"
+                                   "εὐαφρόδιτος" "Κουραφροδίτη"
+                                   "πανεπαφροδισία"))
+                (case-fold-search t))
+            (equal (hrm--re-matcher (hrm--re-builder "Αφροδ") wordlist)
+                   expected-result))))
+#+end_src
+
 ** End matter
 #+begin_src emacs-lisp
 (provide 'hrm-match)
@@ -880,6 +963,11 @@ or otherwise can’t be used, move on."
       (eieio-persistent-save this))))
 
 (defvar hrm-lsj (hrm-lexicon nil))
+#+end_src
+
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
 
 ** End matter
@@ -1177,6 +1265,11 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 - cit
 - tr
 
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:327d7216-5a65-4f76-b9fd-c2a2742c0ada
@@ -1394,6 +1487,11 @@ provide fuzzy-matching. Returns a word-object."
      (hrm--word-buffer word))))
 #+end_src
 
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:ca2a0940-f58e-4c15-9904-a0889f15eb36
@@ -1554,6 +1652,12 @@ If ATOM is non-nil, return the URL for the Atom version."
 
 ;; (defvar hrm-title-hash (hrm--make-title-hash))
 #+end_src
+
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+end_src
+
 ** End matter
 #+begin_src emacs-lisp
 (provide 'hrm-cts)
@@ -2182,6 +2286,11 @@ Note: If no value is given, the application program is responsible for deciding 
   "contains an absolute or relative place name.")
 #+end_src
 
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:e6beb538-1f11-4102-b744-0f9a6c7a9980
@@ -2549,6 +2658,11 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+begin_src emacs-lisp
 #+end_src
 
+** TODO Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+end_src
+
 ** End matter
 :PROPERTIES:
 :ID:       TKR:62892e62-3cf5-4ebb-8622-83ad6021d9d3
@@ -2576,4 +2690,10 @@ Well excu-u-u-u-use me, ‘princ’!"
 (provide 'hermeneus)
 
 ;;; hermeneus.el ends here
+#+end_src
+
+** Testing
+
+#+begin_src emacs-lisp :tangle "hrm-test.el"
+;;; hrm-test.el ends here
 #+end_src
