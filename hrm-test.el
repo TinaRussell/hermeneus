@@ -53,6 +53,7 @@
                             "ταφροποιέω" "τάφρος" "ὕπαφρος"
                             "ὑπελαφρός" "ὑπερέλαφρος"
                             "ὑποκαταφρονέω"))
+                (regexp (hrm--re-builder "Αφροδ"))
                 (expected-result '("Ἀφροδίσια" "Ἀφροδισιάζω"
                                    "Ἀφροδισιακός" "Ἀφροδισιάς"
                                    "Ἀφροδισιασμός" "Ἀφροδισιαστής"
@@ -66,7 +67,7 @@
                                    "εὐαφρόδιτος" "Κουραφροδίτη"
                                    "πανεπαφροδισία"))
                 (case-fold-search t))
-            (equal (hrm--re-matcher (hrm--re-builder "Αφροδ") wordlist)
+            (equal (hrm--re-matcher regexp wordlist)
                    expected-result))))
 
 
@@ -75,7 +76,14 @@
 
 
 
-
+(ert-deftest cts-test ()
+  "Test the Canonical Test Services functionality."
+  (should (equal (hrm-urn-to-base "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+                 "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1"))
+  (should (equal (hrm-urn-to-work "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+                 "urn:cts:greekLit:tlg0020.tlg001"))
+  (should (equal (hrm-urn-to-url "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+                 "http://data.perseus.org/catalog/urn:cts:greekLit:tlg0020.tlg001.perseus-grc1")))
 
 
 
