@@ -892,9 +892,9 @@ This section contains the ~hrm-word~ and ~hrm-lexicon~ objects, used for storing
 At present, this means where to store the Hermeneus lexicon
 cache. If you set this outside Customize, ensure that the
 directory exists (creating it if necessary), and set
-‘hrm-storage-path’ to the value of calling ‘expand-file-name’
-with the new ‘hrm-storage-dir’ value followed by
-‘hrm-storage-file’ as arguments."
+‘hrm-storage-path’ to the value returned by calling
+‘expand-file-name’ with two arguments: the current value of
+‘hrm-storage-file’, and the new value for ‘hrm-storage-dir’."
   :type 'directory
   :tag "Hermeneus — storage directory"
   :group 'hermeneus
@@ -959,7 +959,7 @@ or otherwise can’t be used, move on."
   (let ((entries (oref this entries)))
     ;; Don’t bother scanning the LSJ for entries if the
     ;; ‘entries’ hash-table is already populated, or if
-    ;; slot ‘initialize-p’ is nil.
+    ;; slot ‘initialized-p’ is nil.
     (unless (or (eq (hash-table-count entries) (hash-table-size entries))
                 (oref this initialized-p))
       (oset this entries (hrm-scan-entries))
@@ -970,6 +970,8 @@ or otherwise can’t be used, move on."
 #+end_src
 
 ** TODO Testing
+
+Should we test just this section? Or should we acknowledge that ~hrm-lsj~ has already been created at this point and we could just use that for testing (even though creating it calls the XML section, which comes later in this Org file)? …Huh…
 
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
@@ -1123,6 +1125,7 @@ FILE can be a local filename or an URL."
                                       (value (if (boundp 'hrm-lsj-dir)
                                                  hrm-lsj-dir
                                                hrm--git-lsj-dir)))
+  "Setter function for ‘hrm-lsj-dir’."
   (set-default symbol value)
   (setq hrm-lsj-files
         (cl-loop for i from 1 to 27

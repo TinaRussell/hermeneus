@@ -14,9 +14,9 @@
 At present, this means where to store the Hermeneus lexicon
 cache. If you set this outside Customize, ensure that the
 directory exists (creating it if necessary), and set
-‘hrm-storage-path’ to the value of calling ‘expand-file-name’
-with the new ‘hrm-storage-dir’ value followed by
-‘hrm-storage-file’ as arguments."
+‘hrm-storage-path’ to the value returned by calling
+‘expand-file-name’ with two arguments: the current value of
+‘hrm-storage-file’, and the new value for ‘hrm-storage-dir’."
   :type 'directory
   :tag "Hermeneus — storage directory"
   :group 'hermeneus
@@ -69,7 +69,7 @@ or otherwise can’t be used, move on."
   (let ((entries (oref this entries)))
     ;; Don’t bother scanning the LSJ for entries if the
     ;; ‘entries’ hash-table is already populated, or if
-    ;; slot ‘initialize-p’ is nil.
+    ;; slot ‘initialized-p’ is nil.
     (unless (or (eq (hash-table-count entries) (hash-table-size entries))
                 (oref this initialized-p))
       (oset this entries (hrm-scan-entries))

@@ -84,6 +84,7 @@ FILE can be a local filename or an URL."
                                       (value (if (boundp 'hrm-lsj-dir)
                                                  hrm-lsj-dir
                                                hrm--git-lsj-dir)))
+  "Setter function for ‘hrm-lsj-dir’."
   (set-default symbol value)
   (setq hrm-lsj-files
         (cl-loop for i from 1 to 27
