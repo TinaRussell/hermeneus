@@ -29,7 +29,9 @@ Specifically, this will return a parsed URL object from
   "Return start and end positions of the next instance of XML tag TAG
 (defaults to “entryFree”). Move point to the end position."
   (save-match-data
-    (when (re-search-forward (concat "<" tag (rx word-end)) nil t)
+    (when (re-search-forward (concat "<" (regexp-quote tag)
+                                     (rx word-end))
+                             nil t)
       (let* ((begin (goto-char (match-beginning 0)))
              (end (progn (search-forward (concat "</" tag ">") nil t)
                          (point))))
@@ -64,7 +66,12 @@ FILE can be a local filename or an URL."
   "Return the DOM from the XML LSJ definition of word-object WORD."
   (apply #'hrm--get-dom-from-file (oref word loc)))
 
-(defun hrm--get-file-sizes (list)
+(cl-defun hrm--get-lsj-file-sizes (&optional (list hrm-lsj-files))
+  "Return the sizes of the XML LSJ files in LIST.
+LIST defaults to the value of ‘hrm-lsj-files’, and is assumed to
+be a list of the files in the XML LSJ. If any filename in LIST is
+an URL, then the size is given from a prerecorded list.
+Otherwise, ‘nnheader-file-size’ is used to find the file’s size."
   (let ((sizes '(42923474  5014862  4182729 14588543 40082401
                              15614  1233434  2872155  4731605  4600309
                           23622167  6753069 12285441  4142048   922716
@@ -126,7 +133,7 @@ Return a hash table mapping each headword (expressed as a string)
 to its corresponding word object."
   (interactive)
   (let* ((hash (make-hash-table :test 'equal :size 116493))
-         (sizes (hrm--get-file-sizes hrm-lsj-files))
+         (sizes (hrm--get-lsj-file-sizes))
          (total 0)
          (prog-msg "Scanning Liddell and Scott")
          (progress (make-progress-reporter prog-msg
