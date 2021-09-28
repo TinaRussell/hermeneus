@@ -153,7 +153,7 @@ to its corresponding word object."
     (progress-reporter-done progress)
     hash))
 
-(defun hrm-scan-entry (entry &optional HASH)
+(defun hrm-scan-entry (entry &optional hash)
   "Scan ENTRY, a DOM sexp of an “entryFree” tag from the LSJ files.
 Identify its headword and numeric ID. Create a word object. Add
 the headword and object as a key-value pair in hash-table HASH,
