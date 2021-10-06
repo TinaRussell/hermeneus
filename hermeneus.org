@@ -934,7 +934,8 @@ directory exists (creating it if necessary), and set
    ;; results in an “invalid-slot-type” error, but this doesn’t:
    (file :initform (symbol-value 'hrm-storage-path))
    (file-header-line :initform ";; Hermeneus lexicon object"))
-  :documentation "A Hermeneus object to represent a lexicon of words.")
+  :documentation "A Hermeneus object to represent a lexicon of words.
+Use the function ‘hrm-get-entries’ to access the ‘entries’ slot.")
 #+end_src
 
 ** Methods
@@ -953,25 +954,10 @@ or otherwise can’t be used, move on."
              (eieio-persistent-read path cls t))
         (cl-call-next-method))))
 
-(cl-defmethod initialize-instance :after ((this hrm-lexicon) &rest slots)
-  "After initializing a ‘hrm-lexicon’ object, populate its ‘entries’
-  hash-table with word-objects from the LSJ."
-  (let ((entries (oref this entries)))
-    ;; Don’t bother scanning the LSJ for entries if the
-    ;; ‘entries’ hash-table is already populated, or if
-    ;; slot ‘initialized-p’ is nil.
-    (unless (or (eq (hash-table-count entries) (hash-table-size entries))
-                (oref this initialized-p))
-      (oset this entries (hrm-scan-entries))
-      (oset this initialized-p t)
-      (eieio-persistent-save this))))
-
 (defvar hrm-lsj (hrm-lexicon nil))
 #+end_src
 
 ** TODO Testing
-
-Should we test just this section? Or should we acknowledge that ~hrm-lsj~ has already been created at this point and we could just use that for testing (even though creating it calls the XML section, which comes later in this Org file)? …Huh…
 
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
@@ -1166,14 +1152,7 @@ If you set this outside of Customize, be sure to evaluate
 :PROPERTIES:
 :ID:       TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf
 :END:
-#+begin_src emacs-lisp 
-;;;###autoload
-(defun hrm-scan-lsj ()
-  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
-  (interactive)
-  (oset hrm-lsj entries (hrm-scan-entries))
-  (eieio-persistent-save hrm-lsj))
-
+#+begin_src emacs-lisp
 (defun hrm-scan-entries ()
   "Scan over every lexicon entry in the LSJ, using ‘hrm-scan-entry’.
 Return a hash table mapping each headword (expressed as a string)
@@ -1224,7 +1203,35 @@ Right now, this is a placeholder.
 
 #+begin_src emacs-lisp
 #+end_src
+** Access/populate ~entries~ slot of hrm-lexicon object
 
+#+begin_src emacs-lisp
+(defun hrm-get-entries (lexicon)
+  "Access ‘entries’ slot of ‘hrm-lexicon’ object LEXICON.
+The ‘entries’ slot of ‘hrm-lexicon’ objects is a hash table
+containing ‘hrm-word’ objects. The reason to use this function
+instead of using (oref LEXICON entries) is because a newly
+created ‘hrm-lexicon’ object will not have any ‘hrm-word’ objects
+in its ‘entries’ slot, and will need to be populated."
+  (unless (hrm-lexicon-p lexicon)
+    (signal 'wrong-type-argument (list 'hrm-lexicon-p lexicon)))
+  (unless (oref lexicon initialized-p)
+    (hrm--populate-lexicon lexicon))
+  (oref lexicon entries))
+
+(defun hrm--populate-lexicon (lexicon)
+  "Populate the ‘entries’ hash-table of ‘hrm-lexicon’ object LEXICON
+with word-objects from the LSJ."
+  (oset lexicon entries (hrm-scan-entries))
+  (oset lexicon initialized-p t)
+  (eieio-persistent-save lexicon))
+
+;;;###autoload
+(defun hrm-scan-lsj ()
+  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
+  (interactive)
+  (hrm--populate-lexicon hrm-lsj))
+#+end_src
 ** Return all tag types found in the LSJ (for reference; does not tangle)
 This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hrm-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
 #+begin_src emacs-lisp :tangle no :results replace list :load no
@@ -1322,6 +1329,7 @@ This section handles completion (via ~completing-read~ or Ivy) and contains func
 
 (require 'hrm-conv)
 (require 'hrm-match)
+(require 'hrm-xml)
 
 (defvar hrm--greek-punctuation)
 #+end_src
@@ -1363,7 +1371,7 @@ command ‘counsel-greek-word’."
 (defun describe-greek-word (word)
   (interactive
    (list
-    (let ((entries (oref hrm-lsj entries)))
+    (let ((entries (hrm-get-entries hrm-lsj)))
       (if (and hrm-use-ivy (fboundp 'ivy-read))
           (counsel-greek-word "Look up Greek word: " hrm-lsj)
         (let ((default (hrm-greek-word-at-point)))
@@ -1391,7 +1399,7 @@ keyword arguments, which are passed to ‘ivy-read’."
     (error "Ivy must be installed before using ‘counsel-greek-word’"))
   (let ((collection
          (cond ((hrm-lexicon-p lexicon)
-                (oref lexicon entries))
+                (hrm-get-entries lexicon))
                ((hash-table-p lexicon)
                 lexicon)
                (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
@@ -1467,7 +1475,7 @@ exact match. If no result is found, return nil."
   (unless (and (stringp string) (hrm-lexicon-p lexicon))
     (error "Incorrect arguments for ‘hrm--string-to-object’: %s %s"
            string lexicon))
-  (or (gethash string (oref lexicon entries))
+  (or (gethash string (hrm-get-entries lexicon))
       (hrm--fuzzy-search string)
       (hrm--fuzzy-search (string-trim string))
       (hrm--fuzzy-search (hrm--trim-string-extra string))))
@@ -1478,7 +1486,7 @@ The functions ‘hrm--re-builder’ and ‘hrm--re-matcher’ are used to
 provide fuzzy-matching. Returns a word-object."
   (let* ((hrm-beta-input-type 'beta)
          (re (hrm--re-builder string))
-         (entries (oref lexicon entries))
+         (entries (hrm-get-entries lexicon))
          (matches (hrm--re-matcher re (hash-table-keys entries))))
     (when matches
       (gethash (car matches) entries))))
@@ -1711,6 +1719,7 @@ This handles all the many types of tags found in the XML version of the LSJ, how
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
 
+(require 'hrm-xml)
 (require 'hrm-conv)
 (require 'hrm-render)
 (require 'hrm-abbr) ; standalone file
@@ -2261,7 +2270,7 @@ citation will appear in the relevant docstrings."
            ((not (string-prefix-p "-" (string-trim string1))))
            ((not (string-suffix-p "-" (string-trim string1))))
            
-           (entries (oref hrm-lsj entries))
+           (entries (hrm-get-entries hrm-lsj))
            (target (hrm--string-to-object string1)))
       (progn (hrm--insert-space-maybe)
              (let ((start (point)))

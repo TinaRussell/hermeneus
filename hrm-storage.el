@@ -50,7 +50,8 @@ directory exists (creating it if necessary), and set
    ;; results in an “invalid-slot-type” error, but this doesn’t:
    (file :initform (symbol-value 'hrm-storage-path))
    (file-header-line :initform ";; Hermeneus lexicon object"))
-  :documentation "A Hermeneus object to represent a lexicon of words.")
+  :documentation "A Hermeneus object to represent a lexicon of words.
+Use the function ‘hrm-get-entries’ to access the ‘entries’ slot.")
 
 (cl-defmethod make-instance ((cls (subclass hrm-lexicon)) &rest slots)
   "When making a ‘hrm-lexicon’ object, try to read it from a file.
@@ -62,19 +63,6 @@ or otherwise can’t be used, move on."
     (or (and (file-exists-p path)
              (eieio-persistent-read path cls t))
         (cl-call-next-method))))
-
-(cl-defmethod initialize-instance :after ((this hrm-lexicon) &rest slots)
-  "After initializing a ‘hrm-lexicon’ object, populate its ‘entries’
-  hash-table with word-objects from the LSJ."
-  (let ((entries (oref this entries)))
-    ;; Don’t bother scanning the LSJ for entries if the
-    ;; ‘entries’ hash-table is already populated, or if
-    ;; slot ‘initialized-p’ is nil.
-    (unless (or (eq (hash-table-count entries) (hash-table-size entries))
-                (oref this initialized-p))
-      (oset this entries (hrm-scan-entries))
-      (oset this initialized-p t)
-      (eieio-persistent-save this))))
 
 (defvar hrm-lsj (hrm-lexicon nil))
 

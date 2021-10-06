@@ -8,6 +8,7 @@
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
 
+(require 'hrm-xml)
 (require 'hrm-conv)
 (require 'hrm-render)
 (require 'hrm-abbr) ; standalone file
@@ -436,7 +437,7 @@ citation will appear in the relevant docstrings."
            ((not (string-prefix-p "-" (string-trim string1))))
            ((not (string-suffix-p "-" (string-trim string1))))
            
-           (entries (oref hrm-lsj entries))
+           (entries (hrm-get-entries hrm-lsj))
            (target (hrm--string-to-object string1)))
       (progn (hrm--insert-space-maybe)
              (let ((start (point)))

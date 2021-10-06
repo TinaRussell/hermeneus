@@ -11,6 +11,7 @@
 
 (require 'hrm-conv)
 (require 'hrm-match)
+(require 'hrm-xml)
 
 (defvar hrm--greek-punctuation)
 
@@ -40,7 +41,7 @@ command ‘counsel-greek-word’."
 (defun describe-greek-word (word)
   (interactive
    (list
-    (let ((entries (oref hrm-lsj entries)))
+    (let ((entries (hrm-get-entries hrm-lsj)))
       (if (and hrm-use-ivy (fboundp 'ivy-read))
           (counsel-greek-word "Look up Greek word: " hrm-lsj)
         (let ((default (hrm-greek-word-at-point)))
@@ -62,7 +63,7 @@ keyword arguments, which are passed to ‘ivy-read’."
     (error "Ivy must be installed before using ‘counsel-greek-word’"))
   (let ((collection
          (cond ((hrm-lexicon-p lexicon)
-                (oref lexicon entries))
+                (hrm-get-entries lexicon))
                ((hash-table-p lexicon)
                 lexicon)
                (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
@@ -120,7 +121,7 @@ exact match. If no result is found, return nil."
   (unless (and (stringp string) (hrm-lexicon-p lexicon))
     (error "Incorrect arguments for ‘hrm--string-to-object’: %s %s"
            string lexicon))
-  (or (gethash string (oref lexicon entries))
+  (or (gethash string (hrm-get-entries lexicon))
       (hrm--fuzzy-search string)
       (hrm--fuzzy-search (string-trim string))
       (hrm--fuzzy-search (hrm--trim-string-extra string))))
@@ -131,7 +132,7 @@ The functions ‘hrm--re-builder’ and ‘hrm--re-matcher’ are used to
 provide fuzzy-matching. Returns a word-object."
   (let* ((hrm-beta-input-type 'beta)
          (re (hrm--re-builder string))
-         (entries (oref lexicon entries))
+         (entries (hrm-get-entries lexicon))
          (matches (hrm--re-matcher re (hash-table-keys entries))))
     (when matches
       (gethash (car matches) entries))))

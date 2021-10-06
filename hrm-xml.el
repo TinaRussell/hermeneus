@@ -120,13 +120,6 @@ If you set this outside of Customize, be sure to evaluate
 
 (defvar hrm-use-fonts t)
 
-;;;###autoload
-(defun hrm-scan-lsj ()
-  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
-  (interactive)
-  (oset hrm-lsj entries (hrm-scan-entries))
-  (eieio-persistent-save hrm-lsj))
-
 (defun hrm-scan-entries ()
   "Scan over every lexicon entry in the LSJ, using ‘hrm-scan-entry’.
 Return a hash table mapping each headword (expressed as a string)
@@ -169,6 +162,32 @@ the object."
     obj))
 
 
+
+(defun hrm-get-entries (lexicon)
+  "Access ‘entries’ slot of ‘hrm-lexicon’ object LEXICON.
+The ‘entries’ slot of ‘hrm-lexicon’ objects is a hash table
+containing ‘hrm-word’ objects. The reason to use this function
+instead of using (oref LEXICON entries) is because a newly
+created ‘hrm-lexicon’ object will not have any ‘hrm-word’ objects
+in its ‘entries’ slot, and will need to be populated."
+  (unless (hrm-lexicon-p lexicon)
+    (signal 'wrong-type-argument (list 'hrm-lexicon-p lexicon)))
+  (unless (oref lexicon initialized-p)
+    (hrm--populate-lexicon lexicon))
+  (oref lexicon entries))
+
+(defun hrm--populate-lexicon (lexicon)
+  "Populate the ‘entries’ hash-table of ‘hrm-lexicon’ object LEXICON
+with word-objects from the LSJ."
+  (oset lexicon entries (hrm-scan-entries))
+  (oset lexicon initialized-p t)
+  (eieio-persistent-save lexicon))
+
+;;;###autoload
+(defun hrm-scan-lsj ()
+  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
+  (interactive)
+  (hrm--populate-lexicon hrm-lsj))
 
 (provide 'hrm-xml)
 
