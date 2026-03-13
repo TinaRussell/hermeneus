@@ -26,7 +26,10 @@
 
 ;;; Commentary:
 
-;; see readme.org
+;; This is Hermeneus, the Ancient Greek word system and lookup tool.
+;; Once this package is loaded, use the command ‘describe-greek-word’
+;; to look up a word in Ancient Greek. The ‘ivy’ package is
+;; recommended (see option ‘hrm-use-ivy’).
 
 ;;; Code:
 
@@ -65,7 +68,6 @@
 (defconst hrm--lowercase-sigmas "σςϲͻͼͽ")
 (defconst hrm--uppercase-sigmas "ΣϹϽϾϿ")
 
-;; Oops! ALL sigmas
 (defconst hrm--all-sigmas (concat hrm--lowercase-sigmas
                                   hrm--uppercase-sigmas)
   "Every sigma. All of them.
@@ -78,7 +80,7 @@ covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
   "Location of the LSJ within the PerseusDL “lexica” repository.")
 
 (defun hrm-alist-to-local-vars (alist &optional prefix)
-  "Convert each key in an alist to a local variable.
+  "Convert each key in alist ALIST to a local variable.
 Each variable will have the name and value of the relevant key.
 If PREFIX is a string, it will be added to the beginning of each
 variable name (with a hyphen in between)."
@@ -92,6 +94,7 @@ variable name (with a hyphen in between)."
         (push var rtn)))))
 
 (defun hrm--make-keyword (symbol)
+  "Make a keyword with the same name as SYMBOL (but with a colon)."
   (make-symbol (concat ":" (symbol-name symbol))))
 
 (defun hrm--get-slot-default-value (class slot)

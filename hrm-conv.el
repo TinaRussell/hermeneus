@@ -144,10 +144,7 @@ than make a new one."
         ;; inputs with it.
         ;; Once Hermeneus is sophisticated enough to need
         ;; support for typing a yot in Greek-keyboard style Beta
-        ;; code, I will be happy to rethink this.
-        ;; …And if you need that functionality, PLEASE take me
-        ;; out to dinner.
-        ;; —Tina
+        ;; code, I will be happy to rethink this. —Tina
         ((eq def 'greek-kbd)
          (let ((greek-kbd-def
                 '("a" "b" "g" "d" "e" "`"  "z" "h" "u" "i" "ĳ" "k" "l" "m"

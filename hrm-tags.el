@@ -384,7 +384,7 @@ citation will appear in the relevant docstrings."
   type "gives the type of spelling."
   extent "gives the extent of the orthographic information provided.")
 
-(define-hrm-tag pron           ; Tina, get your mind out of the gutter
+(define-hrm-tag pron
   "contains the pronunciation(s) of the word."
   :attrs
   extent "indicates whether the pronunciation is for whole word or part.")

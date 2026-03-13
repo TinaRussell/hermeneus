@@ -2,12 +2,15 @@
 
 #+TITLE: Hermeneus: Learn Ancient Greek with Emacs
 
-* Introduction
+* Short introduction
+Hermeneus is a tool for those learning Ancient Greek. Right now, its main functionality is to look up Ancient Greek words from the Liddell-Scott-Jones /Greek-English Lexicon/.
+
+* Longer introduction
 Welcome to Hermeneus, the Ancient Greek learning tool!
 
-As a priestess of Aphrodite, I want to learn the language of the ancients. The trouble is, that is very hard to do with a language that is massively more complicated than English and hasn’t been spoken conversationally (outside of students and hobbyists practicing their classical skills) for over a thousand years. There are excellent tools out there, like the [[http://www.perseus.tufts.edu/][Perseus Project]], for studying the individual words of Ancient Greek or for reading Greek texts. But what could be a more fitting platform for ancient Greek learning than Emacs—a world where text itself takes on a magical significance?
+As a devotee of Aphrodite, I want to learn the language of the ancients. The trouble is, that is very hard to do with a language that is massively more complicated than English and hasn’t been spoken conversationally (outside of students and hobbyists practicing their classical skills) for over a thousand years. There are excellent tools out there, like the [[http://www.perseus.tufts.edu/][Perseus Project]], for studying the individual words of Ancient Greek or for reading Greek texts. But what could be a more fitting platform for ancient Greek learning than Emacs—a world where text itself takes on a magical significance?
 
-Truth be told, as I began learning Ancient Greek (thank you, Schoeder and Horrigan), I noticed its similarity to a computer language. Programming languages are more strict about order, of course, but they have the explicit quality of Ancient Greek, where adjectives and modifiers are attached to the relevant words with pinpoint precision, where subject-verb agreement is more like a diplomatic summit. My modern brain, accustomed to the European clusterfuck that is English, has a hard time holding in all that information; but, what programmer can hold all the intricacies of one’s language at the top of one’s own head? No, we use IDEs, and Emacs, with its text-is-magic philosophy, has always been king of the IDEs.
+Truth be told, as I began learning Ancient Greek (thank you, Schoeder and Horrigan), I noticed its similarity to a computer language. Programming languages are more strict about order, of course, but they have the explicit quality of Ancient Greek, where adjectives and modifiers are attached to the relevant words with pinpoint precision, where subject-verb agreement is more like a diplomatic summit. My modern brain, accustomed to the European jumblemash that is English, has a hard time holding in all that information; but, what programmer can hold all the intricacies of one’s language at the top of one’s own head? No, we use IDEs, and Emacs, with its text-is-magic philosophy, has always been king of the IDEs.
 
 My original vision for Hermeneus is thus: use the kind of data on Ancient Greek assembled by heroes at places like Perseus to create an Ancient Greek learning and processing environment, so that writing and reading Ancient Greek is made easier in the way that Emacs makes writing and reading Python or C++ easier. Right now, I am focusing on the task of creating a searchable database of Ancient Greek words, so you can look up a Greek word as easily as you look up an Emacs Lisp symbol. I would love to have it do more, though, such as lemmatizing and conjugation. If you are interested in this, please feel free to contribute! Also, Hermeneus is designed to be as modular as possible, so if you want to make your own package that takes advantage of the Hermeneus database of ancient words, you are absolutely welcome to do so. Like any good Emacs package, Hermeneus is about extending the utility of Emacs, not locking you into one usage pattern.
 
@@ -15,7 +18,16 @@ My original vision for Hermeneus is thus: use the kind of data on Ancient Greek 
 Dedicated to Aphrodite, goddess of love and beauty, and to Hermes, her eloquent friend-with-benefits.
 
 * Installation
-Download this repository to a directory on your computer. Make sure that directory is present in the variable ~load-path~. After restarting Emacs (or using M-x ~load-library~ ~hermeneus~), use the command ~hrm-scan-lsj~ to begin creating the database of Greek words that Hermeneus requires.
+Download this repository to a directory on your computer. Then, put the following in your ~~/.emacs~ or ~~/.emacs.d/init.el~ file (whichever is present):
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "/path/to/hermeneus")
+(require 'hermeneus)
+#+end_src
+
+…replacing ~/path/to/hermeneus~ with the actual directory path, of course. Then, save the file and restart Emacs.
+
+(If you don’t want to restart Emacs, you could evaluate each of those two lines by using C-x C-e at the end of each line in turn.)
 
 * Usage
 Right now, the primary way to use Hermeneus is the command ~describe-greek-word~, which lets you look up any Ancient Greek word (in its dictionary form) with completion. You’ll want to have [[https://github.com/abo-abo/swiper][Ivy]] installed to take advantage of the full power of Hermeneus completion; see the option ~hrm-use-ivy~ for details.
@@ -25,7 +37,7 @@ In order to look up words, Hermeneus will need to scan the /Greek-English Lexico
 ** Advanced usage/technical stuff
 Hermeneus uses the Perseus Project’s [[https://github.com/PerseusDL/lexica][excellent XML version]] of the Liddell-Scott-Jones /Greek-English Lexicon/, a.k.a. “the LSJ” (or “Liddell & Scott”). All word-objects are derived from entries in this lexicon. The first time you use ~describe-greek-word~ (or anything that needs the list of word-objects), or whenever you use the command ~hrm-scan-lsj~, Hermeneus scans the entire LSJ through the process defined in the function ~hrm-scan-entries~, and then caches the resulting objects to a file. (See the variables ~hrm-storage-dir~ and ~hrm-storage-file~ if you want to change where this file is located/named; the default is the value of ~user-emacs-directory~ plus ~var/hermeneus/lsj-cache~, with ~.gz~ at the end if the ~gzip~ executable is installed on your machine.)
 
-Hermeneus should be able to scan the LSJ remotely from the Git repository, but if you want the scan to go faster and/or look up words while offline, download the LSJ XML files from [[the relevant directory of the Perseus lexica repository][the relevant directory of the Perseus lexica repository]] to a directory on your machine and specify that local directory by customizing ~hrm-lsj-dir~.
+Hermeneus should be able to scan the LSJ remotely from the Perseus Project’s Git repository, but if you want the scan to go faster and/or look up words while offline, download the LSJ XML files from [[https://github.com/PerseusDL/lexica/tree/master/CTS_XML_TEI/perseus/pdllex/grc/lsj][the relevant directory of the Perseus lexica repository]] to a directory on your machine and specify that local directory by customizing ~hrm-lsj-dir~.
 
 When the LSJ is being scanned, it calls each function in ~hrm-scan-entry-functions~ with two arguments: the generated word object, and the raw DOM from the entry’s XML (as parsed by ~libxml-parse-xml-region~). This way, users and developers can easily create functions which take information from a word’s LSJ entry and add it (in some fashion or another) to the relevant word object.
 
