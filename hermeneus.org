@@ -2455,8 +2455,18 @@ cases it will return nil."
     (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
 
 (defun hrm--margin-indent-width ()
-  (shr-string-pixel-width
-   (propertize "XIII " :face 'hrm-default-face)))
+  ;; The contents of this function used to be as follows:
+  ;; (shr-string-pixel-width
+  ;;  (propertize "XIII " :face 'hrm-default-face))
+  ;; Sometime after I upgraded to Emacs 29, this started giving me an
+  ;; error, saying that ‘shr-string-pixel-width’ is an invalid
+  ;; function (it’s a macro). I’m not sure why this happens. But,
+  ;; ‘shr-string-pixel-width’ is a pretty simple macro, so I’m
+  ;; just reimplementing its functionality here.
+  (let ((string (propertize "XIII " :face 'hrm-default-face)))
+    (if (not shr-use-fonts)
+        (length string)
+      (string-pixel-width string))))
 
 (defun hrm--pixel-column ()
   (let ((pos (point)))
