@@ -98,12 +98,17 @@ variable name (with a hyphen in between)."
   (make-symbol (concat ":" (symbol-name symbol))))
 
 (defun hrm--get-slot-default-value (class slot)
-  "Return the default value of SLOT in CLASS."
-  (thread-first (cl-loop for slot in (eieio-class-slots class)
-                         if (eq (cl--slot-descriptor-name slot) 'object-name)
-                         return slot)
-    (cl--slot-descriptor-initform)
-    (eieio-default-eval-maybe)))
+  "Return the default value of SLOT in CLASS.
+SLOT should be given as a symbol. Signals an error if CLASS does
+not contain a slot named SLOT."
+  (if-let ((slot-actual
+            (cl-loop for s in (eieio-class-slots class)
+                     if (eq (cl--slot-descriptor-name s) slot)
+                     return s)))
+      (thread-first slot-actual
+        (cl--slot-descriptor-initform)
+        (eieio-default-eval-maybe))
+    (error "Class %s does not appear to contain slot ‘%s’" class slot)))
 
 (defun hrm--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
