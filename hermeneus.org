@@ -152,9 +152,9 @@ not contain a slot named SLOT."
 *** Which words have combining diacriticals that won’t… combine?
 #+begin_src emacs-lisp :tangle no :results replace list :load no
 (let (current-word)
-  (lööp for i across (seq-copy hrm-greek-words-beta)
-        if (string-match-p (rx (category combining-diacritic)) (setq current-word (hrm-beta-to-unicode i)))
-        collect (message "%s ⇒ %s" i current-word)))
+  (cl-loop for i across (seq-copy hrm-greek-words-beta)
+           if (string-match-p (rx (category combining-diacritic)) (setq current-word (hrm-beta-to-unicode i)))
+           collect (message "%s ⇒ %s" i current-word)))
 #+end_src
 
 #+RESULTS:
