@@ -18,7 +18,7 @@ My original vision for Hermeneus is thus: use the kind of data on Ancient Greek 
 Dedicated to Aphrodite, goddess of love and beauty, and to Hermes, her eloquent friend-with-benefits.
 
 * Installation
-Download this repository to a directory on your computer. Then, put the following in your ~~/.emacs~ or ~~/.emacs.d/init.el~ file (whichever is present):
+Download this repository to a directory on your computer. Then, put the following in your ~~​/​.emacs~ or ~~​/.emacs.d/init.el~ file (whichever is present):
 
 #+begin_src emacs-lisp
 (add-to-list 'load-path "/path/to/hermeneus")
