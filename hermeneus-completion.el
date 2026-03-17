@@ -1,4 +1,4 @@
-;;; hrm-completion.el --- -*- lexical-binding: t -*-
+;;; hermeneus-completion.el --- -*- lexical-binding: t -*-
 
 (require 'cl-extra)
 (require 'custom)
@@ -9,20 +9,20 @@
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
 
-(require 'hrm-conv)
-(require 'hrm-match)
-(require 'hrm-xml)
+(require 'hermeneus-conv)
+(require 'hermeneus-match)
+(require 'hermeneus-xml)
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 
-(defcustom hrm-use-ivy (let ((libs '(ivy counsel)))
+(defcustom hermeneus-use-ivy (let ((libs '(ivy counsel)))
                          (or (cl-every 'featurep libs)
                              (cl-every 'package-installed-p libs)))
   "Whether to use the ‘ivy’ package for ‘describe-greek-word’.
 This allows two important features. The first is matching by Beta
 code: if you type in Beta code (e.g. “i(ero/doulos” instead of
 “ἱερόδουλος”), it will match as though you typed the Greek
-Unicode equivalent. (See option ‘hrm-beta-input-type’ if you want
+Unicode equivalent. (See option ‘hermeneus-beta-input-type’ if you want
 to customize the type of Beta code used for this.) The second is
 diacritic-agnostic matching: if you type Greek with no diacritics
 into the ‘describe-greek-word’ prompt, it will match any
@@ -41,46 +41,46 @@ command ‘counsel-greek-word’."
 (defun describe-greek-word (word)
   (interactive
    (list
-    (let ((entries (hrm-get-entries hrm-lsj)))
-      (if (and hrm-use-ivy (fboundp 'ivy-read))
-          (counsel-greek-word "Look up Greek word: " hrm-lsj)
-        (let ((default (hrm-greek-word-at-point)))
+    (let ((entries (hermeneus-get-entries hermeneus-lsj)))
+      (if (and hermeneus-use-ivy (fboundp 'ivy-read))
+          (counsel-greek-word "Look up Greek word: " hermeneus-lsj)
+        (let ((default (hermeneus-greek-word-at-point)))
           (completing-read (format "Look up Greek word%s: "
                                    (if default
                                        (format " (default: %s)" default)
                                      ""))
                            entries nil t nil nil default))))))
-  (unless (and hrm-use-ivy (fboundp 'ivy-read))
-    (hrm--display-word-buffer word)))
+  (unless (and hermeneus-use-ivy (fboundp 'ivy-read))
+    (hermeneus--display-word-buffer word)))
 
 (cl-defun counsel-greek-word (&optional (prompt "Look up Greek word:")
-                                        (lexicon hrm-lsj) &rest kwargs)
+                                        (lexicon hermeneus-lsj) &rest kwargs)
   "Read a Greek word from the LSJ, with Ivy completion.
-COLLECTION should be a ‘hrm-lexicon’ object or a hash-table, and
-defaults to the value of ‘hrm-lsj’. Any other arguments should be
+COLLECTION should be a ‘hermeneus-lexicon’ object or a hash-table, and
+defaults to the value of ‘hermeneus-lsj’. Any other arguments should be
 keyword arguments, which are passed to ‘ivy-read’."
   (unless (fboundp 'ivy-read)
     (error "Ivy must be installed before using ‘counsel-greek-word’"))
   (let ((collection
-         (cond ((hrm-lexicon-p lexicon)
-                (hrm-get-entries lexicon))
+         (cond ((hermeneus-lexicon-p lexicon)
+                (hermeneus-get-entries lexicon))
                ((hash-table-p lexicon)
                 lexicon)
-               (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
+               (t (error "Not a hermeneus-lexicon object or hash table: %s" lexicon)))))
     (cl-flet ((kw-put (prop val)
                       (unless (plist-member kwargs prop)
                         (cl-callf plist-put kwargs prop val))))
-      (kw-put :action #'hrm--display-word-buffer)
-      (kw-put :re-builder #'hrm--re-builder)
-      (kw-put :matcher #'hrm--re-matcher)
-      (awhen (hrm-greek-word-at-point)
+      (kw-put :action #'hermeneus--display-word-buffer)
+      (kw-put :re-builder #'hermeneus--re-builder)
+      (kw-put :matcher #'hermeneus--re-matcher)
+      (awhen (hermeneus-greek-word-at-point)
         (kw-put :preselect it))
       (apply 'ivy-read prompt collection kwargs))))
 
-(defun hrm--fold-case (string)
+(defun hermeneus--fold-case (string)
   (cl-loop for l across (regexp-quote string)
-           if (memq l (string-to-list hrm--all-sigmas))
-           concat (format "[%s]" hrm--all-sigmas)
+           if (memq l (string-to-list hermeneus--all-sigmas))
+           concat (format "[%s]" hermeneus--all-sigmas)
            else
            concat (let ((upr (upcase l))
                         (lwr (downcase l)))
@@ -88,7 +88,7 @@ keyword arguments, which are passed to ‘ivy-read’."
                         (char-to-string l)
                       (format "[%c%c]" upr lwr)))))
 
-(defun hrm--bounds-of-chars (chars)
+(defun hermeneus--bounds-of-chars (chars)
   "Skip CHARS backwards and forwards, return a cons of each point.
 CHARS is a string containing the characters to skip over. If
 point is not adjacent to any characters in CHARS, return nil."
@@ -100,55 +100,55 @@ point is not adjacent to any characters in CHARS, return nil."
     (unless (eql (car rtn) (cdr rtn))
       rtn)))
 
-(defun hrm-bounds-of-greek-word-at-point ()
-  (or (hrm--bounds-of-chars (concat hrm--greek-unicode-all
-                                    hrm--greek-diacritics))
-      (hrm--bounds-of-chars (concat hrm--beta-letters--user ; TODO should check user and standard variants
-                                    hrm--beta-diacritics "*"))))
+(defun hermeneus-bounds-of-greek-word-at-point ()
+  (or (hermeneus--bounds-of-chars (concat hermeneus--greek-unicode-all
+                                    hermeneus--greek-diacritics))
+      (hermeneus--bounds-of-chars (concat hermeneus--beta-letters--user ; TODO should check user and standard variants
+                                    hermeneus--beta-diacritics "*"))))
 
-(defun hrm-greek-word-at-point ()
-  (when-let ((bounds (hrm-bounds-of-greek-word-at-point))
+(defun hermeneus-greek-word-at-point ()
+  (when-let ((bounds (hermeneus-bounds-of-greek-word-at-point))
              (word (buffer-substring-no-properties (car bounds) (cdr bounds)))
-             (obj (hrm--string-to-object word hrm-lsj)))
+             (obj (hermeneus--string-to-object word hermeneus-lsj)))
     (oref obj key)))
 
-(put (intern "greek-word") 'bounds-of-thing-at-point 'hrm-bounds-of-greek-word-at-point)
+(put (intern "greek-word") 'bounds-of-thing-at-point 'hermeneus-bounds-of-greek-word-at-point)
 
-(cl-defun hrm--string-to-object (string &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--string-to-object (string &optional (lexicon hermeneus-lsj))
   "Retrieve the word-object in LEXICON corresponding to STRING.
-The function ‘hrm--fuzzy-search’ is used when there isn’t an
+The function ‘hermeneus--fuzzy-search’ is used when there isn’t an
 exact match. If no result is found, return nil."
-  (unless (and (stringp string) (hrm-lexicon-p lexicon))
-    (error "Incorrect arguments for ‘hrm--string-to-object’: %s %s"
+  (unless (and (stringp string) (hermeneus-lexicon-p lexicon))
+    (error "Incorrect arguments for ‘hermeneus--string-to-object’: %s %s"
            string lexicon))
-  (or (gethash string (hrm-get-entries lexicon))
-      (hrm--fuzzy-search string)
-      (hrm--fuzzy-search (string-trim string))
-      (hrm--fuzzy-search (hrm--trim-string-extra string))))
+  (or (gethash string (hermeneus-get-entries lexicon))
+      (hermeneus--fuzzy-search string)
+      (hermeneus--fuzzy-search (string-trim string))
+      (hermeneus--fuzzy-search (hermeneus--trim-string-extra string))))
 
-(cl-defun hrm--fuzzy-search (string &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--fuzzy-search (string &optional (lexicon hermeneus-lsj))
   "Look up the word STRING in LEXICON (which defaults to the LSJ).
-The functions ‘hrm--re-builder’ and ‘hrm--re-matcher’ are used to
+The functions ‘hermeneus--re-builder’ and ‘hermeneus--re-matcher’ are used to
 provide fuzzy-matching. Returns a word-object."
-  (let* ((hrm-beta-input-type 'beta)
-         (re (hrm--re-builder string))
-         (entries (hrm-get-entries lexicon))
-         (matches (hrm--re-matcher re (hash-table-keys entries))))
+  (let* ((hermeneus-beta-input-type 'beta)
+         (re (hermeneus--re-builder string))
+         (entries (hermeneus-get-entries lexicon))
+         (matches (hermeneus--re-matcher re (hash-table-keys entries))))
     (when matches
       (gethash (car matches) entries))))
 
-(cl-defun hrm--display-word-buffer (word &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--display-word-buffer (word &optional (lexicon hermeneus-lsj))
   "Display WORD, a string or word-object, from LEXICON (default: LSJ)."
-  (unless (hrm-word-p word)
+  (unless (hermeneus-word-p word)
     (if (stringp word)
-        (setq word (hrm--string-to-object word lexicon))
-      (error "Argument is neither a ‘hrm-word’ object nor a string: %s"
+        (setq word (hermeneus--string-to-object word lexicon))
+      (error "Argument is neither a ‘hermeneus-word’ object nor a string: %s"
              word)))
   (when word
-    (prog1 (hrm--switch-buffer
-            (hrm--word-buffer word))
-      (hrm--clear-old-buffers))))
+    (prog1 (hermeneus--switch-buffer
+            (hermeneus--word-buffer word))
+      (hermeneus--clear-old-buffers))))
 
-(provide 'hrm-completion)
+(provide 'hermeneus-completion)
 
-;;; hrm-completion.el ends here
+;;; hermeneus-completion.el ends here

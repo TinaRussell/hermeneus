@@ -29,7 +29,7 @@
 ;; This is Hermeneus, the Ancient Greek word system and lookup tool.
 ;; Once this package is loaded, use the command ‘describe-greek-word’
 ;; to look up a word in Ancient Greek. The ‘ivy’ package is
-;; recommended (see option ‘hrm-use-ivy’).
+;; recommended (see option ‘hermeneus-use-ivy’).
 
 ;;; Code:
 
@@ -43,43 +43,43 @@
                    (require 'rx)
                    (require 'cl-macs))
 
-(defconst hrm--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
+(defconst hermeneus--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
   "Every letter in the Greek alphabet, including the digamma and yot.")
 
-(defconst hrm--greek-diacritics "\u0313\u0314\u0300\u0301\u0342\u0308\u0345\u0304\u0306"
+(defconst hermeneus--greek-diacritics "\u0313\u0314\u0300\u0301\u0342\u0308\u0345\u0304\u0306"
   "Every combining diacritic relevant to Ancient Greek.")
 
-(defconst hrm--greek-punctuation "’·;")
+(defconst hermeneus--greek-punctuation "’·;")
 
 ;; This isn’t actually used anywhere. I don’t remember why I made it.
 ;; But it’s nice, so it stays.
-(defconst hrm--greek-letter-names
+(defconst hermeneus--greek-letter-names
   (list "alpha"  "beta"   "gamma" "delta" "epsilon" "digamma" "zeta"
           "eta" "theta"    "iota"   "yot"   "kappa"  "lambda"   "mu"
            "nu"    "xi" "omicron"    "pi"     "rho"   "sigma"  "tau"
       "upsilon"   "phi"     "chi"   "psi"   "omega"))
 
-(defconst hrm--greek-unicode-all
+(defconst hermeneus--greek-unicode-all
   (cl-loop for v being the hash-values of (ucs-names)
            for v = (char-to-string v)
            if (string-match-p (rx (category greek)) v)
            concat v))
 
-(defconst hrm--lowercase-sigmas "σςϲͻͼͽ")
-(defconst hrm--uppercase-sigmas "ΣϹϽϾϿ")
+(defconst hermeneus--lowercase-sigmas "σςϲͻͼͽ")
+(defconst hermeneus--uppercase-sigmas "ΣϹϽϾϿ")
 
-(defconst hrm--all-sigmas (concat hrm--lowercase-sigmas
-                                  hrm--uppercase-sigmas)
+(defconst hermeneus--all-sigmas (concat hermeneus--lowercase-sigmas
+                                  hermeneus--uppercase-sigmas)
   "Every sigma. All of them.
 You need a lowercase word-ending sigma? Consider it done. How
 about a capital reverse dotted lunate sigma? We’ve got you
 covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
 
-(defconst hrm--git-lsj-dir
+(defconst hermeneus--git-lsj-dir
   "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
   "Location of the LSJ within the PerseusDL “lexica” repository.")
 
-(defun hrm-alist-to-local-vars (alist &optional prefix)
+(defun hermeneus-alist-to-local-vars (alist &optional prefix)
   "Convert each key in alist ALIST to a local variable.
 Each variable will have the name and value of the relevant key.
 If PREFIX is a string, it will be added to the beginning of each
@@ -93,11 +93,11 @@ variable name (with a hyphen in between)."
         (set var (cdr a))
         (push var rtn)))))
 
-(defun hrm--make-keyword (symbol)
+(defun hermeneus--make-keyword (symbol)
   "Make a keyword with the same name as SYMBOL (but with a colon)."
   (make-symbol (concat ":" (symbol-name symbol))))
 
-(defun hrm--get-slot-default-value (class slot)
+(defun hermeneus--get-slot-default-value (class slot)
   "Return the default value of SLOT in CLASS.
 SLOT should be given as a symbol. Signals an error if CLASS does
 not contain a slot named SLOT."
@@ -110,7 +110,7 @@ not contain a slot named SLOT."
         (eieio-default-eval-maybe))
     (error "Class %s does not appear to contain slot ‘%s’" class slot)))
 
-(defun hrm--trim-string-extra (string)
+(defun hermeneus--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
 Returns STRING, with whitespace and punctuation characters found
 at each end removed."
@@ -121,15 +121,15 @@ at each end removed."
   "Options for Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus"
   :group 'applications
-  :prefix "hrm-")
+  :prefix "hermeneus-")
 
-(defgroup hrm-faces nil
+(defgroup hermeneus-faces nil
   "Faces used in Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus faces"
   :group 'hermeneus)
 
-(defcustom hrm-scan-entry-functions nil
-  "Functions called by ‘hrm-scan-xml’ for every XML element
+(defcustom hermeneus-scan-entry-functions nil
+  "Functions called by ‘hermeneus-scan-xml’ for every XML element
 in the lexicon. Each function is run with two arguments: the
 word-object corresponding to the entry, and the DOM parsed
 from the XML element itself."
@@ -138,16 +138,16 @@ from the XML element itself."
 
 (define-derived-mode hermeneus-mode special-mode "Hermeneus")
 
-(define-key hermeneus-mode-map "g" 'hrm-buffer-update)
+(define-key hermeneus-mode-map "g" 'hermeneus-buffer-update)
 
-(require 'hrm-conv)
-(require 'hrm-match)
-(require 'hrm-xml)
-(require 'hrm-completion)
-(require 'hrm-storage)
-(require 'hrm-cts)
-(require 'hrm-tags)
-(require 'hrm-render)
+(require 'hermeneus-conv)
+(require 'hermeneus-match)
+(require 'hermeneus-xml)
+(require 'hermeneus-completion)
+(require 'hermeneus-storage)
+(require 'hermeneus-cts)
+(require 'hermeneus-tags)
+(require 'hermeneus-render)
 
 (provide 'hermeneus)
 

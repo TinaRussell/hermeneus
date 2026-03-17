@@ -43,7 +43,7 @@
 ;; This is Hermeneus, the Ancient Greek word system and lookup tool.
 ;; Once this package is loaded, use the command ‘describe-greek-word’
 ;; to look up a word in Ancient Greek. The ‘ivy’ package is
-;; recommended (see option ‘hrm-use-ivy’).
+;; recommended (see option ‘hermeneus-use-ivy’).
 
 ;;; Code:
 #+end_src
@@ -69,39 +69,39 @@
 :ID:       TKR:476d569a-11f6-4c85-9c83-286ab6af8fec
 :END:
 #+begin_src emacs-lisp
-(defconst hrm--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
+(defconst hermeneus--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
   "Every letter in the Greek alphabet, including the digamma and yot.")
 
-(defconst hrm--greek-diacritics "\u0313\u0314\u0300\u0301\u0342\u0308\u0345\u0304\u0306"
+(defconst hermeneus--greek-diacritics "\u0313\u0314\u0300\u0301\u0342\u0308\u0345\u0304\u0306"
   "Every combining diacritic relevant to Ancient Greek.")
 
-(defconst hrm--greek-punctuation "’·;")
+(defconst hermeneus--greek-punctuation "’·;")
 
 ;; This isn’t actually used anywhere. I don’t remember why I made it.
 ;; But it’s nice, so it stays.
-(defconst hrm--greek-letter-names
+(defconst hermeneus--greek-letter-names
   (list "alpha"  "beta"   "gamma" "delta" "epsilon" "digamma" "zeta"
           "eta" "theta"    "iota"   "yot"   "kappa"  "lambda"   "mu"
            "nu"    "xi" "omicron"    "pi"     "rho"   "sigma"  "tau"
       "upsilon"   "phi"     "chi"   "psi"   "omega"))
 
-(defconst hrm--greek-unicode-all
+(defconst hermeneus--greek-unicode-all
   (cl-loop for v being the hash-values of (ucs-names)
            for v = (char-to-string v)
            if (string-match-p (rx (category greek)) v)
            concat v))
 
-(defconst hrm--lowercase-sigmas "σςϲͻͼͽ")
-(defconst hrm--uppercase-sigmas "ΣϹϽϾϿ")
+(defconst hermeneus--lowercase-sigmas "σςϲͻͼͽ")
+(defconst hermeneus--uppercase-sigmas "ΣϹϽϾϿ")
 
-(defconst hrm--all-sigmas (concat hrm--lowercase-sigmas
-                                  hrm--uppercase-sigmas)
+(defconst hermeneus--all-sigmas (concat hermeneus--lowercase-sigmas
+                                  hermeneus--uppercase-sigmas)
   "Every sigma. All of them.
 You need a lowercase word-ending sigma? Consider it done. How
 about a capital reverse dotted lunate sigma? We’ve got you
 covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
 
-(defconst hrm--git-lsj-dir
+(defconst hermeneus--git-lsj-dir
   "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
   "Location of the LSJ within the PerseusDL “lexica” repository.")
 #+end_src
@@ -111,7 +111,7 @@ covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
 :ID:       TKR:033a6ce1-0d17-431f-921d-75c4ed9bd8d9
 :END:
 #+begin_src emacs-lisp
-(defun hrm-alist-to-local-vars (alist &optional prefix)
+(defun hermeneus-alist-to-local-vars (alist &optional prefix)
   "Convert each key in alist ALIST to a local variable.
 Each variable will have the name and value of the relevant key.
 If PREFIX is a string, it will be added to the beginning of each
@@ -125,7 +125,7 @@ variable name (with a hyphen in between)."
         (set var (cdr a))
         (push var rtn)))))
 
-(defun hrm--make-keyword (symbol)
+(defun hermeneus--make-keyword (symbol)
   "Make a keyword with the same name as SYMBOL (but with a colon)."
   (make-symbol (concat ":" (symbol-name symbol))))
 #+end_src
@@ -135,7 +135,7 @@ variable name (with a hyphen in between)."
 :ID:       TKR:48d94516-5ea7-456d-b072-2666f4600d71
 :END:
 #+begin_src emacs-lisp
-(defun hrm--get-slot-default-value (class slot)
+(defun hermeneus--get-slot-default-value (class slot)
   "Return the default value of SLOT in CLASS.
 SLOT should be given as a symbol. Signals an error if CLASS does
 not contain a slot named SLOT."
@@ -152,8 +152,8 @@ not contain a slot named SLOT."
 *** Which words have combining diacriticals that won’t… combine?
 #+begin_src emacs-lisp :tangle no :results replace list :load no
 (let (current-word)
-  (cl-loop for i across (seq-copy hrm-greek-words-beta)
-           if (string-match-p (rx (category combining-diacritic)) (setq current-word (hrm-beta-to-unicode i)))
+  (cl-loop for i across (seq-copy hermeneus-greek-words-beta)
+           if (string-match-p (rx (category combining-diacritic)) (setq current-word (hermeneus-beta-to-unicode i)))
            collect (message "%s ⇒ %s" i current-word)))
 #+end_src
 
@@ -178,7 +178,7 @@ not contain a slot named SLOT."
 
 *** Trim a string
 #+begin_src emacs-lisp
-(defun hrm--trim-string-extra (string)
+(defun hermeneus--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
 Returns STRING, with whitespace and punctuation characters found
 at each end removed."
@@ -195,9 +195,9 @@ at each end removed."
   "Options for Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus"
   :group 'applications
-  :prefix "hrm-")
+  :prefix "hermeneus-")
 
-(defgroup hrm-faces nil
+(defgroup hermeneus-faces nil
   "Faces used in Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus faces"
   :group 'hermeneus)
@@ -208,8 +208,8 @@ at each end removed."
 :ID:       TKR:d47a2a83-a109-4534-927f-b93831bb9cbe
 :END:
 #+begin_src emacs-lisp
-(defcustom hrm-scan-entry-functions nil
-  "Functions called by ‘hrm-scan-xml’ for every XML element
+(defcustom hermeneus-scan-entry-functions nil
+  "Functions called by ‘hermeneus-scan-xml’ for every XML element
 in the lexicon. Each function is run with two arguments: the
 word-object corresponding to the entry, and the DOM parsed
 from the XML element itself."
@@ -230,26 +230,26 @@ from the XML element itself."
 :ID:       TKR:057b84a7-d596-45d7-ab34-ce9b509049a7
 :END:
 #+begin_src emacs-lisp
-(define-key hermeneus-mode-map "g" 'hrm-buffer-update)
+(define-key hermeneus-mode-map "g" 'hermeneus-buffer-update)
 #+end_src
 
 ** Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
-;;; hrm-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
+;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
 #+end_src
 
 * Conversion
 :PROPERTIES:
 :ID:       TKR:a5c757b2-ff0f-4c62-957d-8d8dc8da62a1
-:header-args:emacs-lisp: :tangle hrm-conv.el
+:header-args:emacs-lisp: :tangle hermeneus-conv.el
 :END:
 This section exists for converting Latin letters representing Greek letters (i.e. “Beta code”) into proper, godly Greek Unicode characters.
 
-Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but, I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hrm-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom setter function, but well worth it for increasing the international utility of Hermeneus.
+Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but, I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hermeneus-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom setter function, but well worth it for increasing the international utility of Hermeneus.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-conv.el --- -*- lexical-binding: t -*-
+;;; hermeneus-conv.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -265,17 +265,17 @@ Now, Beta code, as it exists in this program, takes two forms: the standard Beta
   (require 'cl-macs)
   (require 'subr-x))
 
-(defvar hrm--greek-letters)
-(defvar hrm--greek-punctuation)
-(defvar hrm--greek-diacritics)
-(defvar hrm--all-sigmas)
-(defvar hrm-beta-input-type)
-(defvar hrm--beta-letters-user)
+(defvar hermeneus--greek-letters)
+(defvar hermeneus--greek-punctuation)
+(defvar hermeneus--greek-diacritics)
+(defvar hermeneus--all-sigmas)
+(defvar hermeneus-beta-input-type)
+(defvar hermeneus--beta-letters-user)
 #+end_src
 
 ** Utility functions
 #+begin_src emacs-lisp
-(defun hrm--regexp-bracket-quote (string)
+(defun hermeneus--regexp-bracket-quote (string)
   "Return STRING, regexp-quoted and, if necessary, in square brackets.
 This exists for when a regexp being generated may need to match
 one character or more than one character, depending on the length
@@ -287,7 +287,7 @@ of input STRING."
 
 ** Macros
 #+begin_src emacs-lisp
-(defmacro hrm--make-regexp-versions (def-form &rest string-vars)
+(defmacro hermeneus--make-regexp-versions (def-form &rest string-vars)
   "Define regexp versions of a series of string variables.
 Each string in STRING-VARS will be given a regexp version, suffixed
 \"regexp\", which will match any character in the string.
@@ -297,7 +297,7 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
   `(progn
      ,@(cl-loop for var in string-vars
               collect (list def-form (intern (concat (symbol-name var) "-regexp"))
-                            (hrm--regexp-bracket-quote (symbol-value var))))))
+                            (hermeneus--regexp-bracket-quote (symbol-value var))))))
 #+end_src
 
 ** Variables
@@ -305,49 +305,49 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
 :ID:       TKR:c056d1e0-5c34-41de-89de-94d388c5285f
 :END:
 #+begin_src emacs-lisp
-;; For comparison, here is ‘hrm--greek-letters’:
+;; For comparison, here is ‘hermeneus--greek-letters’:
 ;; αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ
-(defconst hrm--beta-letters--standard
+(defconst hermeneus--beta-letters--standard
   "abgdevzhqijklmncoprstufxywABGDEVZHQIJKLMNCOPRSTUFXYW")
 
-(defvar hrm--beta-letters--user hrm--beta-letters--standard)
+(defvar hermeneus--beta-letters--user hermeneus--beta-letters--standard)
 
-;; (defconst hrm--greek-kbd-letters
+;; (defconst hermeneus--greek-kbd-letters
 ;;   "abgde`zhuiĳklmnjoprwtyfxcvABGDE~ZHUIĲKLMNJOPRWTYFXCV")
 
-;; (defvar hrm--beta-letters--user hrm--beta-letters--standard)
-;; (defvar hrm--beta-output-letters hrm--greek-letters)
+;; (defvar hermeneus--beta-letters--user hermeneus--beta-letters--standard)
+;; (defvar hermeneus--beta-output-letters hermeneus--greek-letters)
 
 ;; For comparison, here are the non-combining versions of the
-;; characters in ‘hrm--greek-diacritics’:
+;; characters in ‘hermeneus--greek-diacritics’:
 ;; ᾿῾ `´῀¨ͺˉ˘
-(defconst hrm--beta-diacritics
+(defconst hermeneus--beta-diacritics
   ")(\\/=+|_^")
 
-(defconst hrm--beta-punctuation
+(defconst hermeneus--beta-punctuation
   "':;") ; "’·;"
 
-(defconst hrm--beta-all--standard
-  (concat hrm--beta-punctuation hrm--beta-diacritics hrm--beta-letters--standard))
+(defconst hermeneus--beta-all--standard
+  (concat hermeneus--beta-punctuation hermeneus--beta-diacritics hermeneus--beta-letters--standard))
 
-(hrm--make-regexp-versions defconst
-  hrm--beta-diacritics hrm--beta-punctuation
-  hrm--beta-all--standard)
+(hermeneus--make-regexp-versions defconst
+  hermeneus--beta-diacritics hermeneus--beta-punctuation
+  hermeneus--beta-all--standard)
 
-(defvar hrm--beta-all--user hrm--beta-all--standard)
-(defvar hrm--beta-all--user-regexp
-  (hrm--regexp-bracket-quote hrm--beta-all--user))
+(defvar hermeneus--beta-all--user hermeneus--beta-all--standard)
+(defvar hermeneus--beta-all--user-regexp
+  (hermeneus--regexp-bracket-quote hermeneus--beta-all--user))
 
-(defvar hrm--greek-all
-  (concat hrm--greek-punctuation hrm--greek-diacritics
+(defvar hermeneus--greek-all
+  (concat hermeneus--greek-punctuation hermeneus--greek-diacritics
           (apply #'string
-                 (delete-dups (append (string-to-list hrm--greek-letters)
-                                      (string-to-list hrm--all-sigmas))))))
+                 (delete-dups (append (string-to-list hermeneus--greek-letters)
+                                      (string-to-list hermeneus--all-sigmas))))))
 #+end_src
 
 ** Options
 #+begin_src emacs-lisp
-(defun hrm--make-beta-hash-1 (input-letters output-letters hash)
+(defun hermeneus--make-beta-hash-1 (input-letters output-letters hash)
   (when (stringp input-letters)
     (setq input-letters (mapcar #'char-to-string
                                 (string-to-list input-letters))))
@@ -355,17 +355,17 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
            for o across output-letters
            if (eq (length i) 1)
            do (puthash (string-to-char i) o hash)
-           else do (setq hash (hrm--make-beta-hash-1 i (make-string (length i) o) hash))
+           else do (setq hash (hermeneus--make-beta-hash-1 i (make-string (length i) o) hash))
            finally return hash))
 
-(cl-defun hrm--make-beta-hash (input-letters &optional
-                                             (output-letters hrm--greek-letters)
-                                             (hash (make-hash-table :size (length hrm--greek-letters)))
+(cl-defun hermeneus--make-beta-hash (input-letters &optional
+                                             (output-letters hermeneus--greek-letters)
+                                             (hash (make-hash-table :size (length hermeneus--greek-letters)))
                                              &key
-                                             (output-punctuation hrm--greek-punctuation)
-                                             (output-diacritics hrm--greek-diacritics)
-                                             (input-punctuation hrm--beta-punctuation)
-                                             (input-diacritics hrm--beta-diacritics))
+                                             (output-punctuation hermeneus--greek-punctuation)
+                                             (output-diacritics hermeneus--greek-diacritics)
+                                             (input-punctuation hermeneus--beta-punctuation)
+                                             (input-diacritics hermeneus--beta-diacritics))
   "Make a hash table for translating INPUT-LETTERS to OUTPUT-LETTERS.
 INPUT-LETTERS can be a string or a list of strings.
 OUTPUT-LETTERS must be a string.
@@ -384,26 +384,26 @@ hash table mapping \"a\" to \"x\", \"b\" to \"x\", \"c\" to
 
 Use HASH if you want to start from an existing hash-table rather
 than make a new one."
-  (setq hash (hrm--make-beta-hash-1 input-letters output-letters hash))
+  (setq hash (hermeneus--make-beta-hash-1 input-letters output-letters hash))
   (when (and input-punctuation input-diacritics output-punctuation output-diacritics)
     (cl-loop for i across (concat input-punctuation input-diacritics)
              for o across (concat output-punctuation output-diacritics)
              do (puthash i o hash)))
   hash)
 
-(defvar hrm--beta-hash--standard (hrm--make-beta-hash hrm--beta-letters--standard))
-(defvar hrm--beta-hash--user (copy-hash-table hrm--beta-hash--standard))
+(defvar hermeneus--beta-hash--standard (hermeneus--make-beta-hash hermeneus--beta-letters--standard))
+(defvar hermeneus--beta-hash--user (copy-hash-table hermeneus--beta-hash--standard))
 
-(cl-defun hrm-conv--set-beta-input-type (&optional sym (def hrm-beta-input-type f))
-  "Setter function for the option `hrm-beta-input-type'."
+(cl-defun hermeneus-conv--set-beta-input-type (&optional sym (def hermeneus-beta-input-type f))
+  "Setter function for the option `hermeneus-beta-input-type'."
   (unless sym
-    (setq sym 'hrm-beta-input-type))
+    (setq sym 'hermeneus-beta-input-type))
 
   (cond ((eq def 'beta)
-         (setq hrm--beta-hash--user
-               hrm--beta-hash--standard)
-         (setq hrm--beta-letters--user
-               hrm--beta-letters--standard))
+         (setq hermeneus--beta-hash--user
+               hermeneus--beta-hash--standard)
+         (setq hermeneus--beta-letters--user
+               hermeneus--beta-letters--standard))
 
         ;; Note that standard Greek keyboard layouts don’t have
         ;; a key for the digamma or yot; so, for the ‘greek-kbd’
@@ -423,29 +423,29 @@ than make a new one."
                   "n" "j" "o" "p" "r" "sw" "t" "y" "f" "x" "c" "v"
                   "A" "B" "G" "D" "E" "~"  "Z" "H" "U" "I" "Ĳ" "K" "L" "M"
                   "N" "J" "O" "P" "R" "SW" "T" "Y" "F" "X" "C" "V")))
-           (setq hrm--beta-hash--user
-                 (hrm--make-beta-hash greek-kbd-def)
-                 hrm--beta-letters-user
+           (setq hermeneus--beta-hash--user
+                 (hermeneus--make-beta-hash greek-kbd-def)
+                 hermeneus--beta-letters-user
                  (apply #'concat greek-kbd-def))))
 
         ((and (listp def) (cl-every #'stringp def))
-         (setq hrm--beta-hash--user
-               (hrm--make-beta-hash def)
-               hrm--beta-letters--user
+         (setq hermeneus--beta-hash--user
+               (hermeneus--make-beta-hash def)
+               hermeneus--beta-letters--user
                (apply #'concat def)))
 
-        (t (error "Invalid definition for ‘hrm-beta-input-type’: %s" def)))
+        (t (error "Invalid definition for ‘hermeneus-beta-input-type’: %s" def)))
 
-  (setq hrm--beta-all--user
-        (concat hrm--beta-punctuation hrm--beta-diacritics hrm--beta-letters--user)
-        hrm--beta-all--user-regexp
-        (hrm--regexp-bracket-quote hrm--beta-all--user))
+  (setq hermeneus--beta-all--user
+        (concat hermeneus--beta-punctuation hermeneus--beta-diacritics hermeneus--beta-letters--user)
+        hermeneus--beta-all--user-regexp
+        (hermeneus--regexp-bracket-quote hermeneus--beta-all--user))
 
   ;; if definition is specified, set the variable itself
   (when f
     (set-default sym def)))
 
-(defcustom hrm-beta-input-type 'beta
+(defcustom hermeneus-beta-input-type 'beta
   "How to interpret Latin letters used to represent Greek words.
 Only affects user input. The default is the standard “Beta code”
 used for representing Greek words in Latin characters. “Greek
@@ -459,19 +459,19 @@ the string if you want more than one key to enter the same
 letter.
 
 If setting this outside of Customize, be sure to run
-‘hrm-conv--set-beta-input-type’ afterward."
+‘hermeneus-conv--set-beta-input-type’ afterward."
   :type `(choice (const beta :tag "Beta code")
                  (const greek-kbd :tag "Greek keyboard")
                  (list :tag "Custom mapping"
-                       ,@(cl-loop for cg across hrm--greek-letters
-                                for cb across hrm--beta-letters--standard
+                       ,@(cl-loop for cg across hermeneus--greek-letters
+                                for cb across hermeneus--beta-letters--standard
                                 for sg = (if (eq cg ?ς)
                                              "σ/ς"
                                            (concat "  " (char-to-string cg)))
                                 for sb = (char-to-string cb)
                                 collect (list 'string :tag sg :value sb))))
   :tag "Hermeneus — Beta code input type"
-  :set 'hrm-conv--set-beta-input-type
+  :set 'hermeneus-conv--set-beta-input-type
   :group 'hermeneus)
 #+end_src
 
@@ -479,7 +479,7 @@ If setting this outside of Customize, be sure to run
 This may have to be recoded in such a way as to allow peeking at the next letter, to see if there’s a word boundary, for the sake of sigma normalization. Also, I should be thinking about iota-subscript stuff right now. Eeeegh…
 
 #+begin_src emacs-lisp
-(defun hrm--convert-string-by-hash (string hash)
+(defun hermeneus--convert-string-by-hash (string hash)
   "Return STRING, translated according to HASH.
   HASH should be a hash table where the keys are characters and the
   values are characters or strings."
@@ -492,18 +492,18 @@ This may have to be recoded in such a way as to allow peeking at the next letter
 
 ** Normalize diacritics
 #+begin_src emacs-lisp
-(defun hrm-conv--change-diacritics-placement (string)
+(defun hermeneus-conv--change-diacritics-placement (string)
   (let ((rx (rx (group "*")
                 (group (one-or-more (any ")(/\\=+|—^")))
                 (group letter))))
     (replace-regexp-in-string rx "\\1\\3\\2" string)))
 
-(defun hrm-conv--dieresis-before-accent (string)
+(defun hermeneus-conv--dieresis-before-accent (string)
   (let ((rx (rx (group (any "/\\"))
                 (group "+" ))))
     (replace-regexp-in-string rx "\\2\\1" string)))
 
-(defun hrm-conv--capitalize-after-asterisk (string)
+(defun hermeneus-conv--capitalize-after-asterisk (string)
   "If STRING contains an asterisk, return STRING with no asterisk
 and with the first letter after it capitalized. Otherwise, return
 STRING. (This also happens when no letters appear anywhere
@@ -515,19 +515,19 @@ following the asterisk.)"
                                   (substring string (1+ astr-idx) capt-idx)
                                   (char-to-string (upcase (elt string capt-idx)))
                                   (substring string (1+ capt-idx))))
-             (hrm-conv--capitalize-after-asterisk string))
+             (hermeneus-conv--capitalize-after-asterisk string))
     string))
 
-(defun hrm-conv--normalize-beta-diacritics (string)
+(defun hermeneus-conv--normalize-beta-diacritics (string)
   (thread-first string
-    (hrm-conv--change-diacritics-placement)
-    (hrm-conv--dieresis-before-accent)
-    (hrm-conv--capitalize-after-asterisk)))
+    (hermeneus-conv--change-diacritics-placement)
+    (hermeneus-conv--dieresis-before-accent)
+    (hermeneus-conv--capitalize-after-asterisk)))
 #+end_src
 
 ** Normalize sigmas
 #+begin_src emacs-lisp
-(defun hrm-conv--normalize-sigmas (string)
+(defun hermeneus-conv--normalize-sigmas (string)
   "Returns a copy of STRING, but with sigmas normalized.
 Sigmas which end a word will be replaced with “ς”, while other sigmas
 will be replaced with “σ”."
@@ -567,40 +567,40 @@ will be replaced with “σ”."
 
 ** Conversion
 #+begin_src emacs-lisp
-(defun hrm-beta-to-unicode (string &optional input-p match-p)
+(defun hermeneus-beta-to-unicode (string &optional input-p match-p)
   "Return STRING converted from Beta code to Unicode.
 INPUT-P is whether or not the string should be interpreted as
 user input. (The difference is that user input should be read
-according to the option ‘hrm-conv-beta-input-type’; otherwise, it
+according to the option ‘hermeneus-conv-beta-input-type’; otherwise, it
 should be read as standard Beta code, as used in the XML LSJ.)
 MATCH-P should be non-nil when converting a string to be used
-solely for matching (like in the function ‘hrm--re-builder’), in
+solely for matching (like in the function ‘hermeneus--re-builder’), in
 which case sigma normalization is unnecessary."
   (setq string
         (thread-first string
-          (hrm-conv--normalize-beta-diacritics)
-          (hrm--convert-string-by-hash (if input-p
-                                           hrm--beta-hash--user
-                                         hrm--beta-hash--standard))
+          (hermeneus-conv--normalize-beta-diacritics)
+          (hermeneus--convert-string-by-hash (if input-p
+                                           hermeneus--beta-hash--user
+                                         hermeneus--beta-hash--standard))
           (ucs-normalize-NFC-string)))
   (if match-p
       string
-    (hrm-conv--normalize-sigmas string)))
+    (hermeneus-conv--normalize-sigmas string)))
 #+end_src
 
 ** Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest conv-test "Test Beta to Unicode conversion"
-  (should (equal (hrm-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
-  (should (let ((hrm-beta-input-type 'greek-kbd))
-            (hrm-conv--set-beta-input-type)
-            (equal (hrm-beta-to-unicode "*)odyssey/w" t) "Ὀδυσσεύς")))
-  (should (let ((hrm-beta-input-type '("o" "d" "y" "b" "z" "`"  "e" "s" "w" "i" "ĳ" "k" "l" "m"
+  (should (equal (hermeneus-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
+  (should (let ((hermeneus-beta-input-type 'greek-kbd))
+            (hermeneus-conv--set-beta-input-type)
+            (equal (hermeneus-beta-to-unicode "*)odyssey/w" t) "Ὀδυσσεύς")))
+  (should (let ((hermeneus-beta-input-type '("o" "d" "y" "b" "z" "`"  "e" "s" "w" "i" "ĳ" "k" "l" "m"
                                        "n" "j" "a" "p" "r" "hu" "t" "g" "f" "x" "c" "v"
                                        "O" "D" "Y" "B" "Z" "~"  "E" "S" "W" "I" "Ĳ" "K" "L" "M"
                                        "N" "J" "A" "P" "R" "HU" "T" "G" "F" "X" "C" "V")))
-            (hrm-conv--set-beta-input-type)
-            (equal (hrm-beta-to-unicode "*)abghhzg/u" t) "Ὀδυσσεύς"))))
+            (hermeneus-conv--set-beta-input-type)
+            (equal (hermeneus-beta-to-unicode "*)abghhzg/u" t) "Ὀδυσσεύς"))))
 #+end_src
 
 ** End matter
@@ -608,20 +608,20 @@ which case sigma normalization is unnecessary."
 :ID:       TKR:843a4901-0bf6-4c9e-a709-c79b0a4195bc
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-conv)
+(provide 'hermeneus-conv)
 
-;;; hrm-conv.el ends here
+;;; hermeneus-conv.el ends here
 #+end_src
 
 * Matching
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle hrm-match.el
+:header-args:emacs-lisp: :tangle hermeneus-match.el
 :END:
 Here we have everything to do with matching one string to another. This is mainly used for completion, so performance is critical.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-match.el --- -*- lexical-binding: t -*-
+;;; hermeneus-match.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -632,15 +632,15 @@ Here we have everything to do with matching one string to another. This is mainl
                    (require 'cl-macs)
                    (require 'subr-x))
 
-(require 'hrm-conv)
+(require 'hermeneus-conv)
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 #+end_src
 
 ** Variables
 #+begin_src emacs-lisp
-(hrm--make-regexp-versions defconst
-  hrm--lowercase-sigmas hrm--uppercase-sigmas hrm--all-sigmas)
+(hermeneus--make-regexp-versions defconst
+  hermeneus--lowercase-sigmas hermeneus--uppercase-sigmas hermeneus--all-sigmas)
 #+end_src
 
 ** Functions
@@ -650,7 +650,7 @@ Here we have everything to do with matching one string to another. This is mainl
 :ID:       TKR:36e58a64-4ada-426c-b9b8-cd7d76123bb2
 :END:
 #+begin_src emacs-lisp
-(defun hrm-remove-diacritics (string)
+(defun hermeneus-remove-diacritics (string)
   "Return STRING, but with all diacritics removed."
   (replace-regexp-in-string (rx (category combining-diacritic)) ""
                             (ucs-normalize-NFD-string string)))
@@ -658,73 +658,73 @@ Here we have everything to do with matching one string to another. This is mainl
 
 ** Hash tables
 #+begin_src emacs-lisp
-(defun hrm-normalize-greek-char (char)
+(defun hermeneus-normalize-greek-char (char)
   (thread-first char
     (char-to-string)
-    (hrm-remove-diacritics)
+    (hermeneus-remove-diacritics)
     (string-to-char)))
 
-(cl-defun hrm--get-letter-variants (char)
+(cl-defun hermeneus--get-letter-variants (char)
   (when (stringp char)
     (setq char (string-to-char char)))
   ;; if it’s a sigma, return all sigmas of that case
-  (if (memq char (string-to-list hrm--all-sigmas))
-      (if (memq char (string-to-list hrm--lowercase-sigmas))
-          hrm--lowercase-sigmas
-        hrm--uppercase-sigmas)
-    ;; otherwise, look up variants in ‘hrm--greek-unicode-all’
-    (cl-loop for c across hrm--greek-unicode-all
-             if (eq (hrm-normalize-greek-char char)
-                    (hrm-normalize-greek-char c))
+  (if (memq char (string-to-list hermeneus--all-sigmas))
+      (if (memq char (string-to-list hermeneus--lowercase-sigmas))
+          hermeneus--lowercase-sigmas
+        hermeneus--uppercase-sigmas)
+    ;; otherwise, look up variants in ‘hermeneus--greek-unicode-all’
+    (cl-loop for c across hermeneus--greek-unicode-all
+             if (eq (hermeneus-normalize-greek-char char)
+                    (hermeneus-normalize-greek-char c))
              concat (char-to-string c))))
 
-(defvar hrm--letter-variant-hash (make-hash-table :size (length hrm--greek-all)))
-(defvar hrm--letter-variant-hash-case-folded (make-hash-table :size (length hrm--greek-all)))
+(defvar hermeneus--letter-variant-hash (make-hash-table :size (length hermeneus--greek-all)))
+(defvar hermeneus--letter-variant-hash-case-folded (make-hash-table :size (length hermeneus--greek-all)))
 
-(defun hrm--make-letter-variant-hashes ()
-  (cl-loop with letters = (thread-first hrm--greek-letters
-                            (concat hrm--all-sigmas)
+(defun hermeneus--make-letter-variant-hashes ()
+  (cl-loop with letters = (thread-first hermeneus--greek-letters
+                            (concat hermeneus--all-sigmas)
                             (string-to-list)
                             (delete-dups))
            for l in letters
            for ld = (downcase l)
            for lu = (upcase l)
-           for variants = (hrm--get-letter-variants l)
+           for variants = (hermeneus--get-letter-variants l)
            for casefold-variants = (if (eq ld lu)
                                        variants
-                                     (concat (hrm--get-letter-variants ld)
-                                             (hrm--get-letter-variants lu)))
-           do (puthash l (hrm--regexp-bracket-quote variants)
-                       hrm--letter-variant-hash)
-              (puthash l (hrm--regexp-bracket-quote casefold-variants)
-                       hrm--letter-variant-hash-case-folded)))
+                                     (concat (hermeneus--get-letter-variants ld)
+                                             (hermeneus--get-letter-variants lu)))
+           do (puthash l (hermeneus--regexp-bracket-quote variants)
+                       hermeneus--letter-variant-hash)
+              (puthash l (hermeneus--regexp-bracket-quote casefold-variants)
+                       hermeneus--letter-variant-hash-case-folded)))
 
-(hrm--make-letter-variant-hashes)
+(hermeneus--make-letter-variant-hashes)
 
-(defvar hrm--case-fold-hash (make-hash-table :size (length hrm--greek-unicode-all)))
+(defvar hermeneus--case-fold-hash (make-hash-table :size (length hermeneus--greek-unicode-all)))
 
-(defun hrm--make-case-fold-hash ()
-  (cl-loop for l across hrm--greek-unicode-all
+(defun hermeneus--make-case-fold-hash ()
+  (cl-loop for l across hermeneus--greek-unicode-all
            for lu = (upcase l)
            for ld = (downcase l)
-           if (memq l (string-to-list hrm--all-sigmas))
-           do (puthash l hrm--all-sigmas-regexp hrm--case-fold-hash)
+           if (memq l (string-to-list hermeneus--all-sigmas))
+           do (puthash l hermeneus--all-sigmas-regexp hermeneus--case-fold-hash)
            else if (eq ld lu)
-           do (puthash l l hrm--case-fold-hash)
+           do (puthash l l hermeneus--case-fold-hash)
            else do (puthash l (format "[%c%c]" ld lu)
-                            hrm--case-fold-hash)))
+                            hermeneus--case-fold-hash)))
 
-(hrm--make-case-fold-hash)
+(hermeneus--make-case-fold-hash)
 
-(defvar hrm--sigma-hash (make-hash-table :size (length hrm--all-sigmas)))
+(defvar hermeneus--sigma-hash (make-hash-table :size (length hermeneus--all-sigmas)))
 
-(defun hrm--make-sigma-hash ()
-  (cl-loop for l across hrm--lowercase-sigmas
-           do (puthash l hrm--lowercase-sigmas-regexp hrm--sigma-hash))
-  (cl-loop for l across hrm--uppercase-sigmas
-           do (puthash l hrm--uppercase-sigmas-regexp hrm--sigma-hash)))
+(defun hermeneus--make-sigma-hash ()
+  (cl-loop for l across hermeneus--lowercase-sigmas
+           do (puthash l hermeneus--lowercase-sigmas-regexp hermeneus--sigma-hash))
+  (cl-loop for l across hermeneus--uppercase-sigmas
+           do (puthash l hermeneus--uppercase-sigmas-regexp hermeneus--sigma-hash)))
 
-(hrm--make-sigma-hash)
+(hermeneus--make-sigma-hash)
 #+end_src
 
 ** Regex builder
@@ -737,14 +737,14 @@ Watch out for:
 Of these, “vowels that can potentially be followed by iota-subscript” remains unimplemented. I’m thinking of doing it this way: if accents are folded, check to see if there’s an alpha, eta, or omega followed by an iota anywhere in the word, and if so, use a text property to mark each such iota as “possibly an iota-subscript”; then, as the regexp is being built, mark the iota as being possibly not present in the matched string at all (the existing regexp-building functionality takes care of equivocating α with ᾳ, η with ῃ, and ω with ῳ).
 
 #+begin_src emacs-lisp
-(defun hrm--re-builder (string)
+(defun hermeneus--re-builder (string)
   ;; Decompose the string into letters and combining diacriticals, and
   ;; translate any Beta code to Unicode
   (setq string (ucs-normalize-NFD-string string))
-  (when (string-match-p hrm--beta-all--user-regexp string)
+  (when (string-match-p hermeneus--beta-all--user-regexp string)
     (setq string (thread-first string
-                   (hrm-conv--normalize-beta-diacritics)
-                   (hrm-beta-to-unicode t t))))
+                   (hermeneus-conv--normalize-beta-diacritics)
+                   (hermeneus-beta-to-unicode t t))))
   ;; Figure out if we need to fold accents or case
   (let* ((fold-accents-p (not (string-match-p
                                (rx (category combining-diacritic))
@@ -758,14 +758,14 @@ Of these, “vowels that can potentially be followed by iota-subscript” remain
          (hash (if fold-accents-p
                    ;; Yes, folding accents
                    (if fold-case-p
-                       hrm--letter-variant-hash-case-folded
-                     hrm--letter-variant-hash)
+                       hermeneus--letter-variant-hash-case-folded
+                     hermeneus--letter-variant-hash)
                  ;; No, not folding accents
                  (setq string (ucs-normalize-NFC-string string)) ; recompose accents
                  (if fold-case-p
-                     hrm--case-fold-hash
-                   hrm--sigma-hash))))
-    (hrm--convert-string-by-hash string hash)))
+                     hermeneus--case-fold-hash
+                   hermeneus--sigma-hash))))
+    (hermeneus--convert-string-by-hash string hash)))
 #+end_src
 
 ** Matcher
@@ -775,7 +775,7 @@ Of these, “vowels that can potentially be followed by iota-subscript” remain
 Performance is insanely critical, here.
 
 #+begin_src emacs-lisp
-(defun hrm--re-matcher (regexp candidates)
+(defun hermeneus--re-matcher (regexp candidates)
   "Return all strings in CANDIDATES that match REGEXP.
 Strings where the regexp matches at the beginning will be listed
 earlier in the result than strings where the regexp matches
@@ -792,11 +792,11 @@ elsewhere."
 #+end_src
 
 ** Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest match-test ()
   "Test the results of the regexp matcher."
   ;; This is the sexp used to create ‘wordlist’:
-  ;; (cl-loop for string in (hash-table-keys (oref hrm-lsj entries)) if (string-match-p (hrm--re-builder "αφρο") string) collect string)
+  ;; (cl-loop for string in (hash-table-keys (oref hermeneus-lsj entries)) if (string-match-p (hermeneus--re-builder "αφρο") string) collect string)
   (should (let ((wordlist '("ἀκαταφρόνητος" "ἀναφροδισία"
                             "ἀναφρόδιτος" "ἀναφρονέω" "ἀναφροντίζω"
                             "ἄναφρος" "ἀνεπαφροδισία" "ἀνεπαφρόδιτος"
@@ -834,7 +834,7 @@ elsewhere."
                             "ταφροποιέω" "τάφρος" "ὕπαφρος"
                             "ὑπελαφρός" "ὑπερέλαφρος"
                             "ὑποκαταφρονέω"))
-                (regexp (hrm--re-builder "Αφροδ"))
+                (regexp (hermeneus--re-builder "Αφροδ"))
                 (expected-result '("Ἀφροδίσια" "Ἀφροδισιάζω"
                                    "Ἀφροδισιακός" "Ἀφροδισιάς"
                                    "Ἀφροδισιασμός" "Ἀφροδισιαστής"
@@ -848,27 +848,27 @@ elsewhere."
                                    "εὐαφρόδιτος" "Κουραφροδίτη"
                                    "πανεπαφροδισία"))
                 (case-fold-search t))
-            (equal (hrm--re-matcher regexp wordlist)
+            (equal (hermeneus--re-matcher regexp wordlist)
                    expected-result))))
 #+end_src
 
 ** End matter
 #+begin_src emacs-lisp
-(provide 'hrm-match)
+(provide 'hermeneus-match)
 
-;;; hrm-match.el ends here
+;;; hermeneus-match.el ends here
 #+end_src
 
 * Storage
 :PROPERTIES:
 :ID:       TKR:517f86fc-db04-4e9d-8539-6111477bea54
-:header-args:emacs-lisp: :tangle hrm-storage.el
+:header-args:emacs-lisp: :tangle hermeneus-storage.el
 :END:
-This section contains the ~hrm-word~ and ~hrm-lexicon~ objects, used for storing the results of ~hrm-scan-lsj~ (see [[XML]]). ~hrm-lexicon~ uses ~eieio-persistent~ to store the data long-term.
+This section contains the ~hermeneus-word~ and ~hermeneus-lexicon~ objects, used for storing the results of ~hermeneus-scan-lsj~ (see [[XML]]). ~hermeneus-lexicon~ uses ~eieio-persistent~ to store the data long-term.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-storage.el --- -*- lexical-binding: t -*-
+;;; hermeneus-storage.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -880,7 +880,7 @@ This section contains the ~hrm-word~ and ~hrm-lexicon~ objects, used for storing
 (require 'eieio-base)
 (require 'cl-generic)
 
-(declare-function #'hrm-scan-entries "hrm-xml")
+(declare-function #'hermeneus-scan-entries "hermeneus-xml")
 #+end_src
 
 ** Variables
@@ -888,17 +888,17 @@ This section contains the ~hrm-word~ and ~hrm-lexicon~ objects, used for storing
 :ID:       TKR:cc2d39d7-8b0f-4f8c-adfb-0d5e8d715cfd
 :END:
 #+begin_src emacs-lisp
-(defvar hrm-storage-file (concat "lsj-cache" (when (executable-find "gzip") ".gz")))
-(defvar hrm-storage-path nil) ; this is set by the setter function below
+(defvar hermeneus-storage-file (concat "lsj-cache" (when (executable-find "gzip") ".gz")))
+(defvar hermeneus-storage-path nil) ; this is set by the setter function below
 
-(defcustom hrm-storage-dir (expand-file-name "var/hermeneus" user-emacs-directory)
+(defcustom hermeneus-storage-dir (expand-file-name "var/hermeneus" user-emacs-directory)
   "Directory in which to store files generated by Hermeneus.
 At present, this means where to store the Hermeneus lexicon
 cache. If you set this outside Customize, ensure that the
 directory exists (creating it if necessary), and set
-‘hrm-storage-path’ to the value returned by calling
+‘hermeneus-storage-path’ to the value returned by calling
 ‘expand-file-name’ with two arguments: the current value of
-‘hrm-storage-file’, and the new value for ‘hrm-storage-dir’."
+‘hermeneus-storage-file’, and the new value for ‘hermeneus-storage-dir’."
   :type 'directory
   :tag "Hermeneus — storage directory"
   :group 'hermeneus
@@ -906,8 +906,8 @@ directory exists (creating it if necessary), and set
          (unless (file-exists-p (directory-file-name value))
            (make-directory (directory-file-name value) t))
          (set-default symbol value)
-         (setq hrm-storage-path
-               (expand-file-name hrm-storage-file value))))
+         (setq hermeneus-storage-path
+               (expand-file-name hermeneus-storage-file value))))
 #+end_src
 
 ** Objects
@@ -915,7 +915,7 @@ directory exists (creating it if necessary), and set
 :ID:       TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8
 :END:
 #+begin_src emacs-lisp
-(defclass hrm-word ()
+(defclass hermeneus-word ()
   ((key :type string
         :initarg :key
         :initform "")
@@ -927,19 +927,19 @@ directory exists (creating it if necessary), and set
         :initform nil))
   :documentation "A Hermeneus object to represent one word.")
 
-(defclass hrm-lexicon (eieio-persistent)
+(defclass hermeneus-lexicon (eieio-persistent)
   ((initialized-p :type boolean
                   :initarg :initialized-p
                   :initform nil)
    (entries :type hash-table
             :initarg :entries
             :initform (make-hash-table :size 116493 :test 'equal))
-   ;; I have absolutely zero clue why (file :initform hrm-storage-path)
+   ;; I have absolutely zero clue why (file :initform hermeneus-storage-path)
    ;; results in an “invalid-slot-type” error, but this doesn’t:
-   (file :initform (symbol-value 'hrm-storage-path))
+   (file :initform (symbol-value 'hermeneus-storage-path))
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.
-Use the function ‘hrm-get-entries’ to access the ‘entries’ slot.")
+Use the function ‘hermeneus-get-entries’ to access the ‘entries’ slot.")
 #+end_src
 
 ** Methods
@@ -947,22 +947,22 @@ Use the function ‘hrm-get-entries’ to access the ‘entries’ slot.")
 :ID:       TKR:155090bb-4267-4ec2-be28-e402000a0a0e
 :END:
 #+begin_src emacs-lisp
-(cl-defmethod make-instance ((cls (subclass hrm-lexicon)) &rest slots)
-  "When making a ‘hrm-lexicon’ object, try to read it from a file.
+(cl-defmethod make-instance ((cls (subclass hermeneus-lexicon)) &rest slots)
+  "When making a ‘hermeneus-lexicon’ object, try to read it from a file.
 (The file’s path can be passed as a “:file” keyword argument, but
-otherwise defaults to ‘hrm-storage-path’.) If the file doesn’t exist,
+otherwise defaults to ‘hermeneus-storage-path’.) If the file doesn’t exist,
 or otherwise can’t be used, move on."
   (let ((path (or (plist-get slots :file)
-                  hrm-storage-path)))
+                  hermeneus-storage-path)))
     (or (and (file-exists-p path)
              (eieio-persistent-read path cls t))
         (cl-call-next-method))))
 
-(defvar hrm-lsj (hrm-lexicon nil))
+(defvar hermeneus-lsj (hermeneus-lexicon nil))
 #+end_src
 
 ** TODO Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
 ** End matter
@@ -970,24 +970,24 @@ or otherwise can’t be used, move on."
 :ID:       TKR:bdfa271e-9060-4205-bd28-d168aef150d2
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-storage)
+(provide 'hermeneus-storage)
 
-;;; hrm-storage.el ends here
+;;; hermeneus-storage.el ends here
 #+end_src
 
 * XML
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle hrm-xml.el
+:header-args:emacs-lisp: :tangle hermeneus-xml.el
 :END:
 This section has everything to do with parsing XML, specifically, [[https://github.com/PerseusDL/lexica][the XML version of the Liddell-Scott-Jones /Greek-English Lexicon]]/ (“the LSJ”), scanned and exhaustively tagged by the fine folks at the Perseus Project.
 
-The main function here is ~hrm-scan-lsj~ (in [[Scan the LSJ]]), which parses the entire LSJ, creates a word object (see [[id:TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8][Objects]] over in [[Storage]]) for each entry, and stores the word objects in the lexicon object ~hrm-lsj~. (Within the lexicon object, the words are stored in a hash table for speedy access.)
+The main function here is ~hermeneus-scan-lsj~ (in [[Scan the LSJ]]), which parses the entire LSJ, creates a word object (see [[id:TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8][Objects]] over in [[Storage]]) for each entry, and stores the word objects in the lexicon object ~hermeneus-lsj~. (Within the lexicon object, the words are stored in a hash table for speedy access.)
 
-If you’d like, you can write a function (whose arguments are a word-object and its XML entry’s DOM) and add it to the hook ~hrm-scan-entry-functions~ (see [[id:TKR:d47a2a83-a109-4534-927f-b93831bb9cbe][Hooks]] in [[Early definitions]]), and the function will be run with every word scanned. You can use this, for instance, to modify the object based on information found in the entry.
+If you’d like, you can write a function (whose arguments are a word-object and its XML entry’s DOM) and add it to the hook ~hermeneus-scan-entry-functions~ (see [[id:TKR:d47a2a83-a109-4534-927f-b93831bb9cbe][Hooks]] in [[Early definitions]]), and the function will be run with every word scanned. You can use this, for instance, to modify the object based on information found in the entry.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-xml.el --- -*- lexical-binding: t -*-
+;;; hermeneus-xml.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -1008,9 +1008,9 @@ If you’d like, you can write a function (whose arguments are a word-object and
 (eval-when-compile (require 'subr-x)
                    (require 'cl-macs))
 
-(require 'hrm-conv)
+(require 'hermeneus-conv)
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 #+end_src
 
 ** Utility functions
@@ -1020,7 +1020,7 @@ If you’d like, you can write a function (whose arguments are a word-object and
 :ID:       TKR:7510ef46-dc7c-46df-91d1-3a78ecc55553
 :END:
 #+begin_src emacs-lisp
-(defun hrm--url-p (path)
+(defun hermeneus--url-p (path)
   "Return non-nil if PATH is a valid URL.
 Specifically, this will return a parsed URL object from
   ‘url-generic-parse-url’, otherwise nil."
@@ -1034,7 +1034,7 @@ Specifically, this will return a parsed URL object from
 :ID:       TKR:83796ca2-8149-4c43-8bdf-e89d91ab4a0c
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--get-next-tag (&optional (tag "entryFree"))
+(cl-defun hermeneus--get-next-tag (&optional (tag "entryFree"))
   "Return start and end positions of the next instance of XML tag TAG
 (defaults to “entryFree”). Move point to the end position."
   (save-match-data
@@ -1052,24 +1052,24 @@ Specifically, this will return a parsed URL object from
 :ID:       TKR:8a8cf7a7-ae76-46ec-9774-7930d5d0413a
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--get-dom-from-file (file &optional start end
+(cl-defun hermeneus--get-dom-from-file (file &optional start end
                                        &key plain-xml-p)
   "Return a DOM sexp from the XML file FILE.
 If keyword argument PLAIN-XML-P is non-nil, return plain XML instead."
   (when (integerp file)
-    (setq file (nth file hrm-lsj-files)))
+    (setq file (nth file hermeneus-lsj-files)))
   (with-temp-buffer
-    (hrm--insert-contents file)
+    (hermeneus--insert-contents file)
     (funcall (if plain-xml-p
                  'buffer-substring
                'libxml-parse-xml-region)
              (or start (point-min))
              (or end (point-max)))))
 
-(defun hrm--insert-contents (file)
+(defun hermeneus--insert-contents (file)
   "Insert contents of FILE into the current buffer.
 FILE can be a local filename or an URL."
-  (if-let ((url (hrm--url-p file)))
+  (if-let ((url (hermeneus--url-p file)))
       (let ((buffer (url-retrieve-synchronously url nil t 60)))
         (url-insert-buffer-contents buffer url)
         (kill-buffer buffer))
@@ -1080,9 +1080,9 @@ FILE can be a local filename or an URL."
 
 *** Get DOM from a word object
 #+begin_src emacs-lisp
-(defun hrm--get-dom-from-word (word)
+(defun hermeneus--get-dom-from-word (word)
   "Return the DOM from the XML LSJ definition of word-object WORD."
-  (apply #'hrm--get-dom-from-file (oref word loc)))
+  (apply #'hermeneus--get-dom-from-file (oref word loc)))
 #+end_src
 
 *** Get file sizes
@@ -1090,9 +1090,9 @@ FILE can be a local filename or an URL."
 :ID:       TKR:04b61a99-7801-424c-a895-f6a71e9601ac
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--get-lsj-file-sizes (&optional (list hrm-lsj-files))
+(cl-defun hermeneus--get-lsj-file-sizes (&optional (list hermeneus-lsj-files))
   "Return the sizes of the XML LSJ files in LIST.
-LIST defaults to the value of ‘hrm-lsj-files’, and is assumed to
+LIST defaults to the value of ‘hermeneus-lsj-files’, and is assumed to
 be a list of the files in the XML LSJ. If any filename in LIST is
 an URL, then the size is given from a prerecorded list.
 Otherwise, ‘nnheader-file-size’ is used to find the file’s size."
@@ -1104,7 +1104,7 @@ Otherwise, ‘nnheader-file-size’ is used to find the file’s size."
                            1596622  1656586)))
     (cl-loop for l in list
              for i from 1 to (length list)
-             if (hrm--url-p l)
+             if (hermeneus--url-p l)
              collect (nth (1- i) sizes)
              else
              collect (nnheader-file-size l))))
@@ -1115,40 +1115,40 @@ Otherwise, ‘nnheader-file-size’ is used to find the file’s size."
 :ID:       TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737
 :END:
 #+begin_src emacs-lisp
-(defvar hrm-lsj-files nil)
+(defvar hermeneus-lsj-files nil)
 
-(cl-defun hrm--set-lsj-dir (&optional (symbol 'hrm-lsj-dir)
-                                      (value (if (boundp 'hrm-lsj-dir)
-                                                 hrm-lsj-dir
-                                               hrm--git-lsj-dir)))
-  "Setter function for ‘hrm-lsj-dir’."
+(cl-defun hermeneus--set-lsj-dir (&optional (symbol 'hermeneus-lsj-dir)
+                                      (value (if (boundp 'hermeneus-lsj-dir)
+                                                 hermeneus-lsj-dir
+                                               hermeneus--git-lsj-dir)))
+  "Setter function for ‘hermeneus-lsj-dir’."
   (set-default symbol value)
-  (setq hrm-lsj-files
+  (setq hermeneus-lsj-files
         (cl-loop for i from 1 to 27
-                 with expand-func = (if (hrm--url-p value)
+                 with expand-func = (if (hermeneus--url-p value)
                                         'url-expand-file-name
                                       'expand-file-name)
                  collect (funcall expand-func
                                   (format "grc.lsj.perseus-eng%s.xml" i)
                                   value))))
 
-(defcustom hrm-lsj-dir hrm--git-lsj-dir
+(defcustom hermeneus-lsj-dir hermeneus--git-lsj-dir
   "Directory where the LSJ Greek lexicon files can be found.
 This can be an URL or a local file path. The files themselves should
 be named in the format “grc.lsj.perseus-engXX.xml”, where XX is a
 number from 1 to 27 (no padding).
 
 If you set this outside of Customize, be sure to evaluate
-‘hrm--set-lsj-dir’."
+‘hermeneus--set-lsj-dir’."
   :tag "Hermeneus — LSJ directory"
-  :type `(choice (const ,hrm--git-lsj-dir
+  :type `(choice (const ,hermeneus--git-lsj-dir
                         :tag "Perseus Digital Library’s Git repository")
                  (directory :tag "local directory")
                  (string :tag "URL"))
-  :set 'hrm--set-lsj-dir
+  :set 'hermeneus--set-lsj-dir
   :group 'hermeneus)
 
-(defvar hrm-use-fonts t)
+(defvar hermeneus-use-fonts t)
 #+end_src
 
 ** Scan the LSJ
@@ -1156,24 +1156,24 @@ If you set this outside of Customize, be sure to evaluate
 :ID:       TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf
 :END:
 #+begin_src emacs-lisp
-(defun hrm-scan-entries ()
-  "Scan over every lexicon entry in the LSJ, using ‘hrm-scan-entry’.
+(defun hermeneus-scan-entries ()
+  "Scan over every lexicon entry in the LSJ, using ‘hermeneus-scan-entry’.
 Return a hash table mapping each headword (expressed as a string)
 to its corresponding word object."
   (interactive)
   (let* ((hash (make-hash-table :test 'equal :size 116493))
-         (sizes (hrm--get-lsj-file-sizes))
+         (sizes (hermeneus--get-lsj-file-sizes))
          (total 0)
          (prog-msg "Scanning Liddell and Scott")
          (progress (make-progress-reporter prog-msg
                                            0 (apply '+ sizes))))
-    (dotimes (i (length hrm-lsj-files))
+    (dotimes (i (length hermeneus-lsj-files))
       (with-temp-buffer
-        (hrm--insert-contents (nth i hrm-lsj-files))
+        (hermeneus--insert-contents (nth i hermeneus-lsj-files))
         (let ((cur-size (pop sizes))
               (max (point-max)))
-          (awhile (hrm--get-next-tag "entryFree")
-            (oset (hrm-scan-entry (apply 'libxml-parse-xml-region it) hash) loc (cons i it))
+          (awhile (hermeneus--get-next-tag "entryFree")
+            (oset (hermeneus-scan-entry (apply 'libxml-parse-xml-region it) hash) loc (cons i it))
             (progress-reporter-update progress (+ total
                                                   (* cur-size
                                                      (/ (float (cadr it))
@@ -1182,19 +1182,19 @@ to its corresponding word object."
     (progress-reporter-done progress)
     hash))
 
-(defun hrm-scan-entry (entry &optional hash)
+(defun hermeneus-scan-entry (entry &optional hash)
   "Scan ENTRY, a DOM sexp of an “entryFree” tag from the LSJ files.
 Identify its headword and numeric ID. Create a word object. Add
 the headword and object as a key-value pair in hash-table HASH,
-if present. Run each function from ‘hrm-scan-entry-functions’
+if present. Run each function from ‘hermeneus-scan-entry-functions’
 with two arguments, the word object and ENTRY. Finally, return
 the object."
-  (let* ((key (hrm-beta-to-unicode (dom-attr entry 'key)))
+  (let* ((key (hermeneus-beta-to-unicode (dom-attr entry 'key)))
          (id (string-to-number
               (string-remove-prefix "n" (dom-attr entry 'id))))
-         (obj (hrm-word :key key :id id)))
+         (obj (hermeneus-word :key key :id id)))
     (when hash (puthash key obj hash))
-    (run-hook-with-args 'hrm-scan-entry-functions obj entry)
+    (run-hook-with-args 'hermeneus-scan-entry-functions obj entry)
     obj))
 #+end_src
 
@@ -1207,64 +1207,64 @@ Right now, this is a placeholder.
 #+begin_src emacs-lisp
 #+end_src
 
-** Access/populate ~entries~ slot of hrm-lexicon object
+** Access/populate ~entries~ slot of hermeneus-lexicon object
 
 #+begin_src emacs-lisp
-(defun hrm-get-entries (lexicon)
-  "Access ‘entries’ slot of ‘hrm-lexicon’ object LEXICON.
-The ‘entries’ slot of ‘hrm-lexicon’ objects is a hash table
-containing ‘hrm-word’ objects. The reason to use this function
+(defun hermeneus-get-entries (lexicon)
+  "Access ‘entries’ slot of ‘hermeneus-lexicon’ object LEXICON.
+The ‘entries’ slot of ‘hermeneus-lexicon’ objects is a hash table
+containing ‘hermeneus-word’ objects. The reason to use this function
 instead of using (oref LEXICON entries) is because a newly
-created ‘hrm-lexicon’ object will not have any ‘hrm-word’ objects
+created ‘hermeneus-lexicon’ object will not have any ‘hermeneus-word’ objects
 in its ‘entries’ slot, and will need to be populated."
-  (unless (hrm-lexicon-p lexicon)
-    (signal 'wrong-type-argument (list 'hrm-lexicon-p lexicon)))
+  (unless (hermeneus-lexicon-p lexicon)
+    (signal 'wrong-type-argument (list 'hermeneus-lexicon-p lexicon)))
   (unless (oref lexicon initialized-p)
-    (hrm--populate-lexicon lexicon))
+    (hermeneus--populate-lexicon lexicon))
   (oref lexicon entries))
 
-(defun hrm--populate-lexicon (lexicon)
-  "Populate the ‘entries’ hash-table of ‘hrm-lexicon’ object LEXICON
+(defun hermeneus--populate-lexicon (lexicon)
+  "Populate the ‘entries’ hash-table of ‘hermeneus-lexicon’ object LEXICON
 with word-objects from the LSJ."
-  (oset lexicon entries (hrm-scan-entries))
+  (oset lexicon entries (hermeneus-scan-entries))
   (oset lexicon initialized-p t)
   (eieio-persistent-save lexicon))
 
 ;;;###autoload
-(defun hrm-scan-lsj ()
-  "Scan the LSJ and save the resulting word-objects to ‘hrm-lsj’."
+(defun hermeneus-scan-lsj ()
+  "Scan the LSJ and save the resulting word-objects to ‘hermeneus-lsj’."
   (interactive)
-  (hrm--populate-lexicon hrm-lsj))
+  (hermeneus--populate-lexicon hermeneus-lsj))
 #+end_src
 
 ** Return all tag types found in the LSJ (for reference; does not tangle)
-This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hrm-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
+This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hermeneus-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
 
 #+begin_src emacs-lisp :tangle no :results replace list :load no
-(defvar hrm--all-tag-types nil)
-(defvar hrm--current-entry nil)
-(defvar hrm--current-children nil)
-(defvar hrm--tricky-bastards nil)
+(defvar hermeneus--all-tag-types nil)
+(defvar hermeneus--current-entry nil)
+(defvar hermeneus--current-children nil)
+(defvar hermeneus--tricky-bastards nil)
 
-(defun hrm--get-tag-types (_obj dom)
-  (setq hrm--tricky-bastards nil)
+(defun hermeneus--get-tag-types (_obj dom)
+  (setq hermeneus--tricky-bastards nil)
   (awhen (dom-attr dom 'key)
-    (setq hrm--current-entry it)
-    (setq hrm--current-children (dom-children dom)))
+    (setq hermeneus--current-entry it)
+    (setq hermeneus--current-children (dom-children dom)))
   (let ((tags nil)
         (children (dom-children dom)))
     ;;    (when (equal (dom-attr dom 'key) "ei)/dw1")
     ;;      (setq please-have-mercy-on-me children))
     (cl-loop for elt in children
              if (not (stringp elt))
-             do (prog1 (cl-pushnew (symbol-name (dom-tag elt)) hrm--all-tag-types)
+             do (prog1 (cl-pushnew (symbol-name (dom-tag elt)) hermeneus--all-tag-types)
                   (if (> (length children) 32)
-                      (push elt hrm--tricky-bastards)
-                    (hrm--get-tag-types _obj children))))))
+                      (push elt hermeneus--tricky-bastards)
+                    (hermeneus--get-tag-types _obj children))))))
 
-(add-hook 'hrm-scan-entry-functions 'hrm--get-tag-types)
+(add-hook 'hermeneus-scan-entry-functions 'hermeneus--get-tag-types)
 
-(reverse hrm--all-tag-types)
+(reverse hermeneus--all-tag-types)
 #+end_src
 
 #+RESULTS:
@@ -1294,7 +1294,7 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 
 ** TODO Testing
 
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
 ** End matter
@@ -1302,21 +1302,21 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 :ID:       TKR:327d7216-5a65-4f76-b9fd-c2a2742c0ada
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-xml)
+(provide 'hermeneus-xml)
 
-;;; hrm-xml.el ends here
+;;; hermeneus-xml.el ends here
 #+end_src
 
 * Completion
 :PROPERTIES:
 :ID:       TKR:49f3f037-acfd-414f-bc51-0a963faa0352
-:header-args:emacs-lisp: :tangle hrm-completion.el
+:header-args:emacs-lisp: :tangle hermeneus-completion.el
 :END:
 This section handles completion (via ~completing-read~ or Ivy) and contains functions for looking up words.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-completion.el --- -*- lexical-binding: t -*-
+;;; hermeneus-completion.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -1333,11 +1333,11 @@ This section handles completion (via ~completing-read~ or Ivy) and contains func
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
 
-(require 'hrm-conv)
-(require 'hrm-match)
-(require 'hrm-xml)
+(require 'hermeneus-conv)
+(require 'hermeneus-match)
+(require 'hermeneus-xml)
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 #+end_src
 
 ** Variables
@@ -1345,14 +1345,14 @@ This section handles completion (via ~completing-read~ or Ivy) and contains func
 :ID:       TKR:7f0bab31-c461-44f0-898d-a80deeefd174
 :END:
 #+begin_src emacs-lisp
-(defcustom hrm-use-ivy (let ((libs '(ivy counsel)))
+(defcustom hermeneus-use-ivy (let ((libs '(ivy counsel)))
                          (or (cl-every 'featurep libs)
                              (cl-every 'package-installed-p libs)))
   "Whether to use the ‘ivy’ package for ‘describe-greek-word’.
 This allows two important features. The first is matching by Beta
 code: if you type in Beta code (e.g. “i(ero/doulos” instead of
 “ἱερόδουλος”), it will match as though you typed the Greek
-Unicode equivalent. (See option ‘hrm-beta-input-type’ if you want
+Unicode equivalent. (See option ‘hermeneus-beta-input-type’ if you want
 to customize the type of Beta code used for this.) The second is
 diacritic-agnostic matching: if you type Greek with no diacritics
 into the ‘describe-greek-word’ prompt, it will match any
@@ -1377,17 +1377,17 @@ command ‘counsel-greek-word’."
 (defun describe-greek-word (word)
   (interactive
    (list
-    (let ((entries (hrm-get-entries hrm-lsj)))
-      (if (and hrm-use-ivy (fboundp 'ivy-read))
-          (counsel-greek-word "Look up Greek word: " hrm-lsj)
-        (let ((default (hrm-greek-word-at-point)))
+    (let ((entries (hermeneus-get-entries hermeneus-lsj)))
+      (if (and hermeneus-use-ivy (fboundp 'ivy-read))
+          (counsel-greek-word "Look up Greek word: " hermeneus-lsj)
+        (let ((default (hermeneus-greek-word-at-point)))
           (completing-read (format "Look up Greek word%s: "
                                    (if default
                                        (format " (default: %s)" default)
                                      ""))
                            entries nil t nil nil default))))))
-  (unless (and hrm-use-ivy (fboundp 'ivy-read))
-    (hrm--display-word-buffer word)))
+  (unless (and hermeneus-use-ivy (fboundp 'ivy-read))
+    (hermeneus--display-word-buffer word)))
 #+end_src
 
 ** Read word
@@ -1396,26 +1396,26 @@ command ‘counsel-greek-word’."
 :END:
 #+begin_src emacs-lisp
 (cl-defun counsel-greek-word (&optional (prompt "Look up Greek word:")
-                                        (lexicon hrm-lsj) &rest kwargs)
+                                        (lexicon hermeneus-lsj) &rest kwargs)
   "Read a Greek word from the LSJ, with Ivy completion.
-COLLECTION should be a ‘hrm-lexicon’ object or a hash-table, and
-defaults to the value of ‘hrm-lsj’. Any other arguments should be
+COLLECTION should be a ‘hermeneus-lexicon’ object or a hash-table, and
+defaults to the value of ‘hermeneus-lsj’. Any other arguments should be
 keyword arguments, which are passed to ‘ivy-read’."
   (unless (fboundp 'ivy-read)
     (error "Ivy must be installed before using ‘counsel-greek-word’"))
   (let ((collection
-         (cond ((hrm-lexicon-p lexicon)
-                (hrm-get-entries lexicon))
+         (cond ((hermeneus-lexicon-p lexicon)
+                (hermeneus-get-entries lexicon))
                ((hash-table-p lexicon)
                 lexicon)
-               (t (error "Not a hrm-lexicon object or hash table: %s" lexicon)))))
+               (t (error "Not a hermeneus-lexicon object or hash table: %s" lexicon)))))
     (cl-flet ((kw-put (prop val)
                       (unless (plist-member kwargs prop)
                         (cl-callf plist-put kwargs prop val))))
-      (kw-put :action #'hrm--display-word-buffer)
-      (kw-put :re-builder #'hrm--re-builder)
-      (kw-put :matcher #'hrm--re-matcher)
-      (awhen (hrm-greek-word-at-point)
+      (kw-put :action #'hermeneus--display-word-buffer)
+      (kw-put :re-builder #'hermeneus--re-builder)
+      (kw-put :matcher #'hermeneus--re-matcher)
+      (awhen (hermeneus-greek-word-at-point)
         (kw-put :preselect it))
       (apply 'ivy-read prompt collection kwargs))))
 #+end_src
@@ -1425,10 +1425,10 @@ keyword arguments, which are passed to ‘ivy-read’."
 :ID:       TKR:9804b1a7-dae0-4425-b671-2cdc3b604017
 :END:
 #+begin_src emacs-lisp
-(defun hrm--fold-case (string)
+(defun hermeneus--fold-case (string)
   (cl-loop for l across (regexp-quote string)
-           if (memq l (string-to-list hrm--all-sigmas))
-           concat (format "[%s]" hrm--all-sigmas)
+           if (memq l (string-to-list hermeneus--all-sigmas))
+           concat (format "[%s]" hermeneus--all-sigmas)
            else
            concat (let ((upr (upcase l))
                         (lwr (downcase l)))
@@ -1442,7 +1442,7 @@ keyword arguments, which are passed to ‘ivy-read’."
 :ID:       TKR:3d941c67-20eb-4ad6-9653-bc545e109827
 :END:
 #+begin_src emacs-lisp
-(defun hrm--bounds-of-chars (chars)
+(defun hermeneus--bounds-of-chars (chars)
   "Skip CHARS backwards and forwards, return a cons of each point.
 CHARS is a string containing the characters to skip over. If
 point is not adjacent to any characters in CHARS, return nil."
@@ -1454,19 +1454,19 @@ point is not adjacent to any characters in CHARS, return nil."
     (unless (eql (car rtn) (cdr rtn))
       rtn)))
 
-(defun hrm-bounds-of-greek-word-at-point ()
-  (or (hrm--bounds-of-chars (concat hrm--greek-unicode-all
-                                    hrm--greek-diacritics))
-      (hrm--bounds-of-chars (concat hrm--beta-letters--user ; TODO should check user and standard variants
-                                    hrm--beta-diacritics "*"))))
+(defun hermeneus-bounds-of-greek-word-at-point ()
+  (or (hermeneus--bounds-of-chars (concat hermeneus--greek-unicode-all
+                                    hermeneus--greek-diacritics))
+      (hermeneus--bounds-of-chars (concat hermeneus--beta-letters--user ; TODO should check user and standard variants
+                                    hermeneus--beta-diacritics "*"))))
 
-(defun hrm-greek-word-at-point ()
-  (when-let ((bounds (hrm-bounds-of-greek-word-at-point))
+(defun hermeneus-greek-word-at-point ()
+  (when-let ((bounds (hermeneus-bounds-of-greek-word-at-point))
              (word (buffer-substring-no-properties (car bounds) (cdr bounds)))
-             (obj (hrm--string-to-object word hrm-lsj)))
+             (obj (hermeneus--string-to-object word hermeneus-lsj)))
     (oref obj key)))
 
-(put (intern "greek-word") 'bounds-of-thing-at-point 'hrm-bounds-of-greek-word-at-point)
+(put (intern "greek-word") 'bounds-of-thing-at-point 'hermeneus-bounds-of-greek-word-at-point)
 #+end_src
 
 ** Look up Greek word noninteractively
@@ -1474,26 +1474,26 @@ point is not adjacent to any characters in CHARS, return nil."
 :ID:       TKR:03304dde-533f-41bb-937b-99e3f31ef2f1
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--string-to-object (string &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--string-to-object (string &optional (lexicon hermeneus-lsj))
   "Retrieve the word-object in LEXICON corresponding to STRING.
-The function ‘hrm--fuzzy-search’ is used when there isn’t an
+The function ‘hermeneus--fuzzy-search’ is used when there isn’t an
 exact match. If no result is found, return nil."
-  (unless (and (stringp string) (hrm-lexicon-p lexicon))
-    (error "Incorrect arguments for ‘hrm--string-to-object’: %s %s"
+  (unless (and (stringp string) (hermeneus-lexicon-p lexicon))
+    (error "Incorrect arguments for ‘hermeneus--string-to-object’: %s %s"
            string lexicon))
-  (or (gethash string (hrm-get-entries lexicon))
-      (hrm--fuzzy-search string)
-      (hrm--fuzzy-search (string-trim string))
-      (hrm--fuzzy-search (hrm--trim-string-extra string))))
+  (or (gethash string (hermeneus-get-entries lexicon))
+      (hermeneus--fuzzy-search string)
+      (hermeneus--fuzzy-search (string-trim string))
+      (hermeneus--fuzzy-search (hermeneus--trim-string-extra string))))
 
-(cl-defun hrm--fuzzy-search (string &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--fuzzy-search (string &optional (lexicon hermeneus-lsj))
   "Look up the word STRING in LEXICON (which defaults to the LSJ).
-The functions ‘hrm--re-builder’ and ‘hrm--re-matcher’ are used to
+The functions ‘hermeneus--re-builder’ and ‘hermeneus--re-matcher’ are used to
 provide fuzzy-matching. Returns a word-object."
-  (let* ((hrm-beta-input-type 'beta)
-         (re (hrm--re-builder string))
-         (entries (hrm-get-entries lexicon))
-         (matches (hrm--re-matcher re (hash-table-keys entries))))
+  (let* ((hermeneus-beta-input-type 'beta)
+         (re (hermeneus--re-builder string))
+         (entries (hermeneus-get-entries lexicon))
+         (matches (hermeneus--re-matcher re (hash-table-keys entries))))
     (when matches
       (gethash (car matches) entries))))
 #+end_src
@@ -1503,21 +1503,21 @@ provide fuzzy-matching. Returns a word-object."
 :ID:       TKR:bd16e1ce-fd2c-4c49-9a73-1d2038210079
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--display-word-buffer (word &optional (lexicon hrm-lsj))
+(cl-defun hermeneus--display-word-buffer (word &optional (lexicon hermeneus-lsj))
   "Display WORD, a string or word-object, from LEXICON (default: LSJ)."
-  (unless (hrm-word-p word)
+  (unless (hermeneus-word-p word)
     (if (stringp word)
-        (setq word (hrm--string-to-object word lexicon))
-      (error "Argument is neither a ‘hrm-word’ object nor a string: %s"
+        (setq word (hermeneus--string-to-object word lexicon))
+      (error "Argument is neither a ‘hermeneus-word’ object nor a string: %s"
              word)))
   (when word
-    (prog1 (hrm--switch-buffer
-            (hrm--word-buffer word))
-      (hrm--clear-old-buffers))))
+    (prog1 (hermeneus--switch-buffer
+            (hermeneus--word-buffer word))
+      (hermeneus--clear-old-buffers))))
 #+end_src
 
 ** TODO Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
 ** End matter
@@ -1525,32 +1525,32 @@ provide fuzzy-matching. Returns a word-object."
 :ID:       TKR:ca2a0940-f58e-4c15-9904-a0889f15eb36
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-completion)
+(provide 'hermeneus-completion)
 
-;;; hrm-completion.el ends here
+;;; hermeneus-completion.el ends here
 #+end_src
 
 * Canonical Text Services
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle hrm-cts.el
+:header-args:emacs-lisp: :tangle hermeneus-cts.el
 :END:
-Most of these code blocks do not tangle, because at present most of this section is stuff I used when manually generating ~hrm-abbr.el~ (which contains variables used when expanding abbreviations during the rendering of a lexicon entry). But, given that every work referenced in the LSJ has a Canonical Text Services URN, and the Scaife CTS API is emerging as the primary way to interact programmatically with the Perseus Project catalog of ancient works, I decided Hermeneus needed its own section for dealing with URNs, CTS, and whatnot.
+Most of these code blocks do not tangle, because at present most of this section is stuff I used when manually generating ~hermeneus-abbr.el~ (which contains variables used when expanding abbreviations during the rendering of a lexicon entry). But, given that every work referenced in the LSJ has a Canonical Text Services URN, and the Scaife CTS API is emerging as the primary way to interact programmatically with the Perseus Project catalog of ancient works, I decided Hermeneus needed its own section for dealing with URNs, CTS, and whatnot.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-cts.el --- -*- lexical-binding: t -*-
+;;; hermeneus-cts.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Variables
 #+begin_src emacs-lisp
-(defvar hrm-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
+(defvar hermeneus-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
   "The URL for the Perseus Project’s Scaife CTS API.")
 #+end_src
 
 ** Functions
 *** Convert URNs
 #+begin_src emacs-lisp
-(defun hrm-urn-to-base (urn)
+(defun hermeneus-urn-to-base (urn)
   "Return URN with the passage component, if present, removed.
 E.g., “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195” will be
 returned as “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1”.
@@ -1566,13 +1566,13 @@ https://github.com/cite-architecture/ctsurn_spec/blob/master/md/specification.md
         (substring urn 0 (1- (match-end 0)))
       urn)))
 
-(defun hrm-urn-to-work (urn)
+(defun hermeneus-urn-to-work (urn)
   "Return URN shortened to the work part of the work component.
 E.g., “urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195” will be
 returned as “urn:cts:greekLit:tlg0020.tlg001”.
 URN should be in the Canonical Text Services URN format. See
 https://github.com/cite-architecture/ctsurn_spec/blob/master/md/specification.md"
-  (setq urn (hrm-urn-to-base urn))
+  (setq urn (hermeneus-urn-to-base urn))
   (save-match-data
     (if (and urn (string-match
                   (rx (= 3 (one-or-more
@@ -1585,17 +1585,17 @@ https://github.com/cite-architecture/ctsurn_spec/blob/master/md/specification.md
         (substring urn 0 (1- (match-end 0)))
       urn)))
 
-(defun hrm-urn-to-url (urn &optional atom)
+(defun hermeneus-urn-to-url (urn &optional atom)
   "Return the canonical Perseus Catalog URL for URN.
 If ATOM is non-nil, return the URL for the Atom version."
-  (concat "http://data.perseus.org/catalog/" (hrm-urn-to-base urn)
+  (concat "http://data.perseus.org/catalog/" (hermeneus-urn-to-base urn)
           (when atom "/atom")))
 
 #+end_src
 
 *** Return all URNs in LSJ
 #+begin_src emacs-lisp :tangle no :load no
-(cl-defun hrm--get-all-urns (&optional (files hrm-lsj-files))
+(cl-defun hermeneus--get-all-urns (&optional (files hermeneus-lsj-files))
   (cl-loop with urns
            for file in files
            do (with-temp-buffer
@@ -1616,9 +1616,9 @@ If ATOM is non-nil, return the URL for the Atom version."
                     (cl-pushnew (match-string 1) urns :test #'equal))))
            finally return (nreverse urns)))
 
-(defvar hrm--all-urns (hrm--get-all-urns))
+(defvar hermeneus--all-urns (hermeneus--get-all-urns))
 
-(cl-defun hrm--insert-all-urns (&optional (urns hrm--all-urns))
+(cl-defun hermeneus--insert-all-urns (&optional (urns hermeneus--all-urns))
   (interactive)
   (cl-loop for urn in urns
            with add-newline-p
@@ -1638,10 +1638,10 @@ If ATOM is non-nil, return the URL for the Atom version."
 (require 'request)
 (eval-when-compile (require 'subr-x))
 
-(defun hrm--get-title-from-urn (urn)
+(defun hermeneus--get-title-from-urn (urn)
   (let ((response
          (request-response-data
-          (request hrm-scaife-api-url :params `((request . "GetLabel")
+          (request hermeneus-scaife-api-url :params `((request . "GetLabel")
                                                 (urn . ,urn))
                    :parser #'xml-parse-region
                    :sync t
@@ -1654,23 +1654,23 @@ If ATOM is non-nil, return the URL for the Atom version."
         (dom-child-by-tag 'title)
         (dom-text)))))
 
-(cl-defun hrm--make-title-hash (&optional (urns hrm--all-urns))
+(cl-defun hermeneus--make-title-hash (&optional (urns hermeneus--all-urns))
   (cl-loop for urn in urns
-           for title = (hrm--get-title-from-urn urn)
+           for title = (hermeneus--get-title-from-urn urn)
            with hash = (make-hash-table :test #'equal)
            if (not (string-blank-p title))
            do (puthash urn title hash)
            finally return hash))
 
-(cl-defun hrm--insert-title-hash (&optional (urns hrm--all-urns)
+(cl-defun hermeneus--insert-title-hash (&optional (urns hermeneus--all-urns)
                                             &aux (size 0) size-pos)
   (interactive)
-  (insert "(defvar hrm-title-hash\n"
+  (insert "(defvar hermeneus-title-hash\n"
           "#s(hash-table size ")
   (setq size-pos (point))
   (insert " test equal rehash-size 1.5 rehash-threshold 0.8125 data\n(")
   (cl-loop for urn in urns
-           for title = (hrm--get-title-from-urn urn)
+           for title = (hermeneus--get-title-from-urn urn)
            if (and title (not (string-blank-p title)))
            do (insert (format "%S %S\n" urn title))
               (setq size (1+ size)))
@@ -1680,39 +1680,39 @@ If ATOM is non-nil, return the URL for the Atom version."
   (insert ")))"))
 
 
-;; (hrm--get-title-from-urn (cadr hrm--all-urns))
+;; (hermeneus--get-title-from-urn (cadr hermeneus--all-urns))
 
-;; (defvar hrm-title-hash (hrm--make-title-hash))
+;; (defvar hermeneus-title-hash (hermeneus--make-title-hash))
 #+end_src
 
 ** TODO Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest cts-test ()
   "Test the Canonical Test Services functionality."
-  (should (equal (hrm-urn-to-base "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+  (should (equal (hermeneus-urn-to-base "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
                  "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1"))
-  (should (equal (hrm-urn-to-work "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+  (should (equal (hermeneus-urn-to-work "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
                  "urn:cts:greekLit:tlg0020.tlg001"))
-  (should (equal (hrm-urn-to-url "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
+  (should (equal (hermeneus-urn-to-url "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
                  "http://data.perseus.org/catalog/urn:cts:greekLit:tlg0020.tlg001.perseus-grc1")))
 #+end_src
 
 ** End matter
 #+begin_src emacs-lisp
-(provide 'hrm-cts)
+(provide 'hermeneus-cts)
 
-;;; hrm-cts.el ends here
+;;; hermeneus-cts.el ends here
 #+end_src
 
 * Tags
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle hrm-tags.el
+:header-args:emacs-lisp: :tangle hermeneus-tags.el
 :END:
-This handles all the many types of tags found in the XML version of the LSJ, how they are interpreted, rendered, etc. See ~define-hrm-tag~ in [[Macro for defining tags]] for information on how to make your own tag definitions.
+This handles all the many types of tags found in the XML version of the LSJ, how they are interpreted, rendered, etc. See ~define-hermeneus-tag~ in [[Macro for defining tags]] for information on how to make your own tag definitions.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-tags.el --- -*- lexical-binding: t -*-
+;;; hermeneus-tags.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -1728,12 +1728,12 @@ This handles all the many types of tags found in the XML version of the LSJ, how
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
 
-(require 'hrm-xml)
-(require 'hrm-conv)
-(require 'hrm-render)
-(require 'hrm-abbr) ; standalone file
+(require 'hermeneus-xml)
+(require 'hermeneus-conv)
+(require 'hermeneus-render)
+(require 'hermeneus-abbr) ; standalone file
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 #+end_src
 
 ** Information on tags
@@ -1815,26 +1815,26 @@ In this list, items at list level 1 are citations, items at level 2 are tags, it
 :ID:       TKR:a3a484db-d437-4e0f-8544-861f94061a64
 :END:
 #+begin_src emacs-lisp
-(defface hrm-default-face '((t nil))
+(defface hermeneus-default-face '((t nil))
   "Default face for Hermeneus text display."
   :tag "Hermeneus — default face"
-  :group 'hrm-faces)
+  :group 'hermeneus-faces)
 
-(defvar hrm-tei-tags '(foreign cit name abbr date pb bibl biblScope
+(defvar hermeneus-tei-tags '(foreign cit name abbr date pb bibl biblScope
                                title author entryFree sense gramGrp etym
                                orth pron gen number per tns mood itype pos
                                subc tr))
 
-(defvar hrm--prev-tag nil)
-(defvar hrm--prev-author nil)
+(defvar hermeneus--prev-tag nil)
+(defvar hermeneus--prev-author nil)
 
-(defvar hrm--bibl-urn nil
+(defvar hermeneus--bibl-urn nil
   "The CTS URN cited by the current bibl tag.
 Should be nil if Hermeneus is not currently rendering a bibl tag.")
 
-(defvar hrm-defined-tags nil)
+(defvar hermeneus-defined-tags nil)
 
-(defvar hrm--tag-keywords '(:attrs :face :render :doc-source))
+(defvar hermeneus--tag-keywords '(:attrs :face :render :doc-source))
 #+end_src
 
 *** Local variables
@@ -1842,15 +1842,15 @@ Should be nil if Hermeneus is not currently rendering a bibl tag.")
 :ID:       TKR:036c52c4-109f-447d-a270-b93a2a48d8a7
 :END:
 #+begin_src emacs-lisp
-(defvar-local hrm--word-obj nil)
-(defvar-local hrm--word-dom nil)
+(defvar-local hermeneus--word-obj nil)
+(defvar-local hermeneus--word-dom nil)
 
-(defvar-local hrm-doc-source nil)
+(defvar-local hermeneus-doc-source nil)
 #+end_src
 
 ** Options
 #+begin_src emacs-lisp
-(defcustom hrm-expand-abbreviations t
+(defcustom hermeneus-expand-abbreviations t
   "Whether abbreviations in definitions should be expanded.
 If non-nil, Hermeneus will attempt to expand abbreviations (of
 authors, works, etc.) found when displaying a definition. The
@@ -1867,16 +1867,16 @@ with expansions written as ‘help-echo’ properties."
 :ID:       TKR:170c9de8-c302-4f27-b7c6-46e2dc15372a
 :END:
 #+begin_src emacs-lisp
-(defun hrm--render-generic (dom &optional tag face)
+(defun hermeneus--render-generic (dom &optional tag face)
   (unless tag
     (setq tag (dom-tag dom)))
   (unless face
-    (setq face (intern-soft (format "hrm-face-%s" tag))))
-  (hrm--insert-space-maybe)
+    (setq face (intern-soft (format "hermeneus-face-%s" tag))))
+  (hermeneus--insert-space-maybe)
   (shr-fontize-dom dom face)
-  (setq hrm--prev-tag tag))
+  (setq hermeneus--prev-tag tag))
 
-(defun hrm--insert-space-maybe ()
+(defun hermeneus--insert-space-maybe ()
   (unless (or (bobp) (bolp)
               (let ((cs (char-syntax (char-before))))
                 (or (eq cs 32) (eq cs ?\())))
@@ -1888,11 +1888,11 @@ with expansions written as ‘help-echo’ properties."
 :ID:       TKR:9807ac9b-f45b-4b1a-abbb-149cc3593b84
 :END:
 #+begin_src emacs-lisp
-(defun hrm-greek-word-button-action (button)
-  (hrm--display-word-buffer (button-get button 'target)))
+(defun hermeneus-greek-word-button-action (button)
+  (hermeneus--display-word-buffer (button-get button 'target)))
 
-(define-button-type 'hrm-greek-word-button
-  'action #'hrm-greek-word-button-action
+(define-button-type 'hermeneus-greek-word-button
+  'action #'hermeneus-greek-word-button-action
   'target nil)
 #+end_src
 
@@ -1905,7 +1905,7 @@ with expansions written as ‘help-echo’ properties."
 ;; to make it easier for non-Lisp people to make customizations.
 ;; (i.e., learning Ancient Greek is hard enough without having to
 ;; remember how Lisp plists work)
-(defun hrm--normalize-keywords (list)
+(defun hermeneus--normalize-keywords (list)
   "Make a proper plist from a list of keyword arguments.
 For example, “'(:hero sonic tails knuckles :villain eggman)”
 will return “'(:hero (sonic tails knuckles) :villain eggman)”,
@@ -1922,7 +1922,7 @@ which is more readable to ‘plist-get’ and related functions."
               rtn)))
     (nreverse rtn)))
 
-(defun hrm--doc-concat (&rest strings)
+(defun hermeneus--doc-concat (&rest strings)
   (with-temp-buffer
     (insert (apply 'concat strings))
     (goto-char 1)
@@ -1932,7 +1932,7 @@ which is more readable to ‘plist-get’ and related functions."
         (fill-region (line-beginning-position) (line-end-position))))
     (buffer-string)))
 
-(defun hrm--doc-source (doc-source)
+(defun hermeneus--doc-source (doc-source)
   (when (and (symbolp doc-source) (boundp doc-source))
     (setq doc-source (symbol-value doc-source)))
   (cond ((stringp doc-source)
@@ -1941,30 +1941,30 @@ which is more readable to ‘plist-get’ and related functions."
               (stringp (car doc-source)) (stringp (cadr doc-source)))
          (format "\n\nInformation from “%s”\n%s" (cadr doc-source) (car doc-source)))))
 
-(defun hrm--format-attrs (attrs)
+(defun hermeneus--format-attrs (attrs)
   (cl-loop while attrs
            concat (let* ((attr (pop attrs))
                          (desc (pop attrs)))
                     (format "\n‘%s’ %s" attr desc))))
 
-(cl-defmacro define-hrm-tag (tag &rest args)
+(cl-defmacro define-hermeneus-tag (tag &rest args)
   "Macro for defining XML tags in Hermeneus.
 TAG is the unquoted name of the tag in question.
 
 DOCSTRING is an optional description that, when given, will be
 prepended with the name of the tag and used in docstrings for
-constructs defined by ‘define-hrm-tag’. e.g. the docstring used
-in the ‘define-hrm-tag’ definition for <name> is \"contains a
+constructs defined by ‘define-hermeneus-tag’. e.g. the docstring used
+in the ‘define-hermeneus-tag’ definition for <name> is \"contains a
 proper noun or noun phrase.\", and the docstring generated for
-the function ‘hrm-render-name’ includes \"‘<name>’ contains a
+the function ‘hermeneus-render-name’ includes \"‘<name>’ contains a
 proper noun or noun phrase.\" Do not use line breaks to wrap the
 string; line breaks will be added automatically to the generated
 docstrings.
 
-‘define-hrm-tag’ accepts the following keyword arguments:
+‘define-hermeneus-tag’ accepts the following keyword arguments:
 
 ATTRS is a list (though it can be expressed inline; see the
-function ‘hrm---normalize-keywords’) of tag attributes, in the
+function ‘hermeneus---normalize-keywords’) of tag attributes, in the
 form \"ATTR DOCSTRING ATTR DOCSTRING …\". Each ATTR is the
 unquoted name of an attribute specific to this tag, and each
 DOCSTRING is a short string describing the preceding attribute.
@@ -1975,20 +1975,20 @@ name of the attribute.
 FACE is a quoted face specification which Hermeneus will use when
 displaying the tag. See Info node ‘(elisp)Defining Faces’. If
 FACE is not given, then a generic face will be created which by
-default inherits from ‘hrm-default-face’. Either way, the
-resulting face will be named in the format ‘hrm-face-TAG’.
+default inherits from ‘hermeneus-default-face’. Either way, the
+resulting face will be named in the format ‘hermeneus-face-TAG’.
 
 RENDER is a series of sexps which will be used to define a
 function for rendering the tag’s contents. The function will be
-named in the format `hrm-render-TAG’ and will be given one
+named in the format `hermeneus-render-TAG’ and will be given one
 argument, ‘dom’, which is the DOM of the tag being rendered (see
 Info node ‘(elisp)Document Object Model’). If RENDER is absent,
-then the special function ‘hrm--render-generic’ will be used to
+then the special function ‘hermeneus--render-generic’ will be used to
 render the tag.
 Note that if you define your own rendering function using RENDER,
 then any rendering it does must manually take into account the
 tag’s face, which (as you may recall) is named in the format
-‘hrm-face-TAG’.
+‘hermeneus-face-TAG’.
 
 DOC-SOURCE is a symbol, a string, or a list of two strings which
 serves as a citation for the information contained in DOCSTRING
@@ -2000,7 +2000,7 @@ interpreted generically (adding \"Information from \" followed by
 DOC-SOURCE to the docstrings of relevant constructs), and if
 DOC-SOURCE is a list of two strings, it will be interpreted as
 the URL of a publication followed by its title.
-If DOC-SOURCE is not given, then the value of ‘hrm-doc-source’
+If DOC-SOURCE is not given, then the value of ‘hermeneus-doc-source’
 will be used instead. If that value is nil (the default), then no
 citation will appear in the relevant docstrings."
   ;; Note that I’m not sure if that last part actually works, urgh
@@ -2021,16 +2021,16 @@ citation will appear in the relevant docstrings."
                       (while (not (or (null (car args))
                                       (keywordp (car args))))
                         (pop args))))
-         (kw-args (hrm--normalize-keywords args))
+         (kw-args (hermeneus--normalize-keywords args))
          (kw-vals (mapcar (lambda (x) (plist-get kw-args x))
-                          hrm--tag-keywords)))
+                          hermeneus--tag-keywords)))
     ;; (small exception for ‘doc-source’—if it’s not given as an
-    ;; argument, but ‘hrm-doc-source’ has a value outside the macro
+    ;; argument, but ‘hermeneus-doc-source’ has a value outside the macro
     ;; call, use that value instead of ‘nil’)
     (when (and (not (plist-get kw-args :doc-source))
-               (boundp 'hrm-doc-source))
-      (let ((ds-pos (seq-position hrm--tag-keywords :doc-source)))
-        (setf (elt kw-vals ds-pos) hrm-doc-source)))
+               (boundp 'hermeneus-doc-source))
+      (let ((ds-pos (seq-position hermeneus--tag-keywords :doc-source)))
+        (setf (elt kw-vals ds-pos) hermeneus-doc-source)))
     ;; Bind the keywords locally
     (cl-progv
         (mapcar
@@ -2038,38 +2038,38 @@ citation will appear in the relevant docstrings."
                        (symbol-name)
                        (string-remove-prefix ":")
                        (intern)))
-         hrm--tag-keywords)
+         hermeneus--tag-keywords)
         kw-vals
       ;; Finally, write out the definitions
-      (let ((face-name (intern (format "hrm-face-%s" tag))))
+      (let ((face-name (intern (format "hermeneus-face-%s" tag))))
         `(progn
            (defface ,face-name
              ,(if face
                   `,@face
-                `'((t (:inherit hrm-default-face))))
-             ,(hrm--doc-concat
+                `'((t (:inherit hermeneus-default-face))))
+             ,(hermeneus--doc-concat
                (format "Face used to render the XML tag ‘<%1$s>’.\n‘<%1$s>’ %2$s"
                        tag docstring)
-               (hrm--doc-source doc-source))
+               (hermeneus--doc-source doc-source))
              :tag ,(format "Hermeneus — face for XML tag <%s>" tag)
-             :group 'hrm-faces)
-           (defun ,(intern (format "hrm-render-%s" tag)) (dom)
-             ,(hrm--doc-concat
+             :group 'hermeneus-faces)
+           (defun ,(intern (format "hermeneus-render-%s" tag)) (dom)
+             ,(hermeneus--doc-concat
                (format "Rendering function for the XML tag ‘<%1$s>’.\n‘<%1$s>’ %2$s"
                        tag docstring)
                (when attrs (concat "\n\nAttributes:"
-                                   (hrm--format-attrs attrs)))
-               (hrm--doc-source doc-source))
+                                   (hermeneus--format-attrs attrs)))
+               (hermeneus--doc-source doc-source))
              ,@(if render
                    `,@(if (or (atom render) (atom (car render)))
                           (list render)
                         render)
-                 (list `(hrm--render-generic dom ',tag ',face-name))))
+                 (list `(hermeneus--render-generic dom ',tag ',face-name))))
            ;; (I know that ‘add-to-list’ is supposed to be used
            ;; sparingly in Lisp code, but the fact that ‘push’ would
            ;; add to the front of the list here is just too much for
            ;; my autistic sensibilities.)
-           (add-to-list 'hrm-defined-tags ',tag t))))))
+           (add-to-list 'hermeneus-defined-tags ',tag t))))))
 #+end_src
 
 ** Tag definitions
@@ -2078,19 +2078,19 @@ citation will appear in the relevant docstrings."
 :PROPERTIES:
 :ID:       TKR:0cbf3bb6-a38b-4eb4-829e-72e1c51f596e
 :END:
-#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")
-(define-hrm-tag foreign
+#+begin_src emacs-lisp :var hermeneus-doc-source='("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")
+(define-hermeneus-tag foreign
   "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
 
-(define-hrm-tag cit
+(define-hermeneus-tag cit
   "A quotation from some other document, together with a bibliographic reference to its source.")
 
-(define-hrm-tag name
+(define-hermeneus-tag name
   "contains a proper noun or noun phrase."
   :attrs
   type "indicates the type of the object which is being named by the phrase.")
 
-(define-hrm-tag abbr
+(define-hermeneus-tag abbr
   "contains an abbreviation of any sort."
   :attrs
   expan "(expansion) gives an expansion of the abbreviation."
@@ -2098,30 +2098,30 @@ citation will appear in the relevant docstrings."
   type "allows the encoder to classify the abbreviation according to some convenient typology."
   cert "(certainty) signifies the degree of certainty ascribed to the expansion of the abbreviation.")
 
-(define-hrm-tag date
+(define-hermeneus-tag date
   "contains a date in any format."
   :attrs
   calendar "indicates the system or calendar to which the date belongs."
   value "gives the value of the date in some standard form, usually yyyy-mm-dd."
   certainty "indicates the degree of precision to be attributed to the date.")
 
-(define-hrm-tag pb
+(define-hermeneus-tag pb
   "marks the boundary between one page of a text and the next in a standard reference system."
   :attrs
   ed "(edition) indicates the edition or version in which the page break is located at this point.")
 
-(define-hrm-tag bibl
+(define-hermeneus-tag bibl
   "contains a loosely-structured bibliographic citation of which the sub-components may or may not be explicitly tagged."
   :render
-  (let ((hrm--bibl-urn (hrm-urn-to-work (dom-attr dom 'n))))
-    (hrm--render-generic dom)))
+  (let ((hermeneus--bibl-urn (hermeneus-urn-to-work (dom-attr dom 'n))))
+    (hermeneus--render-generic dom)))
 
-(define-hrm-tag biblScope
+(define-hermeneus-tag biblScope
   "defines the scope of a bibliographic reference, for example as a list of pagenumbers, or a named subdivision of a larger work."
   :attrs
   type "identifies the type of information conveyed by the element, e.g. ‘pages’, ‘volume’.")
 
-(define-hrm-tag title
+(define-hermeneus-tag title
   "contains the title of a work, whether article, book, journal, or series, including any alternative titles or subtitles."
   :attrs
   level "(bibliographic level (or class) of title) indicates whether this is the title of an article, book, journal, series, or unpublished material."
@@ -2132,37 +2132,37 @@ citation will appear in the relevant docstrings."
   (let* ((new-dom (copy-seq dom))
          (text (car (nthcdr (1- (safe-length new-dom)) new-dom)))
          (expansion (and (stringp text)
-                         (gethash hrm--bibl-urn hrm-title-hash))))
+                         (gethash hermeneus--bibl-urn hermeneus-title-hash))))
 
-    (when (and expansion hrm-expand-abbreviations)
+    (when (and expansion hermeneus-expand-abbreviations)
       (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
 
     (let ((start (point)))
-      (hrm--render-generic new-dom)
+      (hermeneus--render-generic new-dom)
       (when expansion
         (add-text-properties start (point)
                              (list 'help-echo
-                                   (if hrm-expand-abbreviations
+                                   (if hermeneus-expand-abbreviations
                                        text
                                      expansion)))))))
 
-(define-hrm-tag author
+(define-hermeneus-tag author
   "in a bibliographic reference, contains the name of the author(s), personal or corporate, of a work; the primary statement of responsibility for any bibliographic item."
   :render
   (let* ((new-dom (copy-seq dom))
          (text (car (nthcdr (1- (safe-length new-dom)) new-dom)))
          (expansion (and (stringp text)
-                         (gethash text hrm-author-abbr-hash))))
+                         (gethash text hermeneus-author-abbr-hash))))
 
-    (when (and expansion hrm-expand-abbreviations)
+    (when (and expansion hermeneus-expand-abbreviations)
       (setf (car (nthcdr (1- (safe-length new-dom)) new-dom)) expansion))
 
     (let ((start (point)))
-      (hrm--render-generic new-dom)
+      (hermeneus--render-generic new-dom)
       (when expansion
         (add-text-properties start (point)
                              (list 'help-echo
-                                   (if hrm-expand-abbreviations
+                                   (if hermeneus-expand-abbreviations
                                        text
                                      expansion)))))))
 #+end_src
@@ -2171,94 +2171,94 @@ citation will appear in the relevant docstrings."
 :PROPERTIES:
 :ID:       TKR:a805acf7-e2c2-4cfb-9911-2a8bb57eaccd
 :END:
-#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")
-(define-hrm-tag entryFree
+#+begin_src emacs-lisp :var hermeneus-doc-source='("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")
+(define-hermeneus-tag entryFree
   "contains a dictionary entry which does not necessarily conform to the constraints imposed by the entry element."
   :render
   (let* ((key (dom-attr dom 'key))
          (id (dom-attr dom 'id))
-         (heading (dom-node nil nil (hrm-beta-to-unicode key))))
+         (heading (dom-node nil nil (hermeneus-beta-to-unicode key))))
     (shr-ensure-paragraph)
     (shr-heading heading 'info-title-3)
-    (shr-fontize-dom dom 'hrm-face-entryFree)
+    (shr-fontize-dom dom 'hermeneus-face-entryFree)
     (shr-ensure-paragraph))
-  (setq hrm--prev-tag 'entryFree))
+  (setq hermeneus--prev-tag 'entryFree))
 
-(define-hrm-tag sense
+(define-hermeneus-tag sense
   "groups together all information relating to one word sense in a dictionary entry (definitions, examples, translation equivalents, etc.)"
   :attrs
   level "gives the nesting depth of this sense."
   :render
   (shr-ensure-newline)
   (let ((start (point))
-        (start-pixel (hrm--pixel-column)))
+        (start-pixel (hermeneus--pixel-column)))
     (let* ((bullet (shr-insert (concat (dom-attr dom 'n) ". "))) ; bullet is inserted, here
-           (width (- (hrm--pixel-column) start-pixel))
+           (width (- (hermeneus--pixel-column) start-pixel))
            (margin (* (string-to-number (dom-attr dom 'level))
-                      (hrm--margin-indent-width))))
+                      (hermeneus--margin-indent-width))))
       (shr-mark-fill start)
       (put-text-property start (1+ start)
                          'shr-continuation-indentation margin)
       (put-text-property start (1+ start) 'shr-indentation (- margin width))
-      (shr-fontize-dom dom 'hrm-face-sense)))
+      (shr-fontize-dom dom 'hermeneus-face-sense)))
   (unless (bolp)
     (insert "\n"))
-  (setq hrm--prev-tag 'sense))
+  (setq hermeneus--prev-tag 'sense))
 
-(define-hrm-tag gramGrp
+(define-hermeneus-tag gramGrp
   "groups morpho-syntactic information about a lexical item, e.g. pos, gen, number, case, or itype (inflectional class).")
 
-(define-hrm-tag etym
+(define-hermeneus-tag etym
   "encloses the etymological information in a dictionary entry.")
 
-(define-hrm-tag xr
+(define-hermeneus-tag xr
   "contains a phrase, sentence, or icon referring the reader to some other location in this or another text."
   :attrs
   type "indicates the type of cross reference, using any convenient typology.")
 
-(define-hrm-tag orth
+(define-hermeneus-tag orth
   "gives the orthographic form of a dictionary headword."
   :attrs
   type "gives the type of spelling."
   extent "gives the extent of the orthographic information provided.")
 
-(define-hrm-tag pron
+(define-hermeneus-tag pron
   "contains the pronunciation(s) of the word."
   :attrs
   extent "indicates whether the pronunciation is for whole word or part.")
 
-(define-hrm-tag lbl
+(define-hermeneus-tag lbl
   "in dictionaries, contains a label for a form, example, translation, or other piece of information, e.g. abbreviation for, contraction of, literally, approximately, synonyms:, etc."
   :attrs
   type "classifies the label using any convenient typology.")
 
-(define-hrm-tag gen
+(define-hermeneus-tag gen
   "identifies the morphological gender of a lexical item, as given in the dictionary.")
 
-(define-hrm-tag number
+(define-hermeneus-tag number
   "indicates grammatical number associated with a form, as given in a dictionary.")
 
-(define-hrm-tag per
+(define-hermeneus-tag per
   "contains an indication of the grammatical person (1st, 2nd, 3rd, etc.) associated with a given inflected form in a dictionary.")
 
-(define-hrm-tag tns
+(define-hermeneus-tag tns
   "indicates the grammatical tense associated with a given inflected form in a dictionary.")
 
-(define-hrm-tag mood
+(define-hermeneus-tag mood
   "contains information about the grammatical mood of verbs (e.g. indicative, subjunctive, imperative)")
 
-(define-hrm-tag itype
+(define-hermeneus-tag itype
   "indicates the inflectional class associated with a lexical item."
   :attrs
   type "indicates the type of indicator used to specify the inflection class, when it is necessary to distinguish between the usual abbreviated indications (e.g. ‘inv’) and other kinds of indicators, such as special codes referring to conjugation patterns, etc.")
 
-(define-hrm-tag pos
+(define-hermeneus-tag pos
   "Indicates the part of speech assigned to a dictionary headword (noun, verb, adjective, etc.)")
 
-(define-hrm-tag subc
+(define-hermeneus-tag subc
   "contains subcategorization information (transitive/intransitive, countable/non-countable, etc.)")
 
-(define-hrm-tag tr
+(define-hermeneus-tag tr
   "contains a translation of the headword or an example.")
 #+end_src
 
@@ -2266,8 +2266,8 @@ citation will appear in the relevant docstrings."
 :PROPERTIES:
 :ID:       TKR:16b30fea-d72a-46ed-8d7b-3ad080969fd1
 :END:
-#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment")
-(define-hrm-tag ref
+#+begin_src emacs-lisp :var hermeneus-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment")
+(define-hermeneus-tag ref
   "defines a reference to another location in the current document, in terms of one or more identifiable elements, possibly modified by additional text or comment."
   :face
   '((t . (:inherit shr-link)))
@@ -2279,15 +2279,15 @@ citation will appear in the relevant docstrings."
            ((not (string-prefix-p "-" (string-trim string1))))
            ((not (string-suffix-p "-" (string-trim string1))))
            
-           (entries (hrm-get-entries hrm-lsj))
-           (target (hrm--string-to-object string1)))
-      (progn (hrm--insert-space-maybe)
+           (entries (hermeneus-get-entries hermeneus-lsj))
+           (target (hermeneus--string-to-object string1)))
+      (progn (hermeneus--insert-space-maybe)
              (let ((start (point)))
-               (hrm--render-generic dom 'ref 'hrm-face-ref)
+               (hermeneus--render-generic dom 'ref 'hermeneus-face-ref)
                (make-button start (point)
-                            :type 'hrm-greek-word-button
+                            :type 'hermeneus-greek-word-button
                             'target target)))
-    (hrm--render-generic dom 'ref 'hrm-default-face))
+    (hermeneus--render-generic dom 'ref 'hermeneus-default-face))
   :attrs
   target "specifies the destination of the reference by supplying the value of the id attribute on one or more other elements in the current document."
   type "categorizes the pointer in some respect, using any convenient set of categories.
@@ -2322,13 +2322,13 @@ Note: If no value is given, the application program is responsible for deciding 
 :PROPERTIES:
 :ID:       TKR:87ee579a-cc46-4178-ab45-82a5c9cf108d
 :END:
-#+begin_src emacs-lisp :var hrm-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates")
-(define-hrm-tag placeName
+#+begin_src emacs-lisp :var hermeneus-doc-source='("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates")
+(define-hermeneus-tag placeName
   "contains an absolute or relative place name.")
 #+end_src
 
 ** TODO Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
 ** End matter
@@ -2336,21 +2336,21 @@ Note: If no value is given, the application program is responsible for deciding 
 :ID:       TKR:e6beb538-1f11-4102-b744-0f9a6c7a9980
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-tags)
+(provide 'hermeneus-tags)
 
-;;; hrm-tags.el ends here
+;;; hermeneus-tags.el ends here
 #+end_src
 
 * Renderer
 :PROPERTIES:
 :ID:       TKR:255fa4f5-47e9-4b9c-9cca-2ad83135842d
-:header-args:emacs-lisp: :tangle hrm-render.el
+:header-args:emacs-lisp: :tangle hermeneus-render.el
 :END:
 Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ as though they were HTML documents.
 
 ** Front matter
 #+begin_src emacs-lisp
-;;; hrm-render.el --- -*- lexical-binding: t -*-
+;;; hermeneus-render.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
@@ -2364,7 +2364,7 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
 (require 'anaphora)
 (require 'shr)
 (require 'dom)
-(require 'hrm-xml)
+(require 'hermeneus-xml)
 (require 'eieio)
 (require 'seq)
 
@@ -2372,10 +2372,10 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
                    (require 'rx)
                    (require 'subr-x))
 
-(require 'hrm-conv)
-(require 'hrm-xml)
+(require 'hermeneus-conv)
+(require 'hermeneus-xml)
 
-(defvar hrm--greek-punctuation)
+(defvar hermeneus--greek-punctuation)
 #+end_src
 
 ** Variables
@@ -2383,7 +2383,7 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
 :ID:       TKR:6cfdaa3c-43a4-4acc-ac6f-ec4c0f33091c
 :END:
 #+begin_src emacs-lisp
-(defcustom hrm-max-buffers 8
+(defcustom hermeneus-max-buffers 8
   "The maximum number of open Hermeneus word buffers.
 If there are this many buffers open, then opening a new Hermeneus
 word buffer will close the least recently visited one. Nil means
@@ -2396,7 +2396,7 @@ it will be first to be closed when opening a new word buffer.)"
   :tag "Hermeneus — maximum number of buffers"
   :group 'hermeneus)
 
-(defcustom hrm-show-entry-source nil
+(defcustom hermeneus-show-entry-source nil
   "Whether to show the document source after a word definition.
 This affects the word defintiions displayed by ‘describe-greek-word’
 and ‘counsel-greek-word’.
@@ -2418,11 +2418,11 @@ the definition."
   :tag "Hermeneus — show entry source?"
   :group 'hermeneus)
 
-(defcustom hrm-show-entry-source-tidy-p t
+(defcustom hermeneus-show-entry-source-tidy-p t
   "Whether to tidy the displayed XML source using Tidy.
 Tidy is an external program that makes XML sources easier to
 read. If it is not installed, or if “Hermeneus — show entry
-source?” (‘hrm-show-entry-source-p’) is nil, this option is
+source?” (‘hermeneus-show-entry-source-p’) is nil, this option is
 ignored.
 
 Find out more about Tidy at http://www.html-tidy.org"
@@ -2430,12 +2430,12 @@ Find out more about Tidy at http://www.html-tidy.org"
   :tag "Hermeneus — tidy entry source?"
   :group 'hermeneus)
 
-(defcustom hrm-show-entry-source-tidy-config
-  (expand-file-name "hrm-tidy.conf" (file-name-directory
+(defcustom hermeneus-show-entry-source-tidy-config
+  (expand-file-name "hermeneus-tidy.conf" (file-name-directory
                                      (locate-library "hermeneus")))
   "Configuration file to use with Tidy when tidying XML sources.
-See options “Hermeneus — show entry source?” (‘hrm-show-entry-source-p’)
-and “Hermeneus — tidy entry source?” (‘hrm-show-entry-source-tidy’).
+See options “Hermeneus — show entry source?” (‘hermeneus-show-entry-source-p’)
+and “Hermeneus — tidy entry source?” (‘hermeneus-show-entry-source-tidy’).
 
 Find out more about Tidy at http://www.html-tidy.org"
   :type 'file
@@ -2448,7 +2448,7 @@ Find out more about Tidy at http://www.html-tidy.org"
 :ID:       TKR:40231884-7d27-4fa7-a8a5-52bbab041a20
 :END:
 #+begin_src emacs-lisp
-(defun hrm--roman-numeral-p (string)
+(defun hermeneus--roman-numeral-p (string)
   "A limited test for whether STRING represents a Roman numeral.
 This is to allow proper spacing for Roman-numbered list bullets.
 The limitation is that it can’t tell when a single letter (“I”, “V”,
@@ -2457,21 +2457,21 @@ cases it will return nil."
   (when (> (length string) 1)
     (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
 
-(defun hrm--margin-indent-width ()
+(defun hermeneus--margin-indent-width ()
   ;; The contents of this function used to be as follows:
   ;; (shr-string-pixel-width
-  ;;  (propertize "XIII " :face 'hrm-default-face))
+  ;;  (propertize "XIII " :face 'hermeneus-default-face))
   ;; Sometime after I upgraded to Emacs 29, this started giving me an
   ;; error, saying that ‘shr-string-pixel-width’ is an invalid
   ;; function (it’s a macro). I’m not sure why this happens. But,
   ;; ‘shr-string-pixel-width’ is a pretty simple macro, so I’m
   ;; just reimplementing its functionality here.
-  (let ((string (propertize "XIII " :face 'hrm-default-face)))
+  (let ((string (propertize "XIII " :face 'hermeneus-default-face)))
     (if (not shr-use-fonts)
         (length string)
       (string-pixel-width string))))
 
-(defun hrm--pixel-column ()
+(defun hermeneus--pixel-column ()
   (let ((pos (point)))
     (prog1 (shr-pixel-column)
       (goto-char pos))))
@@ -2482,58 +2482,58 @@ cases it will return nil."
 :ID:       TKR:8fcb947d-de04-41e0-9bd4-c9861511da2b
 :END:
 #+begin_src emacs-lisp
-(defvar hrm--tree-depth 0)
-(defvar hrm--parent-tree nil)
+(defvar hermeneus--tree-depth 0)
+(defvar hermeneus--parent-tree nil)
 
-(define-widget 'hrm-tree-widget 'tree-widget
+(define-widget 'hermeneus-tree-widget 'tree-widget
   "A tree widget for displaying XML sources and DOM trees."
-  :action 'hrm-tree-widget-action
-  :expander 'hrm-tree-widget-expander)
+  :action 'hermeneus-tree-widget-action
+  :expander 'hermeneus-tree-widget-expander)
 
-(defun hrm--tree-icon-width (&optional icon-sym)
+(defun hermeneus--tree-icon-width (&optional icon-sym)
   (with-temp-buffer
     (widget-create (or icon-sym 'tree-widget-open-icon))
-    (hrm--pixel-column)))
+    (hermeneus--pixel-column)))
 
-(defun hrm--get-dom-tree-widget (value &rest kwargs)
+(defun hermeneus--get-dom-tree-widget (value &rest kwargs)
   (if (consp value)
-      `(hrm-tree-widget :tag ,(when-let ((tag (dom-tag value)))
+      `(hermeneus-tree-widget :tag ,(when-let ((tag (dom-tag value)))
                                 (propertize (symbol-name (dom-tag value))
                                             'face 'bold))
-                        :hrm-value ,value
+                        :hermeneus-value ,value
                         ,@kwargs)
     `(item :value ,(propertize (format "\"%s\"" value)
-                               'hrm--tree hrm--parent-tree
+                               'hermeneus--tree hermeneus--parent-tree
                                'face 'font-lock-string-face))))
 
-(defun hrm-tree-widget-expander (tree)
-  (let* ((value (widget-get tree :hrm-value))
+(defun hermeneus-tree-widget-expander (tree)
+  (let* ((value (widget-get tree :hermeneus-value))
          (attrs-string (awhen (dom-attributes value)
                          (thread-first it
                            (pp-to-string)
                            (string-trim-right)
-                           (propertize 'hrm--tree tree)))))
+                           (propertize 'hermeneus--tree tree)))))
     (append (when attrs-string
               `((item :value ,attrs-string)))
             (awhen (dom-children value)
-              (let ((hrm--parent-tree tree))
+              (let ((hermeneus--parent-tree tree))
                 (cl-loop for c in it
                          for i from (length it) downto 1
                          if (or (> i 1) (not (stringp c)))
-                         collect (hrm--get-dom-tree-widget c)
+                         collect (hermeneus--get-dom-tree-widget c)
                          else
-                         collect (hrm--get-dom-tree-widget
+                         collect (hermeneus--get-dom-tree-widget
                                   (propertize
-                                   c 'hrm--tree-last-sibling t))))))))
+                                   c 'hermeneus--tree-last-sibling t))))))))
 
-(defun hrm-tree-widget-action (tree &optional event)
+(defun hermeneus-tree-widget-action (tree &optional event)
   (unwind-protect
       (progn
-        (advice-add 'princ :before-until 'hrm--well-excuse-me-princ)
+        (advice-add 'princ :before-until 'hermeneus--well-excuse-me-princ)
         (tree-widget-action tree event))
-    (advice-remove 'princ 'hrm--well-excuse-me-princ)))
+    (advice-remove 'princ 'hermeneus--well-excuse-me-princ)))
 
-(defun hrm--tree-insert-guides (tree &optional icon-width last-sibling-p)
+(defun hermeneus--tree-insert-guides (tree &optional icon-width last-sibling-p)
   (let ((flags    (aif (widget-get tree :tree-widget--guide-flags)
                       (append (list t) it)
                     (if last-sibling-p
@@ -2554,27 +2554,27 @@ cases it will return nil."
        tree nohandle :tag-glyph nohandli))
     (insert (propertize " " 'display
                         `(space :width (,(or icon-width
-                                             (hrm--tree-icon-width))))))))
+                                             (hermeneus--tree-icon-width))))))))
 
-(defun hrm--well-excuse-me-princ (object &optional printcharfun)
+(defun hermeneus--well-excuse-me-princ (object &optional printcharfun)
   "Function with which to override ‘princ’ to preserve text properties.
 Well excu-u-u-u-use me, ‘princ’!"
   ;; This function is meant to be used as ‘before-until’ advice.
   (when (and (stringp object) (bufferp printcharfun))
-    (when-let ((tree (get-text-property 0 'hrm--tree object))
+    (when-let ((tree (get-text-property 0 'hermeneus--tree object))
                (wrap (with-temp-buffer
-                       (hrm--tree-insert-guides tree)
-                       (hrm--pixel-column))))
+                       (hermeneus--tree-insert-guides tree)
+                       (hermeneus--pixel-column))))
       (cl-callf propertize object 'wrap-prefix `(space :width (,wrap)))
       (if-let ((first-line-end (string-match-p "\n" object))
                (first-line     (substring object 0 (1+ first-line-end)))
                (rest-lines     (substring object (1+ first-line-end)))
-               (icon-width     (hrm--tree-icon-width)))
-          (let ((last-sibling-p (get-text-property 1 'hrm--tree-last-sibling object)))
+               (icon-width     (hermeneus--tree-icon-width)))
+          (let ((last-sibling-p (get-text-property 1 'hermeneus--tree-last-sibling object)))
             (with-current-buffer printcharfun
               (insert first-line)
               (dolist (l (split-string rest-lines "\n"))
-                (hrm--tree-insert-guides tree icon-width last-sibling-p)
+                (hermeneus--tree-insert-guides tree icon-width last-sibling-p)
                 (insert l ?\n))
               (delete-char -1)))
         (insert object))
@@ -2586,51 +2586,51 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:fc1834d0-b144-4892-88ba-59ce73dd836d
 :END:
 #+begin_src emacs-lisp
-(defun hrm--word-buffer (obj)
+(defun hermeneus--word-buffer (obj)
   "Get or create a Hermeneus buffer for word-object OBJ and return it."
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
     (hermeneus-mode)
-    (setq hrm--word-obj obj
-          hrm--word-dom (hrm--get-dom-from-word obj))
-    (hrm--dom-convert-betacode hrm--word-dom)
-    (hrm-buffer-update)
+    (setq hermeneus--word-obj obj
+          hermeneus--word-dom (hermeneus--get-dom-from-word obj))
+    (hermeneus--dom-convert-betacode hermeneus--word-dom)
+    (hermeneus-buffer-update)
     (current-buffer)))
 
-(defun hrm--dom-convert-betacode (dom)
+(defun hermeneus--dom-convert-betacode (dom)
   "Destructively convert all Greek Betacode text in DOM to Unicode."
   (cl-loop for elt in-ref (dom-elements dom 'lang "greek")
            do (cl-loop for child in-ref (dom-children elt)
                        if (and (stringp child)
                                (not (string-match-p
                                      (rx (category greek)) child)))
-                       do (cl-callf hrm-beta-to-unicode child))))
+                       do (cl-callf hermeneus-beta-to-unicode child))))
 
-(defun hrm--get-rendering-functions-alist ()
-  (cl-loop for tag in hrm-defined-tags
-           collect (cons tag (intern-soft (format "hrm-render-%s" tag)))))
+(defun hermeneus--get-rendering-functions-alist ()
+  (cl-loop for tag in hermeneus-defined-tags
+           collect (cons tag (intern-soft (format "hermeneus-render-%s" tag)))))
 
-(defun hrm-buffer-update ()
+(defun hermeneus-buffer-update ()
   (interactive)
   (let ((shr-external-rendering-functions
-         (hrm--get-rendering-functions-alist))
+         (hermeneus--get-rendering-functions-alist))
         (inhibit-read-only t)
         (pos (point)))
     (with-silent-modifications
       (erase-buffer)
-      (shr-insert-document hrm--word-dom)
-      (when hrm-show-entry-source
+      (shr-insert-document hermeneus--word-dom)
+      (when hermeneus-show-entry-source
         (insert "\n══════════════════════╡ Source ╞══════════════════════\n\n")
-        (when (memq hrm-show-entry-source '(xml both t))
-          (let ((widget `(hrm-tree-widget :tag "XML source")))
+        (when (memq hermeneus-show-entry-source '(xml both t))
+          (let ((widget `(hermeneus-tree-widget :tag "XML source")))
             (widget-put widget :args `((item :value ,(propertize
-                                                      (hrm--get-entry-source hrm--word-obj)
-                                                      'hrm--tree widget
-                                                      'hrm--tree-last-sibling t))))
+                                                      (hermeneus--get-entry-source hermeneus--word-obj)
+                                                      'hermeneus--tree widget
+                                                      'hermeneus--tree-last-sibling t))))
             (widget-create widget)))
-        (when (memq hrm-show-entry-source '(sexp both t))
+        (when (memq hermeneus-show-entry-source '(sexp both t))
           (widget-create
-           `(hrm-tree-widget :tag "DOM tree"
-                             :hrm-value ,hrm--word-dom))))
+           `(hermeneus-tree-widget :tag "DOM tree"
+                             :hermeneus-value ,hermeneus--word-dom))))
       (goto-char pos))))
 #+end_src
 
@@ -2639,7 +2639,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:2c8fd835-90e1-4e54-a923-2da89407f579
 :END:
 #+begin_src emacs-lisp
-(defun hrm--switch-buffer (buffer)
+(defun hermeneus--switch-buffer (buffer)
   ;; Is the current window a Hermeneus buffer? Switch in the same window.
   (if (eq major-mode 'hermeneus-mode)
       (pop-to-buffer-same-window buffer)
@@ -2657,13 +2657,13 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:2e7d2ea0-72e2-4903-80ac-2ac3f2980f71
 :END:
 #+begin_src emacs-lisp
-(cl-defun hrm--get-entry-source (&optional (obj hrm--word-obj))
+(cl-defun hermeneus--get-entry-source (&optional (obj hermeneus--word-obj))
   (seq-let (i begin end) (oref obj loc)
-    (let ((bufstr (hrm--get-dom-from-file i begin end :plain-xml-p t)))
+    (let ((bufstr (hermeneus--get-dom-from-file i begin end :plain-xml-p t)))
       (with-temp-buffer
         (insert bufstr)
-        (hrm-tidy-xml-buffer)
-        (hrm-indent-xml-buffer)
+        (hermeneus-tidy-xml-buffer)
+        (hermeneus-indent-xml-buffer)
         ;; fontify the source—thanks go to Wilfred Hughes’s
         ;; ‘helpful’ package for a good example of how to do this
         ;; (in function ‘helpful--syntax-highlight’)
@@ -2677,9 +2677,9 @@ Well excu-u-u-u-use me, ‘princ’!"
             (font-lock-fontify-buffer)))
         (buffer-string)))))
 
-;; (cl-defun hrm--get-entry-sexp (&optional (obj hrm--word-obj))
+;; (cl-defun hermeneus--get-entry-sexp (&optional (obj hermeneus--word-obj))
 ;;   (seq-let (i begin end) (oref obj loc)
-;;     (let ((bufstr (hrm--get-dom-from-file i begin end)))
+;;     (let ((bufstr (hermeneus--get-dom-from-file i begin end)))
 ;;       (with-temp-buffer
 ;;         (pp bufstr (current-buffer))
 ;;         (delay-mode-hooks (emacs-lisp-mode))
@@ -2697,13 +2697,13 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:4d3df8d9-777d-4421-ad3a-a10912a34890
 :END:
 #+begin_src emacs-lisp
-(defun hrm-tidy-xml-buffer ()
+(defun hermeneus-tidy-xml-buffer ()
   (interactive)
-  (if (and hrm-show-entry-source-tidy-p (executable-find "tidy"))
+  (if (and hermeneus-show-entry-source-tidy-p (executable-find "tidy"))
       (call-process-region 1 (point-max) "tidy" t t nil
-                           "-config" hrm-show-entry-source-tidy-config "-")))
+                           "-config" hermeneus-show-entry-source-tidy-config "-")))
 
-(defun hrm-indent-xml-buffer ()
+(defun hermeneus-indent-xml-buffer ()
   (interactive)
   ;; Tidy and ‘nxml-mode’ both royally fail at
   ;; indenting the LSJ’s XML properly, so we’ll
@@ -2720,24 +2720,24 @@ Well excu-u-u-u-use me, ‘princ’!"
 
 *** Clear out old Hermeneus buffers
 #+begin_src emacs-lisp
-(defun hrm--clear-old-buffers ()
-  "Clear out old Hermeneus buffers to satisfy ‘hrm-max-buffers’."
+(defun hermeneus--clear-old-buffers ()
+  "Clear out old Hermeneus buffers to satisfy ‘hermeneus-max-buffers’."
   ;; with acknowledgement to Wilfred Hughes’s ‘helpful’ package
   ;; and the function ‘helpful--buffer’
-  (when (numberp hrm-max-buffers)
+  (when (numberp hermeneus-max-buffers)
     (let* ((hermeneus-buffers
             (seq-filter (lambda (x) (with-current-buffer x
                                       (eq major-mode 'hermeneus-mode)))
                         (buffer-list)))
            ;; The result of the function ‘buffer-list’ is ordered by
            ;; most recently visited first; so, define everything past
-           ;; the ‘hrm-max-buffers’ limit as excess
-           (excess-buffers (nthcdr hrm-max-buffers hermeneus-buffers)))
+           ;; the ‘hermeneus-max-buffers’ limit as excess
+           (excess-buffers (nthcdr hermeneus-max-buffers hermeneus-buffers)))
       (mapc #'kill-buffer excess-buffers))))
 #+end_src
 
 ** TODO Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
 ** End matter
@@ -2745,9 +2745,9 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:62892e62-3cf5-4ebb-8622-83ad6021d9d3
 :END:
 #+begin_src emacs-lisp
-(provide 'hrm-render)
+(provide 'hermeneus-render)
 
-;;; hrm-render.el ends here
+;;; hermeneus-render.el ends here
 #+end_src
 
 * End matter
@@ -2755,14 +2755,14 @@ Well excu-u-u-u-use me, ‘princ’!"
 :ID:       TKR:ea04e9be-aeef-48ed-88eb-f885d3304129
 :END:
 #+begin_src emacs-lisp
-(require 'hrm-conv)
-(require 'hrm-match)
-(require 'hrm-xml)
-(require 'hrm-completion)
-(require 'hrm-storage)
-(require 'hrm-cts)
-(require 'hrm-tags)
-(require 'hrm-render)
+(require 'hermeneus-conv)
+(require 'hermeneus-match)
+(require 'hermeneus-xml)
+(require 'hermeneus-completion)
+(require 'hermeneus-storage)
+(require 'hermeneus-cts)
+(require 'hermeneus-tags)
+(require 'hermeneus-render)
 
 (provide 'hermeneus)
 
@@ -2770,6 +2770,6 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 ** Testing
-#+begin_src emacs-lisp :tangle "hrm-test.el"
-;;; hrm-test.el ends here
+#+begin_src emacs-lisp :tangle "hermeneus-test.el"
+;;; hermeneus-test.el ends here
 #+end_src

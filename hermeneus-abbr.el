@@ -1,4 +1,4 @@
-(defvar hrm-author-abbr-hash
+(defvar hermeneus-author-abbr-hash
 #s(hash-table size 1095 test equal rehash-size 1.5 rehash-threshold 0.8125 data
 ("Abyd." "Abydenus" "Acerat." "Aceratus" "Acesand." "Acesander"
  "Achae." "Achaeus" "Ach.Tat." "Achilles Tatius" "Acus." "Acusilaus"
@@ -386,7 +386,7 @@
  "Zos.Alch." "Zosimus" "Zos." "Zosimus (Historicus)"))
   "A hash table containing every author abbreviation in the LSJ.")
 
-(defvar hrm-title-hash
+(defvar hermeneus-title-hash
 #s(hash-table size 751 test equal rehash-size 1.5 rehash-threshold 0.8125 data
 ("urn:cts:greekLit:tlg0012.tlg002" "Odyssey"
  "urn:cts:greekLit:tlg0011.tlg001" "Trachiniae"
@@ -1140,4 +1140,4 @@
  "urn:cts:latinLit:phi0893.phi001" "Carmina"
  "urn:cts:greekLit:tlg0693.tlg001" "Epitome doctrinae Platonicae sive Διδασκαλικός")))
 
-(provide 'hrm-abbr)
+(provide 'hermeneus-abbr)
