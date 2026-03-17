@@ -234,7 +234,6 @@ from the XML element itself."
 #+end_src
 
 ** Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 ;;; hrm-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
 #+end_src
@@ -478,6 +477,7 @@ If setting this outside of Customize, be sure to run
 
 ** Convert by hash
 This may have to be recoded in such a way as to allow peeking at the next letter, to see if there’s a word boundary, for the sake of sigma normalization. Also, I should be thinking about iota-subscript stuff right now. Eeeegh…
+
 #+begin_src emacs-lisp
 (defun hrm--convert-string-by-hash (string hash)
   "Return STRING, translated according to HASH.
@@ -589,7 +589,6 @@ which case sigma normalization is unnecessary."
 #+end_src
 
 ** Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 (ert-deftest conv-test "Test Beta to Unicode conversion"
   (should (equal (hrm-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
@@ -735,7 +734,8 @@ Watch out for:
 - Sigmas
 - Iotas, iota-subscript, and vowels that can potentially be followed by iota-subscript
 
-  Of these, “vowels that can potentially be followed by iota-subscript” remains unimplemented. I’m thinking of doing it this way: if accents are folded, check to see if there’s an alpha, eta, or omega followed by an iota anywhere in the word, and if so, use a text property to mark each such iota as “possibly an iota-subscript”; then, as the regexp is being built, mark the iota as being possibly not present in the matched string at all (the existing regexp-building functionality takes care of equivocating α with ᾳ, η with ῃ, and ω with ῳ).
+Of these, “vowels that can potentially be followed by iota-subscript” remains unimplemented. I’m thinking of doing it this way: if accents are folded, check to see if there’s an alpha, eta, or omega followed by an iota anywhere in the word, and if so, use a text property to mark each such iota as “possibly an iota-subscript”; then, as the regexp is being built, mark the iota as being possibly not present in the matched string at all (the existing regexp-building functionality takes care of equivocating α with ᾳ, η with ῃ, and ω with ῳ).
+
 #+begin_src emacs-lisp
 (defun hrm--re-builder (string)
   ;; Decompose the string into letters and combining diacriticals, and
@@ -792,7 +792,6 @@ elsewhere."
 #+end_src
 
 ** Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 (ert-deftest match-test ()
   "Test the results of the regexp matcher."
@@ -963,7 +962,6 @@ or otherwise can’t be used, move on."
 #+end_src
 
 ** TODO Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
 
@@ -1208,6 +1206,7 @@ Right now, this is a placeholder.
 
 #+begin_src emacs-lisp
 #+end_src
+
 ** Access/populate ~entries~ slot of hrm-lexicon object
 
 #+begin_src emacs-lisp
@@ -1237,8 +1236,10 @@ with word-objects from the LSJ."
   (interactive)
   (hrm--populate-lexicon hrm-lsj))
 #+end_src
+
 ** Return all tag types found in the LSJ (for reference; does not tangle)
 This code doesn’t work well. If you can tell, I’ve made many attempts to avoid and make note of entries that make the function choke. Still, it always causes hrm-scan-entries to hang somewhere at about 39%. But, the results (see below) /should/ be a complete list of every tag used in the LSJ.
+
 #+begin_src emacs-lisp :tangle no :results replace list :load no
 (defvar hrm--all-tag-types nil)
 (defvar hrm--current-entry nil)
@@ -1516,7 +1517,6 @@ provide fuzzy-matching. Returns a word-object."
 #+end_src
 
 ** TODO Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
 
@@ -1540,11 +1540,13 @@ Most of these code blocks do not tangle, because at present most of this section
 #+begin_src emacs-lisp
 ;;; hrm-cts.el --- -*- lexical-binding: t -*-
 #+end_src
+
 ** Variables
 #+begin_src emacs-lisp
 (defvar hrm-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
   "The URL for the Perseus Project’s Scaife CTS API.")
 #+end_src
+
 ** Functions
 *** Convert URNs
 #+begin_src emacs-lisp
@@ -1590,6 +1592,7 @@ If ATOM is non-nil, return the URL for the Atom version."
           (when atom "/atom")))
 
 #+end_src
+
 *** Return all URNs in LSJ
 #+begin_src emacs-lisp :tangle no :load no
 (cl-defun hrm--get-all-urns (&optional (files hrm-lsj-files))
@@ -1629,6 +1632,7 @@ If ATOM is non-nil, return the URL for the Atom version."
               (insert ")")
               (save-buffer)))
 #+end_src
+
 *** Return title from URN
 #+begin_src emacs-lisp :tangle no :results no
 (require 'request)
@@ -1682,7 +1686,6 @@ If ATOM is non-nil, return the URL for the Atom version."
 #+end_src
 
 ** TODO Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 (ert-deftest cts-test ()
   "Test the Canonical Test Services functionality."
@@ -1700,6 +1703,7 @@ If ATOM is non-nil, return the URL for the Atom version."
 
 ;;; hrm-cts.el ends here
 #+end_src
+
 * Tags
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle hrm-tags.el
@@ -2324,7 +2328,6 @@ Note: If no value is given, the application program is responsible for deciding 
 #+end_src
 
 ** TODO Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
 
@@ -2734,7 +2737,6 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 ** TODO Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 #+end_src
 
@@ -2768,7 +2770,6 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 ** Testing
-
 #+begin_src emacs-lisp :tangle "hrm-test.el"
 ;;; hrm-test.el ends here
 #+end_src
