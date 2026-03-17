@@ -17,9 +17,9 @@
 
 (defun hermeneus--regexp-bracket-quote (string)
   "Return STRING, regexp-quoted and, if necessary, in square brackets.
-This exists for when a regexp being generated may need to match
-one character or more than one character, depending on the length
-of input STRING."
+This exists for when a regexp being generated may need to match one
+character or more than one character, depending on the length of input
+STRING."
   (if (> (length string) 1)
       (concat "[" (regexp-quote string) "]")
     (regexp-quote string)))
@@ -27,8 +27,8 @@ of input STRING."
 (defmacro hermeneus--make-regexp-versions (def-form &rest string-vars)
   "Define regexp versions of a series of string variables.
 Each string in STRING-VARS will be given a regexp version, suffixed
-\"regexp\", which will match any character in the string.
-DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
+\"regexp\", which will match any character in the string. DEF-FORM
+should be one of ‘defvar’, ‘defconst’, or ‘setq’."
   (declare (indent 1)
            (debug ([&or "defvar" "defconst" "setq"] &rest symbolp)))
   `(progn
@@ -59,7 +59,9 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
   "':;") ; "’·;"
 
 (defconst hermeneus--beta-all--standard
-  (concat hermeneus--beta-punctuation hermeneus--beta-diacritics hermeneus--beta-letters--standard))
+  (concat hermeneus--beta-punctuation
+          hermeneus--beta-diacritics
+          hermeneus--beta-letters--standard))
 
 (hermeneus--make-regexp-versions defconst
   hermeneus--beta-diacritics hermeneus--beta-punctuation
@@ -95,23 +97,22 @@ DEF-FORM should be one of ‘defvar’, ‘defconst’, or ‘setq’."
                                              (input-punctuation hermeneus--beta-punctuation)
                                              (input-diacritics hermeneus--beta-diacritics))
   "Make a hash table for translating INPUT-LETTERS to OUTPUT-LETTERS.
-INPUT-LETTERS can be a string or a list of strings.
-OUTPUT-LETTERS must be a string.
+INPUT-LETTERS can be a string or a list of strings. OUTPUT-LETTERS must
+be a string.
 
-If INPUT-LETTERS is a string, then each letter in INPUT-LETTERS
-will be used as a key in the resulting hash table, with the
-corresponding letter in OUTPUT-LETTERS as the value.
+If INPUT-LETTERS is a string, then each letter in INPUT-LETTERS will be
+used as a key in the resulting hash table, with the corresponding letter
+in OUTPUT-LETTERS as the value.
 
-If INPUT-LETTERS is a list of strings, then each character in
-each string is interpreted as alternate keys for whichever
-character has the positional index in OUTPUT-LETTERS that the
-string has in INPUT-LETTERS (a many-to-one mapping). E.g., the
-arguments '(\"ab\" \"c\" \"d\") and \"xyz\" would result in a
-hash table mapping \"a\" to \"x\", \"b\" to \"x\", \"c\" to
-\"y\", and \"d\" to \"z\".
+If INPUT-LETTERS is a list of strings, then each character in each
+string is interpreted as alternate keys for whichever character has the
+positional index in OUTPUT-LETTERS that the string has in
+INPUT-LETTERS (a many-to-one mapping). E.g., the arguments
+'(\"ab\" \"c\" \"d\") and \"xyz\" would result in a hash table mapping
+\"a\" to \"x\", \"b\" to \"x\", \"c\" to \"y\", and \"d\" to \"z\".
 
-Use HASH if you want to start from an existing hash-table rather
-than make a new one."
+Use HASH if you want to start from an existing hash-table rather than
+make a new one."
   (setq hash (hermeneus--make-beta-hash-1 input-letters output-letters hash))
   (when (and input-punctuation input-diacritics output-punctuation output-diacritics)
     (cl-loop for i across (concat input-punctuation input-diacritics)
@@ -165,7 +166,9 @@ than make a new one."
         (t (error "Invalid definition for ‘hermeneus-beta-input-type’: %s" def)))
 
   (setq hermeneus--beta-all--user
-        (concat hermeneus--beta-punctuation hermeneus--beta-diacritics hermeneus--beta-letters--user)
+        (concat hermeneus--beta-punctuation
+                hermeneus--beta-diacritics
+                hermeneus--beta-letters--user)
         hermeneus--beta-all--user-regexp
         (hermeneus--regexp-bracket-quote hermeneus--beta-all--user))
 
@@ -175,16 +178,15 @@ than make a new one."
 
 (defcustom hermeneus-beta-input-type 'beta
   "How to interpret Latin letters used to represent Greek words.
-Only affects user input. The default is the standard “Beta code”
-used for representing Greek words in Latin characters. “Greek
-Keyboard” translates a standard QWERTY keyboard layout to a
-standard Greek keyboard layout. Finally, with “Custom mapping,”
-you can define your own style of Beta code. This is represented
-with a list of strings, each corresponding to a Greek letter (use
-the Customize interface to see which ones). Each string only
-needs to be one character, but you can add more characters onto
-the string if you want more than one key to enter the same
-letter.
+Only affects user input. The default is the standard “Beta code” used
+for representing Greek words in Latin characters. “Greek Keyboard”
+translates a standard QWERTY keyboard layout to a standard Greek
+keyboard layout. Finally, with “Custom mapping,” you can define your own
+style of Beta code. This is represented with a list of strings, each
+corresponding to a Greek letter (use the Customize interface to see
+which ones). Each string only needs to be one character, but you can add
+more characters onto the string if you want more than one key to enter
+the same letter.
 
 If setting this outside of Customize, be sure to run
 ‘hermeneus-conv--set-beta-input-type’ afterward."
@@ -226,8 +228,8 @@ If setting this outside of Customize, be sure to run
 (defun hermeneus-conv--capitalize-after-asterisk (string)
   "If STRING contains an asterisk, return STRING with no asterisk
 and with the first letter after it capitalized. Otherwise, return
-STRING. (This also happens when no letters appear anywhere
-following the asterisk.)"
+STRING. (This also happens when no letters appear anywhere following the
+asterisk.)"
   (if-let ((astr-idx (string-match-p "\*" string))   ; “asterisk index”
            (capt-idx (string-match-p (rx word-start) ; where to capitalize
                                      string (1+ astr-idx))))
@@ -283,20 +285,21 @@ will be replaced with “σ”."
 
 (defun hermeneus-beta-to-unicode (string &optional input-p match-p)
   "Return STRING converted from Beta code to Unicode.
-INPUT-P is whether or not the string should be interpreted as
-user input. (The difference is that user input should be read
-according to the option ‘hermeneus-conv-beta-input-type’; otherwise, it
-should be read as standard Beta code, as used in the XML LSJ.)
-MATCH-P should be non-nil when converting a string to be used
-solely for matching (like in the function ‘hermeneus--re-builder’), in
-which case sigma normalization is unnecessary."
+INPUT-P is whether or not the string should be interpreted as user
+input. (The difference is that user input should be read according to
+the option ‘hermeneus-conv-beta-input-type’; otherwise, it should be
+read as standard Beta code, as used in the XML LSJ.) MATCH-P should be
+non-nil when converting a string to be used solely for matching (like in
+the function ‘hermeneus--re-builder’), in which case sigma normalization
+is unnecessary."
   (setq string
         (thread-first string
-          (hermeneus-conv--normalize-beta-diacritics)
-          (hermeneus--convert-string-by-hash (if input-p
-                                           hermeneus--beta-hash--user
-                                         hermeneus--beta-hash--standard))
-          (ucs-normalize-NFC-string)))
+                      (hermeneus-conv--normalize-beta-diacritics)
+                      (hermeneus--convert-string-by-hash
+                       (if input-p
+                           hermeneus--beta-hash--user
+                         hermeneus--beta-hash--standard))
+                      (ucs-normalize-NFC-string)))
   (if match-p
       string
     (hermeneus-conv--normalize-sigmas string)))

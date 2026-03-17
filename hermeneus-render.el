@@ -21,32 +21,31 @@
 
 (defcustom hermeneus-max-buffers 8
   "The maximum number of open Hermeneus word buffers.
-If there are this many buffers open, then opening a new Hermeneus
-word buffer will close the least recently visited one. Nil means
-no Hermeneus buffers will be closed upon opening a new one.
+If there are this many buffers open, then opening a new Hermeneus word
+buffer will close the least recently visited one. Nil means no Hermeneus
+buffers will be closed upon opening a new one.
 
-(Note that quitting such a buffer with ‘quit-window’, ordinarily
-set to the letter q, will send it to the back of the line; i.e.,
-it will be first to be closed when opening a new word buffer.)"
+(Note that quitting such a buffer with ‘quit-window’, ordinarily set to
+the letter q, will send it to the back of the line; i.e., it will be
+first to be closed when opening a new word buffer.)"
   :type '(choice (const nil) integer)
   :tag "Hermeneus — maximum number of buffers"
   :group 'hermeneus)
 
 (defcustom hermeneus-show-entry-source nil
   "Whether to show the document source after a word definition.
-This affects the word defintiions displayed by ‘describe-greek-word’
-and ‘counsel-greek-word’.
+This affects the word defintiions displayed by ‘describe-greek-word’ and
+‘counsel-greek-word’.
 
-When this is set to “XML” (symbol ‘xml’), then any definition
-displayed will be followed by the definition’s original XML
-source. When this is set to “DOM sexp” (symbol ‘sexp’), the
-source will be displayed in the form of the DOM sexp that was
-generated from the XML by ‘libxml-parse-xml-region’ and used by
-Hermeneus to interpret and render the definition. When this is
-set to “both” (symbol ‘both’, or t), then the source will be
-displayed as XML and as a DOM sexp. When this is set to
-“no” (nil), the default, then no source will be displayed below
-the definition."
+When this is set to “XML” (symbol ‘xml’), then any definition displayed
+will be followed by the definition’s original XML source. When this is
+set to “DOM sexp” (symbol ‘sexp’), the source will be displayed in the
+form of the DOM sexp that was generated from the XML by
+‘libxml-parse-xml-region’ and used by Hermeneus to interpret and render
+the definition. When this is set to “both” (symbol ‘both’, or t), then
+the source will be displayed as XML and as a DOM sexp. When this is set
+to “no” (nil), the default, then no source will be displayed below the
+definition."
   :type '(choice (const xml :tag "XML")
                  (const sexp :tag "DOM sexp")
                  (const both :tag "both")
@@ -70,8 +69,9 @@ Find out more about Tidy at http://www.html-tidy.org"
   (expand-file-name "hermeneus-tidy.conf" (file-name-directory
                                      (locate-library "hermeneus")))
   "Configuration file to use with Tidy when tidying XML sources.
-See options “Hermeneus — show entry source?” (‘hermeneus-show-entry-source-p’)
-and “Hermeneus — tidy entry source?” (‘hermeneus-show-entry-source-tidy’).
+See options “Hermeneus — show entry source?”
+(‘hermeneus-show-entry-source-p’) and “Hermeneus — tidy entry source?”
+(‘hermeneus-show-entry-source-tidy’).
 
 Find out more about Tidy at http://www.html-tidy.org"
   :type 'file
@@ -80,10 +80,10 @@ Find out more about Tidy at http://www.html-tidy.org"
 
 (defun hermeneus--roman-numeral-p (string)
   "A limited test for whether STRING represents a Roman numeral.
-This is to allow proper spacing for Roman-numbered list bullets.
-The limitation is that it can’t tell when a single letter (“I”, “V”,
-“X”, etc.) is supposed to be a Roman numeral or not, and in those
-cases it will return nil."
+This is to allow proper spacing for Roman-numbered list bullets. The
+limitation is that it can’t tell when a single letter (“I”, “V”, “X”,
+etc.) is supposed to be a Roman numeral or not, and in those cases it
+will return nil."
   (when (> (length string) 1)
     (string-match-p "\\`M?M?M?C?M?D?C?C?C?D?C?X?C?L?X?L?X?X?X?I?X?V?I?V?I?I?I?\\'" string)))
 
@@ -255,9 +255,11 @@ Well excu-u-u-u-use me, ‘princ’!"
   ;; Is the current window a Hermeneus buffer? Switch in the same window.
   (if (eq major-mode 'hermeneus-mode)
       (pop-to-buffer-same-window buffer)
-    ;; Is any window on the current frame a Hermeneus buffer? Switch in that window.
+    ;; Is any window on the current frame a Hermeneus buffer? Switch
+    ;; in that window.
     (if-let ((window (cl-loop for x in (window-list)
-                              if (eq (with-selected-window x major-mode) 'hermeneus-mode)
+                              if (eq (with-selected-window x major-mode)
+                                     'hermeneus-mode)
                               return x)))
         (progn (select-window window) (pop-to-buffer-same-window buffer))
       ;; Otherwise, use ‘pop-to-buffer’.
@@ -270,9 +272,9 @@ Well excu-u-u-u-use me, ‘princ’!"
         (insert bufstr)
         (hermeneus-tidy-xml-buffer)
         (hermeneus-indent-xml-buffer)
-        ;; fontify the source—thanks go to Wilfred Hughes’s
-        ;; ‘helpful’ package for a good example of how to do this
-        ;; (in function ‘helpful--syntax-highlight’)
+        ;; fontify the source—thanks go to Wilfred Hughes’s ‘helpful’
+        ;; package for a good example of how to do this (in function
+        ;; ‘helpful--syntax-highlight’)
         (delay-mode-hooks
           (if (fboundp 'xml-mode)
               (nxml-mode)

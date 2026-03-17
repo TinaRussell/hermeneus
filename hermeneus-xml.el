@@ -69,9 +69,9 @@ FILE can be a local filename or an URL."
 (cl-defun hermeneus--get-lsj-file-sizes (&optional (list hermeneus-lsj-files))
   "Return the sizes of the XML LSJ files in LIST.
 LIST defaults to the value of ‘hermeneus-lsj-files’, and is assumed to
-be a list of the files in the XML LSJ. If any filename in LIST is
-an URL, then the size is given from a prerecorded list.
-Otherwise, ‘nnheader-file-size’ is used to find the file’s size."
+be a list of the files in the XML LSJ. If any filename in LIST is an
+URL, then the size is given from a prerecorded list. Otherwise,
+‘nnheader-file-size’ is used to find the file’s size."
   (let ((sizes '(42923474  5014862  4182729 14588543 40082401
                              15614  1233434  2872155  4731605  4600309
                           23622167  6753069 12285441  4142048   922716
@@ -122,8 +122,8 @@ If you set this outside of Customize, be sure to evaluate
 
 (defun hermeneus-scan-entries ()
   "Scan over every lexicon entry in the LSJ, using ‘hermeneus-scan-entry’.
-Return a hash table mapping each headword (expressed as a string)
-to its corresponding word object."
+Return a hash table mapping each headword (expressed as a string) to its
+corresponding word object."
   (interactive)
   (let* ((hash (make-hash-table :test 'equal :size 116493))
          (sizes (hermeneus--get-lsj-file-sizes))
@@ -148,11 +148,10 @@ to its corresponding word object."
 
 (defun hermeneus-scan-entry (entry &optional hash)
   "Scan ENTRY, a DOM sexp of an “entryFree” tag from the LSJ files.
-Identify its headword and numeric ID. Create a word object. Add
-the headword and object as a key-value pair in hash-table HASH,
-if present. Run each function from ‘hermeneus-scan-entry-functions’
-with two arguments, the word object and ENTRY. Finally, return
-the object."
+Identify its headword and numeric ID. Create a word object. Add the
+headword and object as a key-value pair in hash-table HASH, if present.
+Run each function from ‘hermeneus-scan-entry-functions’ with two
+arguments, the word object and ENTRY. Finally, return the object."
   (let* ((key (hermeneus-beta-to-unicode (dom-attr entry 'key)))
          (id (string-to-number
               (string-remove-prefix "n" (dom-attr entry 'id))))
@@ -167,9 +166,9 @@ the object."
   "Access ‘entries’ slot of ‘hermeneus-lexicon’ object LEXICON.
 The ‘entries’ slot of ‘hermeneus-lexicon’ objects is a hash table
 containing ‘hermeneus-word’ objects. The reason to use this function
-instead of using (oref LEXICON entries) is because a newly
-created ‘hermeneus-lexicon’ object will not have any ‘hermeneus-word’ objects
-in its ‘entries’ slot, and will need to be populated."
+instead of using (oref LEXICON entries) is because a newly created
+‘hermeneus-lexicon’ object will not have any ‘hermeneus-word’ objects in
+its ‘entries’ slot, and will need to be populated."
   (unless (hermeneus-lexicon-p lexicon)
     (signal 'wrong-type-argument (list 'hermeneus-lexicon-p lexicon)))
   (unless (oref lexicon initialized-p)

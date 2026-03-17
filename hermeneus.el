@@ -71,9 +71,9 @@
 (defconst hermeneus--all-sigmas (concat hermeneus--lowercase-sigmas
                                   hermeneus--uppercase-sigmas)
   "Every sigma. All of them.
-You need a lowercase word-ending sigma? Consider it done. How
-about a capital reverse dotted lunate sigma? We’ve got you
-covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
+You need a lowercase word-ending sigma? Consider it done. How about a
+capital reverse dotted lunate sigma? We’ve got you covered. Is this
+madness, you ask? Madness? THIS IS SIGMA!")
 
 (defconst hermeneus--git-lsj-dir
   "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
@@ -81,9 +81,9 @@ covered. Is this madness, you ask? Madness? THIS IS SIGMA!")
 
 (defun hermeneus-alist-to-local-vars (alist &optional prefix)
   "Convert each key in alist ALIST to a local variable.
-Each variable will have the name and value of the relevant key.
-If PREFIX is a string, it will be added to the beginning of each
-variable name (with a hyphen in between)."
+Each variable will have the name and value of the relevant key. If
+PREFIX is a string, it will be added to the beginning of each variable
+name (with a hyphen in between)."
   (let (rtn)
     (dolist (a alist (nreverse rtn))
       (let* ((var-sym (if (stringp prefix)
@@ -99,8 +99,8 @@ variable name (with a hyphen in between)."
 
 (defun hermeneus--get-slot-default-value (class slot)
   "Return the default value of SLOT in CLASS.
-SLOT should be given as a symbol. Signals an error if CLASS does
-not contain a slot named SLOT."
+SLOT should be given as a symbol. Signals an error if CLASS does not
+contain a slot named SLOT."
   (if-let ((slot-actual
             (cl-loop for s in (eieio-class-slots class)
                      if (eq (cl--slot-descriptor-name s) slot)
@@ -112,8 +112,8 @@ not contain a slot named SLOT."
 
 (defun hermeneus--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
-Returns STRING, with whitespace and punctuation characters found
-at each end removed."
+Returns STRING, with whitespace and punctuation characters found at each
+end removed."
   (let ((trim (rx (one-or-more (any blank punctuation ?\n)))))
     (string-trim string trim trim)))
 
@@ -130,9 +130,9 @@ at each end removed."
 
 (defcustom hermeneus-scan-entry-functions nil
   "Functions called by ‘hermeneus-scan-xml’ for every XML element
-in the lexicon. Each function is run with two arguments: the
-word-object corresponding to the entry, and the DOM parsed
-from the XML element itself."
+in the lexicon. Each function is run with two arguments: the word-object
+corresponding to the entry, and the DOM parsed from the XML element
+itself."
   :type 'hook
   :group 'hermeneus)
 

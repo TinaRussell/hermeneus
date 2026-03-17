@@ -38,8 +38,10 @@
                     (hermeneus-normalize-greek-char c))
              concat (char-to-string c))))
 
-(defvar hermeneus--letter-variant-hash (make-hash-table :size (length hermeneus--greek-all)))
-(defvar hermeneus--letter-variant-hash-case-folded (make-hash-table :size (length hermeneus--greek-all)))
+(defvar hermeneus--letter-variant-hash (make-hash-table
+                                        :size (length hermeneus--greek-all)))
+(defvar hermeneus--letter-variant-hash-case-folded (make-hash-table
+                                                    :size (length hermeneus--greek-all)))
 
 (defun hermeneus--make-letter-variant-hashes ()
   (cl-loop with letters = (thread-first hermeneus--greek-letters
@@ -118,9 +120,8 @@
 
 (defun hermeneus--re-matcher (regexp candidates)
   "Return all strings in CANDIDATES that match REGEXP.
-Strings where the regexp matches at the beginning will be listed
-earlier in the result than strings where the regexp matches
-elsewhere."
+Strings where the regexp matches at the beginning will be listed earlier
+in the result than strings where the regexp matches elsewhere."
   (if (string-empty-p regexp)
       candidates
     (let (list-1 list-2)

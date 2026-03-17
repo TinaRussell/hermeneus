@@ -43,11 +43,11 @@ Should be nil if Hermeneus is not currently rendering a bibl tag.")
 
 (defcustom hermeneus-expand-abbreviations t
   "Whether abbreviations in definitions should be expanded.
-If non-nil, Hermeneus will attempt to expand abbreviations (of
-authors, works, etc.) found when displaying a definition. The
-abbreviation will be available as the ‘help-echo’ (“tooltip”)
-property of the expanded text. If nil, abbreviations will remain,
-with expansions written as ‘help-echo’ properties."
+If non-nil, Hermeneus will attempt to expand abbreviations (of authors,
+works, etc.) found when displaying a definition. The abbreviation will
+be available as the ‘help-echo’ (“tooltip”) property of the expanded
+text. If nil, abbreviations will remain, with expansions written as
+‘help-echo’ properties."
   :type 'boolean
   :tag "Hermeneus — expand abbreviations"
   :group 'hermeneus)
@@ -124,55 +124,50 @@ which is more readable to ‘plist-get’ and related functions."
   "Macro for defining XML tags in Hermeneus.
 TAG is the unquoted name of the tag in question.
 
-DOCSTRING is an optional description that, when given, will be
-prepended with the name of the tag and used in docstrings for
-constructs defined by ‘define-hermeneus-tag’. e.g. the docstring used
-in the ‘define-hermeneus-tag’ definition for <name> is \"contains a
-proper noun or noun phrase.\", and the docstring generated for
-the function ‘hermeneus-render-name’ includes \"‘<name>’ contains a
-proper noun or noun phrase.\" Do not use line breaks to wrap the
-string; line breaks will be added automatically to the generated
-docstrings.
+DOCSTRING is an optional description that, when given, will be prepended
+with the name of the tag and used in docstrings for constructs defined
+by ‘define-hermeneus-tag’. e.g. the docstring used in the
+‘define-hermeneus-tag’ definition for <name> is \"contains a proper noun
+or noun phrase.\", and the docstring generated for the function
+‘hermeneus-render-name’ includes \"‘<name>’ contains a proper noun or
+noun phrase.\" Do not use line breaks to wrap the string; line breaks
+will be added automatically to the generated docstrings.
 
 ‘define-hermeneus-tag’ accepts the following keyword arguments:
 
-ATTRS is a list (though it can be expressed inline; see the
-function ‘hermeneus---normalize-keywords’) of tag attributes, in the
-form \"ATTR DOCSTRING ATTR DOCSTRING …\". Each ATTR is the
-unquoted name of an attribute specific to this tag, and each
-DOCSTRING is a short string describing the preceding attribute.
-Like with the main docstring for the tag, do not use line breaks
-for wrapping, and expect each string to be prepended with the
-name of the attribute.
+ATTRS is a list (though it can be expressed inline; see the function
+‘hermeneus---normalize-keywords’) of tag attributes, in the form
+\"ATTR DOCSTRING ATTR DOCSTRING …\". Each ATTR is the unquoted name of
+an attribute specific to this tag, and each DOCSTRING is a short string
+describing the preceding attribute. Like with the main docstring for the
+tag, do not use line breaks for wrapping, and expect each string to be
+prepended with the name of the attribute.
 
 FACE is a quoted face specification which Hermeneus will use when
-displaying the tag. See Info node ‘(elisp)Defining Faces’. If
-FACE is not given, then a generic face will be created which by
-default inherits from ‘hermeneus-default-face’. Either way, the
-resulting face will be named in the format ‘hermeneus-face-TAG’.
+displaying the tag. See Info node ‘(elisp)Defining Faces’. If FACE is
+not given, then a generic face will be created which by default inherits
+from ‘hermeneus-default-face’. Either way, the resulting face will be
+named in the format ‘hermeneus-face-TAG’.
 
-RENDER is a series of sexps which will be used to define a
-function for rendering the tag’s contents. The function will be
-named in the format `hermeneus-render-TAG’ and will be given one
-argument, ‘dom’, which is the DOM of the tag being rendered (see
-Info node ‘(elisp)Document Object Model’). If RENDER is absent,
-then the special function ‘hermeneus--render-generic’ will be used to
-render the tag.
-Note that if you define your own rendering function using RENDER,
-then any rendering it does must manually take into account the
-tag’s face, which (as you may recall) is named in the format
-‘hermeneus-face-TAG’.
+RENDER is a series of sexps which will be used to define a function for
+rendering the tag’s contents. The function will be named in the format
+`hermeneus-render-TAG’ and will be given one argument, ‘dom’, which is
+the DOM of the tag being rendered (see Info node ‘(elisp)Document Object
+Model’). If RENDER is absent, then the special function
+‘hermeneus--render-generic’ will be used to render the tag. Note that if
+you define your own rendering function using RENDER, then any rendering
+it does must manually take into account the tag’s face, which (as you
+may recall) is named in the format ‘hermeneus-face-TAG’.
 
-DOC-SOURCE is a symbol, a string, or a list of two strings which
-serves as a citation for the information contained in DOCSTRING
-and ATTRS. Use this if you copied such information from somewhere
-else, i.e. a specification like the TEI P4 Guidelines. If
-DOC-SOURCE is a bound symbol, it will be set to that symbol’s
-value as a variable. If DOC-SOURCE is a string, it will be
-interpreted generically (adding \"Information from \" followed by
-DOC-SOURCE to the docstrings of relevant constructs), and if
-DOC-SOURCE is a list of two strings, it will be interpreted as
-the URL of a publication followed by its title.
+DOC-SOURCE is a symbol, a string, or a list of two strings which serves
+as a citation for the information contained in DOCSTRING and ATTRS. Use
+this if you copied such information from somewhere else, i.e. a
+specification like the TEI P4 Guidelines. If DOC-SOURCE is a bound
+symbol, it will be set to that symbol’s value as a variable. If
+DOC-SOURCE is a string, it will be interpreted generically (adding
+\"Information from \" followed by DOC-SOURCE to the docstrings of
+relevant constructs), and if DOC-SOURCE is a list of two strings, it
+will be interpreted as the URL of a publication followed by its title.
 If DOC-SOURCE is not given, then the value of ‘hermeneus-doc-source’
 will be used instead. If that value is nil (the default), then no
 citation will appear in the relevant docstrings."

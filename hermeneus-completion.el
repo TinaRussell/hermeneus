@@ -19,21 +19,20 @@
                          (or (cl-every 'featurep libs)
                              (cl-every 'package-installed-p libs)))
   "Whether to use the ‘ivy’ package for ‘describe-greek-word’.
-This allows two important features. The first is matching by Beta
-code: if you type in Beta code (e.g. “i(ero/doulos” instead of
-“ἱερόδουλος”), it will match as though you typed the Greek
-Unicode equivalent. (See option ‘hermeneus-beta-input-type’ if you want
-to customize the type of Beta code used for this.) The second is
-diacritic-agnostic matching: if you type Greek with no diacritics
-into the ‘describe-greek-word’ prompt, it will match any
-combination of diacritics on the same sequence of letters. This
-works whether you’re typing in Greek Unicode or in Beta code: so,
-either “etaira” or “εταιρα” will match “ἑταίρα”.
+This allows two important features. The first is matching by Beta code:
+if you type in Beta code (e.g. “i(ero/doulos” instead of “ἱερόδουλος”),
+it will match as though you typed the Greek Unicode equivalent. (See
+option ‘hermeneus-beta-input-type’ if you want to customize the type of
+Beta code used for this.) The second is diacritic-agnostic matching: if
+you type Greek with no diacritics into the ‘describe-greek-word’ prompt,
+it will match any combination of diacritics on the same sequence of
+letters. This works whether you’re typing in Greek Unicode or in Beta
+code: so, either “etaira” or “εταιρα” will match “ἑταίρα”.
 
-This option has no effect if Ivy is not installed. If Ivy is
-installed, but this option is turned off (‘nil’), then the Ivy
-version of ‘describe-greek-word’ is still available as the
-command ‘counsel-greek-word’."
+This option has no effect if Ivy is not installed. If Ivy is installed,
+but this option is turned off (‘nil’), then the Ivy version of
+‘describe-greek-word’ is still available as the command
+‘counsel-greek-word’."
   :type 'boolean
   :group 'hermeneus)
 
@@ -90,8 +89,8 @@ keyword arguments, which are passed to ‘ivy-read’."
 
 (defun hermeneus--bounds-of-chars (chars)
   "Skip CHARS backwards and forwards, return a cons of each point.
-CHARS is a string containing the characters to skip over. If
-point is not adjacent to any characters in CHARS, return nil."
+CHARS is a string containing the characters to skip over. If point is
+not adjacent to any characters in CHARS, return nil."
   (let ((rtn (cons
               (save-excursion (skip-chars-backward chars)
                               (point))
@@ -116,8 +115,8 @@ point is not adjacent to any characters in CHARS, return nil."
 
 (cl-defun hermeneus--string-to-object (string &optional (lexicon hermeneus-lsj))
   "Retrieve the word-object in LEXICON corresponding to STRING.
-The function ‘hermeneus--fuzzy-search’ is used when there isn’t an
-exact match. If no result is found, return nil."
+The function ‘hermeneus--fuzzy-search’ is used when there isn’t an exact
+match. If no result is found, return nil."
   (unless (and (stringp string) (hermeneus-lexicon-p lexicon))
     (error "Incorrect arguments for ‘hermeneus--string-to-object’: %s %s"
            string lexicon))
