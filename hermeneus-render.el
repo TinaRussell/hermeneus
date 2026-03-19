@@ -16,6 +16,7 @@
 
 (require 'hermeneus-conv)
 (require 'hermeneus-xml)
+(require 'hermeneus-tags)
 
 (defvar hermeneus--greek-punctuation)
 
