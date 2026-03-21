@@ -1,5 +1,8 @@
+;; [[id:TKR:654eb5b3-da3c-44aa-a53b-0cd49fd15648][Testing:1]]
 ;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
+;; Testing:1 ends here
 
+;; [[id:TKR:ac0367f5-9016-4139-acef-3183123bb0d6][Testing:1]]
 (ert-deftest conv-test "Test Beta to Unicode conversion"
   (should (equal (hermeneus-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
   (should (let ((hermeneus-beta-input-type 'greek-kbd))
@@ -11,7 +14,9 @@
                                        "N" "J" "A" "P" "R" "HU" "T" "G" "F" "X" "C" "V")))
             (hermeneus-conv--set-beta-input-type)
             (equal (hermeneus-beta-to-unicode "*)abghhzg/u" t) "Ὀδυσσεύς"))))
+;; Testing:1 ends here
 
+;; [[id:TKR:8999aa73-3aa5-46fa-be90-be901b945d1e][Testing:1]]
 (ert-deftest match-test ()
   "Test the results of the regexp matcher."
   ;; This is the sexp used to create ‘wordlist’:
@@ -69,13 +74,21 @@
                 (case-fold-search t))
             (equal (hermeneus--re-matcher regexp wordlist)
                    expected-result))))
+;; Testing:1 ends here
 
+;; [[id:TKR:98034f7e-a248-4c5a-a6d5-69b803a991c8][Testing:1]]
 
+;; Testing:1 ends here
 
+;; [[id:TKR:6a32401f-f9e7-4e52-9c47-65cc722cb2ba][Testing:1]]
 
+;; Testing:1 ends here
 
+;; [[id:TKR:ba63b06f-cf08-4ff1-9b1f-eed5387a6a47][Testing:1]]
 
+;; Testing:1 ends here
 
+;; [[id:TKR:2f830a16-8963-4182-a998-c45bfa2401c1][Testing:1]]
 (ert-deftest cts-test ()
   "Test the Canonical Test Services functionality."
   (should (equal (hermeneus-urn-to-base "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
@@ -84,9 +97,16 @@
                  "urn:cts:greekLit:tlg0020.tlg001"))
   (should (equal (hermeneus-urn-to-url "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
                  "http://data.perseus.org/catalog/urn:cts:greekLit:tlg0020.tlg001.perseus-grc1")))
+;; Testing:1 ends here
 
+;; [[id:TKR:0822da09-649c-47fe-96ec-e53bb1ff6043][Testing:1]]
 
+;; Testing:1 ends here
 
+;; [[id:TKR:616b86f6-97e1-4eef-b5f6-4d34c45a492b][Testing:1]]
 
+;; Testing:1 ends here
 
+;; [[id:TKR:96d2cc57-bf6d-4024-b4ee-d6bb2703763d][Testing:1]]
 ;;; hermeneus-test.el ends here
+;; Testing:1 ends here

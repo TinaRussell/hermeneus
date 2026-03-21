@@ -1,5 +1,6 @@
 ;;; hermeneus-render.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:aad6b242-9100-4505-9739-dbcfc187c036][Dependencies:1]]
 (require 'gv)
 (require 'widget)
 (require 'tree-widget)
@@ -19,7 +20,9 @@
 (require 'hermeneus-tags)
 
 (defvar hermeneus--greek-punctuation)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:6cfdaa3c-43a4-4acc-ac6f-ec4c0f33091c][Variables:1]]
 (defcustom hermeneus-max-buffers 8
   "The maximum number of open Hermeneus word buffers.
 If there are this many buffers open, then opening a new Hermeneus word
@@ -78,7 +81,9 @@ Find out more about Tidy at http://www.html-tidy.org"
   :type 'file
   :tag "Hermeneus — Tidy config file"
   :group 'hermeneus)
+;; Variables:1 ends here
 
+;; [[id:TKR:40231884-7d27-4fa7-a8a5-52bbab041a20][Functions:1]]
 (defun hermeneus--roman-numeral-p (string)
   "A limited test for whether STRING represents a Roman numeral.
 This is to allow proper spacing for Roman-numbered list bullets. The
@@ -106,7 +111,9 @@ will return nil."
   (let ((pos (point)))
     (prog1 (shr-pixel-column)
       (goto-char pos))))
+;; Functions:1 ends here
 
+;; [[id:TKR:8fcb947d-de04-41e0-9bd4-c9861511da2b][Widgets:1]]
 (defvar hermeneus--tree-depth 0)
 (defvar hermeneus--parent-tree nil)
 
@@ -204,7 +211,9 @@ Well excu-u-u-u-use me, ‘princ’!"
               (delete-char -1)))
         (insert object))
       object)))
+;; Widgets:1 ends here
 
+;; [[id:TKR:fc1834d0-b144-4892-88ba-59ce73dd836d][Help buffers:1]]
 (defun hermeneus--word-buffer (obj)
   "Get or create a Hermeneus buffer for word-object OBJ and return it."
   (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
@@ -251,7 +260,9 @@ Well excu-u-u-u-use me, ‘princ’!"
            `(hermeneus-tree-widget :tag "DOM tree"
                              :hermeneus-value ,hermeneus--word-dom))))
       (goto-char pos))))
+;; Help buffers:1 ends here
 
+;; [[id:TKR:2c8fd835-90e1-4e54-a923-2da89407f579][Switch buffer:1]]
 (defun hermeneus--switch-buffer (buffer)
   ;; Is the current window a Hermeneus buffer? Switch in the same window.
   (if (eq major-mode 'hermeneus-mode)
@@ -265,7 +276,9 @@ Well excu-u-u-u-use me, ‘princ’!"
         (progn (select-window window) (pop-to-buffer-same-window buffer))
       ;; Otherwise, use ‘pop-to-buffer’.
       (pop-to-buffer buffer))))
+;; Switch buffer:1 ends here
 
+;; [[id:TKR:2e7d2ea0-72e2-4903-80ac-2ac3f2980f71][Get entry source:1]]
 (cl-defun hermeneus--get-entry-source (&optional (obj hermeneus--word-obj))
   (seq-let (i begin end) (oref obj loc)
     (let ((bufstr (hermeneus--get-dom-from-file i begin end :plain-xml-p t)))
@@ -299,7 +312,9 @@ Well excu-u-u-u-use me, ‘princ’!"
 ;;           (with-no-warnings
 ;;             (font-lock-fontify-buffer)))
 ;;         (buffer-string)))))
+;; Get entry source:1 ends here
 
+;; [[id:TKR:4d3df8d9-777d-4421-ad3a-a10912a34890][Tidying:1]]
 (defun hermeneus-tidy-xml-buffer ()
   (interactive)
   (if (and hermeneus-show-entry-source-tidy-p (executable-find "tidy"))
@@ -319,7 +334,9 @@ Well excu-u-u-u-use me, ‘princ’!"
         (sgml-indent-line)
         (forward-line))
       (funcall mode))))
+;; Tidying:1 ends here
 
+;; [[id:TKR:1b45d816-5cc7-441a-b9cb-70863a09ba98][Clear out old Hermeneus buffers:1]]
 (defun hermeneus--clear-old-buffers ()
   "Clear out old Hermeneus buffers to satisfy ‘hermeneus-max-buffers’."
   ;; with acknowledgement to Wilfred Hughes’s ‘helpful’ package
@@ -334,6 +351,7 @@ Well excu-u-u-u-use me, ‘princ’!"
            ;; the ‘hermeneus-max-buffers’ limit as excess
            (excess-buffers (nthcdr hermeneus-max-buffers hermeneus-buffers)))
       (mapc #'kill-buffer excess-buffers))))
+;; Clear out old Hermeneus buffers:1 ends here
 
 (provide 'hermeneus-render)
 

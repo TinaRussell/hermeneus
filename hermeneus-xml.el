@@ -1,5 +1,6 @@
 ;;; hermeneus-xml.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:7a98e386-09fc-4f8a-8cbe-7719ed02b2c0][Dependencies:1]]
 (require 'url-handlers)
 (require 'url)
 (require 'url-parse)
@@ -16,7 +17,9 @@
 (require 'hermeneus-conv)
 
 (defvar hermeneus--greek-punctuation)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:7510ef46-dc7c-46df-91d1-3a78ecc55553][Is file an URL?:1]]
 (defun hermeneus--url-p (path)
   "Return non-nil if PATH is a valid URL.
 Specifically, this will return a parsed URL object from
@@ -24,7 +27,9 @@ Specifically, this will return a parsed URL object from
   (let ((url (url-generic-parse-url path)))
     (when (cl-struct-slot-value 'url 'type url)
       url)))
+;; Is file an URL?:1 ends here
 
+;; [[id:TKR:83796ca2-8149-4c43-8bdf-e89d91ab4a0c][Get the location of the next XML tag:1]]
 (cl-defun hermeneus--get-next-tag (&optional (tag "entryFree"))
   "Return start and end positions of the next instance of XML tag TAG
 (defaults to “entryFree”). Move point to the end position."
@@ -36,7 +41,9 @@ Specifically, this will return a parsed URL object from
              (end (progn (search-forward (concat "</" tag ">") nil t)
                          (point))))
         (list begin end)))))
+;; Get the location of the next XML tag:1 ends here
 
+;; [[id:TKR:8a8cf7a7-ae76-46ec-9774-7930d5d0413a][Get a DOM from an XML file:1]]
 (cl-defun hermeneus--get-dom-from-file (file &optional start end
                                        &key plain-xml-p)
   "Return a DOM sexp from the XML file FILE.
@@ -61,11 +68,15 @@ FILE can be a local filename or an URL."
     (if (file-exists-p file)
         (insert-file-contents file)
       (error "File does not exist: %s" file))))
+;; Get a DOM from an XML file:1 ends here
 
+;; [[id:TKR:4a6f55ba-0e8f-4bf1-80aa-86b4d1cf6061][Get DOM from a word object:1]]
 (defun hermeneus--get-dom-from-word (word)
   "Return the DOM from the XML LSJ definition of word-object WORD."
   (apply #'hermeneus--get-dom-from-file (oref word loc)))
+;; Get DOM from a word object:1 ends here
 
+;; [[id:TKR:04b61a99-7801-424c-a895-f6a71e9601ac][Get file sizes:1]]
 (cl-defun hermeneus--get-lsj-file-sizes (&optional (list hermeneus-lsj-files))
   "Return the sizes of the XML LSJ files in LIST.
 LIST defaults to the value of ‘hermeneus-lsj-files’, and is assumed to
@@ -84,7 +95,9 @@ URL, then the size is given from a prerecorded list. Otherwise,
              collect (nth (1- i) sizes)
              else
              collect (nnheader-file-size l))))
+;; Get file sizes:1 ends here
 
+;; [[id:TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737][Variables:1]]
 (defvar hermeneus-lsj-files nil)
 
 (cl-defun hermeneus--set-lsj-dir (&optional (symbol 'hermeneus-lsj-dir)
@@ -119,7 +132,9 @@ If you set this outside of Customize, be sure to evaluate
   :group 'hermeneus)
 
 (defvar hermeneus-use-fonts t)
+;; Variables:1 ends here
 
+;; [[id:TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf][Scan the LSJ:1]]
 (defun hermeneus-scan-entries ()
   "Scan over every lexicon entry in the LSJ, using ‘hermeneus-scan-entry’.
 Return a hash table mapping each headword (expressed as a string) to its
@@ -159,9 +174,13 @@ arguments, the word object and ENTRY. Finally, return the object."
     (when hash (puthash key obj hash))
     (run-hook-with-args 'hermeneus-scan-entry-functions obj entry)
     obj))
+;; Scan the LSJ:1 ends here
 
+;; [[id:TKR:b8745465-2261-4607-aef9-af0a26ac6068][Hook functions:1]]
 
+;; Hook functions:1 ends here
 
+;; [[id:TKR:03c78954-db65-47a8-9e2f-111a0d331ee0][Access/populate ~entries~ slot of hermeneus-lexicon object:1]]
 (defun hermeneus-get-entries (lexicon)
   "Access ‘entries’ slot of ‘hermeneus-lexicon’ object LEXICON.
 The ‘entries’ slot of ‘hermeneus-lexicon’ objects is a hash table
@@ -187,6 +206,7 @@ with word-objects from the LSJ."
   "Scan the LSJ and save the resulting word-objects to ‘hermeneus-lsj’."
   (interactive)
   (hermeneus--populate-lexicon hermeneus-lsj))
+;; Access/populate ~entries~ slot of hermeneus-lexicon object:1 ends here
 
 (provide 'hermeneus-xml)
 

@@ -1,5 +1,6 @@
 ;;; hermeneus-conv.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:91c60345-0a80-4c03-8984-9a02ff01186d][Dependencies:1]]
 (require 'cl-lib)
 (require 'ucs-normalize)
 
@@ -14,7 +15,9 @@
 (defvar hermeneus--all-sigmas)
 (defvar hermeneus-beta-input-type)
 (defvar hermeneus--beta-letters-user)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:fc9f22a2-ddff-4758-a2e2-b02798dcea73][Utility functions:1]]
 (defun hermeneus--regexp-bracket-quote (string)
   "Return STRING, regexp-quoted and, if necessary, in square brackets.
 This exists for when a regexp being generated may need to match one
@@ -23,7 +26,9 @@ STRING."
   (if (> (length string) 1)
       (concat "[" (regexp-quote string) "]")
     (regexp-quote string)))
+;; Utility functions:1 ends here
 
+;; [[id:TKR:d4cc8238-e2f3-4fe4-a3a9-cc285258642c][Macros:1]]
 (defmacro hermeneus--make-regexp-versions (def-form &rest string-vars)
   "Define regexp versions of a series of string variables.
 Each string in STRING-VARS will be given a regexp version, suffixed
@@ -35,7 +40,9 @@ should be one of ‘defvar’, ‘defconst’, or ‘setq’."
      ,@(cl-loop for var in string-vars
               collect (list def-form (intern (concat (symbol-name var) "-regexp"))
                             (hermeneus--regexp-bracket-quote (symbol-value var))))))
+;; Macros:1 ends here
 
+;; [[id:TKR:c056d1e0-5c34-41de-89de-94d388c5285f][Variables:1]]
 ;; For comparison, here is ‘hermeneus--greek-letters’:
 ;; αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ
 (defconst hermeneus--beta-letters--standard
@@ -76,7 +83,9 @@ should be one of ‘defvar’, ‘defconst’, or ‘setq’."
           (apply #'string
                  (delete-dups (append (string-to-list hermeneus--greek-letters)
                                       (string-to-list hermeneus--all-sigmas))))))
+;; Variables:1 ends here
 
+;; [[id:TKR:f62487a8-0d91-4f0b-a35d-2fd34668f6d9][Options:1]]
 (defun hermeneus--make-beta-hash-1 (input-letters output-letters hash)
   (when (stringp input-letters)
     (setq input-letters (mapcar #'char-to-string
@@ -203,7 +212,9 @@ If setting this outside of Customize, be sure to run
   :tag "Hermeneus — Beta code input type"
   :set 'hermeneus-conv--set-beta-input-type
   :group 'hermeneus)
+;; Options:1 ends here
 
+;; [[id:TKR:137b2e54-d67e-4fe4-94b4-bb76ea9c7b0b][Convert by hash:1]]
 (defun hermeneus--convert-string-by-hash (string hash)
   "Return STRING, translated according to HASH.
   HASH should be a hash table where the keys are characters and the
@@ -213,7 +224,9 @@ If setting this outside of Customize, be sure to run
            concat (cl-etypecase o
                     (string o)
                     (character (char-to-string o)))))
+;; Convert by hash:1 ends here
 
+;; [[id:TKR:d7f63fff-5539-4340-8c3e-b312af1c8880][Normalize diacritics:1]]
 (defun hermeneus-conv--change-diacritics-placement (string)
   (let ((rx (rx (group "*")
                 (group (one-or-more (any ")(/\\=+|—^")))
@@ -245,7 +258,9 @@ asterisk.)"
     (hermeneus-conv--change-diacritics-placement)
     (hermeneus-conv--dieresis-before-accent)
     (hermeneus-conv--capitalize-after-asterisk)))
+;; Normalize diacritics:1 ends here
 
+;; [[id:TKR:88c94caa-08ef-4993-8aad-f3eac89d1b03][Normalize sigmas:1]]
 (defun hermeneus-conv--normalize-sigmas (string)
   "Returns a copy of STRING, but with sigmas normalized.
 Sigmas which end a word will be replaced with “ς”, while other sigmas
@@ -282,7 +297,9 @@ will be replaced with “σ”."
     (if (stringp done)
         done
       (apply #'concat (nreverse substrings)))))
+;; Normalize sigmas:1 ends here
 
+;; [[id:TKR:c46f4a38-61b2-4dd0-b0e0-54d4321ffff5][Conversion:1]]
 (defun hermeneus-beta-to-unicode (string &optional input-p match-p)
   "Return STRING converted from Beta code to Unicode.
 INPUT-P is whether or not the string should be interpreted as user
@@ -303,6 +320,7 @@ is unnecessary."
   (if match-p
       string
     (hermeneus-conv--normalize-sigmas string)))
+;; Conversion:1 ends here
 
 (provide 'hermeneus-conv)
 

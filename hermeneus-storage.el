@@ -1,11 +1,14 @@
 ;;; hermeneus-storage.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:76751cd5-569d-483b-a6e0-2050e9760bd7][Dependencies:1]]
 (require 'eieio)
 (require 'eieio-base)
 (require 'cl-generic)
 
 (declare-function #'hermeneus-scan-entries "hermeneus-xml")
+;; Dependencies:1 ends here
 
+;; [[id:TKR:cc2d39d7-8b0f-4f8c-adfb-0d5e8d715cfd][Variables:1]]
 (defvar hermeneus-storage-file (concat "lsj-cache" (when (executable-find "gzip") ".gz")))
 (defvar hermeneus-storage-path nil) ; this is set by the setter function below
 
@@ -26,7 +29,9 @@ current value of ‘hermeneus-storage-file’, and the new value for
          (set-default symbol value)
          (setq hermeneus-storage-path
                (expand-file-name hermeneus-storage-file value))))
+;; Variables:1 ends here
 
+;; [[id:TKR:ec258183-0deb-4581-a0df-7ad3eec2dcd8][Objects:1]]
 (defclass hermeneus-word ()
   ((key :type string
         :initarg :key
@@ -53,7 +58,9 @@ current value of ‘hermeneus-storage-file’, and the new value for
    (file-header-line :initform ";; Hermeneus lexicon object"))
   :documentation "A Hermeneus object to represent a lexicon of words.
 Use the function ‘hermeneus-get-entries’ to access the ‘entries’ slot.")
+;; Objects:1 ends here
 
+;; [[id:TKR:155090bb-4267-4ec2-be28-e402000a0a0e][Methods:1]]
 (cl-defmethod make-instance ((cls (subclass hermeneus-lexicon)) &rest slots)
   "When making a ‘hermeneus-lexicon’ object, try to read it from a file.
 (The file’s path can be passed as a “:file” keyword argument, but
@@ -66,6 +73,7 @@ exist, or otherwise can’t be used, move on."
         (cl-call-next-method))))
 
 (defvar hermeneus-lsj (hermeneus-lexicon nil))
+;; Methods:1 ends here
 
 (provide 'hermeneus-storage)
 

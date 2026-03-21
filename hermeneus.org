@@ -1,19 +1,25 @@
-# -*- mode: org; org-src-preserve-indentation: t; org-blank-before-new-entry: '((heading . t) (plain-list-item . auto)); eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
+# -*- mode: org; org-src-preserve-indentation: t; org-blank-before-new-entry: '((heading . t) (plain-list-item . auto)); org-id-link-to-org-use-id: t; eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
 
 #+TITLE: Hermeneus
 
-#+PROPERTY: header-args :results silent :tangle yes
+#+PROPERTY: header-args :results silent :tangle yes :comments link
 #+PROPERTY: header-args:emacs-lisp :lexical t
 
 * Early definitions
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:920c07f3-b0b6-430a-a3bf-d3b4afdcff5e
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus.el --- Ancient Greek word lookup tool -*- lexical-binding: t -*-
 #+end_src
 
 ** Package header
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:dc614a92-d809-40bd-8860-2481cef1d2ff
+:END:
+#+begin_src emacs-lisp :comments no
 ;; Author: Tina Russell
 ;; Maintainer: Tina Russell
 ;; Version: 0.1
@@ -178,6 +184,9 @@ contain a slot named SLOT."
 - w)|o=fage/w ⇒ ᾠο͂φαγέω
 
 *** Trim a string
+:PROPERTIES:
+:ID:       TKR:835bcf45-1f4a-47a7-8fd7-a52531a7427e
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
@@ -235,6 +244,9 @@ itself."
 #+end_src
 
 ** Testing
+:PROPERTIES:
+:ID:       TKR:654eb5b3-da3c-44aa-a53b-0cd49fd15648
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 ;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
 #+end_src
@@ -249,7 +261,10 @@ This section exists for converting Latin letters representing Greek letters (i.e
 Now, Beta code, as it exists in this program, takes two forms: the standard Beta code used by the XML LSJ, and a more personalized Beta code for the individual user. The latter mainly exists because I wanted to be able to look up Greek words in a Greek keyboard layout without having to switch from a QWERTY layout manually; but, I realized that this approach (translating the QWERTY layout to the Greek layout) excludes those who use different keyboard layouts, which is why I made it fully customizable. (see option ~hermeneus-beta-input-type~) It’s a bit of a doozy to implement, requiring several utility functions and a loop in a custom setter function, but well worth it for increasing the international utility of Hermeneus.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:9b2e54f6-6a02-4980-9c49-411666126640
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-conv.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -275,6 +290,9 @@ Now, Beta code, as it exists in this program, takes two forms: the standard Beta
 #+end_src
 
 ** Utility functions
+:PROPERTIES:
+:ID:       TKR:fc9f22a2-ddff-4758-a2e2-b02798dcea73
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus--regexp-bracket-quote (string)
   "Return STRING, regexp-quoted and, if necessary, in square brackets.
@@ -287,6 +305,9 @@ STRING."
 #+end_src
 
 ** Macros
+:PROPERTIES:
+:ID:       TKR:d4cc8238-e2f3-4fe4-a3a9-cc285258642c
+:END:
 #+begin_src emacs-lisp
 (defmacro hermeneus--make-regexp-versions (def-form &rest string-vars)
   "Define regexp versions of a series of string variables.
@@ -349,6 +370,9 @@ should be one of ‘defvar’, ‘defconst’, or ‘setq’."
 #+end_src
 
 ** Options
+:PROPERTIES:
+:ID:       TKR:f62487a8-0d91-4f0b-a35d-2fd34668f6d9
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus--make-beta-hash-1 (input-letters output-letters hash)
   (when (stringp input-letters)
@@ -479,6 +503,9 @@ If setting this outside of Customize, be sure to run
 #+end_src
 
 ** Convert by hash
+:PROPERTIES:
+:ID:       TKR:137b2e54-d67e-4fe4-94b4-bb76ea9c7b0b
+:END:
 This may have to be recoded in such a way as to allow peeking at the next letter, to see if there’s a word boundary, for the sake of sigma normalization. Also, I should be thinking about iota-subscript stuff right now. Eeeegh…
 
 #+begin_src emacs-lisp
@@ -494,6 +521,9 @@ This may have to be recoded in such a way as to allow peeking at the next letter
 #+end_src
 
 ** Normalize diacritics
+:PROPERTIES:
+:ID:       TKR:d7f63fff-5539-4340-8c3e-b312af1c8880
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-conv--change-diacritics-placement (string)
   (let ((rx (rx (group "*")
@@ -529,6 +559,9 @@ asterisk.)"
 #+end_src
 
 ** Normalize sigmas
+:PROPERTIES:
+:ID:       TKR:88c94caa-08ef-4993-8aad-f3eac89d1b03
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-conv--normalize-sigmas (string)
   "Returns a copy of STRING, but with sigmas normalized.
@@ -569,6 +602,9 @@ will be replaced with “σ”."
 #+end_src
 
 ** Conversion
+:PROPERTIES:
+:ID:       TKR:c46f4a38-61b2-4dd0-b0e0-54d4321ffff5
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-beta-to-unicode (string &optional input-p match-p)
   "Return STRING converted from Beta code to Unicode.
@@ -593,6 +629,9 @@ is unnecessary."
 #+end_src
 
 ** Testing
+:PROPERTIES:
+:ID:       TKR:ac0367f5-9016-4139-acef-3183123bb0d6
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest conv-test "Test Beta to Unicode conversion"
   (should (equal (hermeneus-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
@@ -611,7 +650,7 @@ is unnecessary."
 :PROPERTIES:
 :ID:       TKR:843a4901-0bf6-4c9e-a709-c79b0a4195bc
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-conv)
 
 ;;; hermeneus-conv.el ends here
@@ -624,11 +663,17 @@ is unnecessary."
 Here we have everything to do with matching one string to another. This is mainly used for completion, so performance is critical.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:974f68c5-f091-40a2-8564-e38a2df3de94
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-match.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Dependencies
+:PROPERTIES:
+:ID:       TKR:584cfcc4-e766-413c-af24-10457843fa14
+:END:
 #+begin_src emacs-lisp
 (require 'ucs-normalize)
 
@@ -642,6 +687,9 @@ Here we have everything to do with matching one string to another. This is mainl
 #+end_src
 
 ** Variables
+:PROPERTIES:
+:ID:       TKR:1891c233-e559-4ef7-a6e2-4d3de5f16d2d
+:END:
 #+begin_src emacs-lisp
 (hermeneus--make-regexp-versions defconst
   hermeneus--lowercase-sigmas hermeneus--uppercase-sigmas hermeneus--all-sigmas)
@@ -661,6 +709,9 @@ Here we have everything to do with matching one string to another. This is mainl
 #+end_src
 
 ** Hash tables
+:PROPERTIES:
+:ID:       TKR:e4580ea6-9430-414f-b91f-eeb17fb51591
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-normalize-greek-char (char)
   (thread-first char
@@ -734,6 +785,9 @@ Here we have everything to do with matching one string to another. This is mainl
 #+end_src
 
 ** Regex builder
+:PROPERTIES:
+:ID:       TKR:5a761b71-feda-4241-abaa-2d85ffe2048c
+:END:
 Watch out for:
 
 - Combining diacritics
@@ -797,6 +851,9 @@ in the result than strings where the regexp matches elsewhere."
 #+end_src
 
 ** Testing
+:PROPERTIES:
+:ID:       TKR:8999aa73-3aa5-46fa-be90-be901b945d1e
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest match-test ()
   "Test the results of the regexp matcher."
@@ -858,7 +915,10 @@ in the result than strings where the regexp matches elsewhere."
 #+end_src
 
 ** End matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:a21aa806-4c7f-4c5b-b8b3-bfccc09a5192
+:END:
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-match)
 
 ;;; hermeneus-match.el ends here
@@ -872,7 +932,10 @@ in the result than strings where the regexp matches elsewhere."
 This section contains the ~hermeneus-word~ and ~hermeneus-lexicon~ objects, used for storing the results of ~hermeneus-scan-lsj~ (see [[XML]]). ~hermeneus-lexicon~ uses ~eieio-persistent~ to store the data long-term.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:1c8a8fb3-dc9e-48e4-a8c9-a6ef6b611ced
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-storage.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -968,6 +1031,9 @@ exist, or otherwise can’t be used, move on."
 #+end_src
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:98034f7e-a248-4c5a-a6d5-69b803a991c8
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
@@ -975,7 +1041,7 @@ exist, or otherwise can’t be used, move on."
 :PROPERTIES:
 :ID:       TKR:bdfa271e-9060-4205-bd28-d168aef150d2
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-storage)
 
 ;;; hermeneus-storage.el ends here
@@ -992,7 +1058,10 @@ The main function here is ~hermeneus-scan-lsj~ (in [[Scan the LSJ]]), which pars
 If you’d like, you can write a function (whose arguments are a word-object and its XML entry’s DOM) and add it to the hook ~hermeneus-scan-entry-functions~ (see [[id:TKR:d47a2a83-a109-4534-927f-b93831bb9cbe][Hooks]] in [[Early definitions]]), and the function will be run with every word scanned. You can use this, for instance, to modify the object based on information found in the entry.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:8ef9d318-a3ac-4b7e-a301-ddb1e71d1a15
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-xml.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -1085,6 +1154,9 @@ FILE can be a local filename or an URL."
 #+end_src
 
 *** Get DOM from a word object
+:PROPERTIES:
+:ID:       TKR:4a6f55ba-0e8f-4bf1-80aa-86b4d1cf6061
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus--get-dom-from-word (word)
   "Return the DOM from the XML LSJ definition of word-object WORD."
@@ -1213,6 +1285,9 @@ Right now, this is a placeholder.
 #+end_src
 
 ** Access/populate ~entries~ slot of hermeneus-lexicon object
+:PROPERTIES:
+:ID:       TKR:03c78954-db65-47a8-9e2f-111a0d331ee0
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-get-entries (lexicon)
   "Access ‘entries’ slot of ‘hermeneus-lexicon’ object LEXICON.
@@ -1297,6 +1372,9 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 - tr
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:6a32401f-f9e7-4e52-9c47-65cc722cb2ba
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
@@ -1304,7 +1382,7 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 :PROPERTIES:
 :ID:       TKR:327d7216-5a65-4f76-b9fd-c2a2742c0ada
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-xml)
 
 ;;; hermeneus-xml.el ends here
@@ -1318,7 +1396,10 @@ This code doesn’t work well. If you can tell, I’ve made many attempts to avo
 This section handles completion (via ~completing-read~ or Ivy) and contains functions for looking up words.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:86ea32d7-c7e2-4b38-aae4-155d6c358688
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-completion.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -1519,6 +1600,9 @@ provide fuzzy-matching. Returns a word-object."
 #+end_src
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:ba63b06f-cf08-4ff1-9b1f-eed5387a6a47
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
@@ -1526,7 +1610,7 @@ provide fuzzy-matching. Returns a word-object."
 :PROPERTIES:
 :ID:       TKR:ca2a0940-f58e-4c15-9904-a0889f15eb36
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-completion)
 
 ;;; hermeneus-completion.el ends here
@@ -1539,11 +1623,17 @@ provide fuzzy-matching. Returns a word-object."
 Most of these code blocks do not tangle, because at present most of this section is stuff I used when manually generating ~hermeneus-abbr.el~ (which contains variables used when expanding abbreviations during the rendering of a lexicon entry). But, given that every work referenced in the LSJ has a Canonical Text Services URN, and the Scaife CTS API is emerging as the primary way to interact programmatically with the Perseus Project catalog of ancient works, I decided Hermeneus needed its own section for dealing with URNs, CTS, and whatnot.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:cc113d67-8b69-4365-8dbd-e297ae042830
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-cts.el --- -*- lexical-binding: t -*-
 #+end_src
 
 ** Variables
+:PROPERTIES:
+:ID:       TKR:381cf97b-9b75-471a-a25c-eb82f16d3417
+:END:
 #+begin_src emacs-lisp
 (defvar hermeneus-scaife-api-url "http://scaife-cts.perseus.org/api/cts"
   "The URL for the Perseus Project’s Scaife CTS API.")
@@ -1551,6 +1641,9 @@ Most of these code blocks do not tangle, because at present most of this section
 
 ** Functions
 *** Convert URNs
+:PROPERTIES:
+:ID:       TKR:263e9918-cdaf-4218-a60a-f39fc095324b
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus-urn-to-base (urn)
   "Return URN with the passage component, if present, removed.
@@ -1688,6 +1781,9 @@ If ATOM is non-nil, return the URL for the Atom version."
 #+end_src
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:2f830a16-8963-4182-a998-c45bfa2401c1
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 (ert-deftest cts-test ()
   "Test the Canonical Test Services functionality."
@@ -1700,7 +1796,10 @@ If ATOM is non-nil, return the URL for the Atom version."
 #+end_src
 
 ** End matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:b581329f-b6d5-4d0e-9817-71d70ecff1d4
+:END:
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-cts)
 
 ;;; hermeneus-cts.el ends here
@@ -1713,7 +1812,10 @@ If ATOM is non-nil, return the URL for the Atom version."
 This handles all the many types of tags found in the XML version of the LSJ, how they are interpreted, rendered, etc. See ~define-hermeneus-tag~ in [[Macro for defining tags]] for information on how to make your own tag definitions.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:c138c657-c54c-47e5-a18e-0d712388bcac
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-tags.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -1851,6 +1953,9 @@ Should be nil if Hermeneus is not currently rendering a bibl tag.")
 #+end_src
 
 ** Options
+:PROPERTIES:
+:ID:       TKR:17600f25-f72c-49fb-9fcb-dc7497e16687
+:END:
 #+begin_src emacs-lisp
 (defcustom hermeneus-expand-abbreviations t
   "Whether abbreviations in definitions should be expanded.
@@ -2325,6 +2430,9 @@ Note: If no value is given, the application program is responsible for deciding 
 #+end_src
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:0822da09-649c-47fe-96ec-e53bb1ff6043
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
@@ -2332,7 +2440,7 @@ Note: If no value is given, the application program is responsible for deciding 
 :PROPERTIES:
 :ID:       TKR:e6beb538-1f11-4102-b744-0f9a6c7a9980
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-tags)
 
 ;;; hermeneus-tags.el ends here
@@ -2346,7 +2454,10 @@ Note: If no value is given, the application program is responsible for deciding 
 Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ as though they were HTML documents.
 
 ** Front matter
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       TKR:26d1a990-ce33-4169-82bf-ff0e71db22ef
+:END:
+#+begin_src emacs-lisp :comments no
 ;;; hermeneus-render.el --- -*- lexical-binding: t -*-
 #+end_src
 
@@ -2719,6 +2830,9 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 *** Clear out old Hermeneus buffers
+:PROPERTIES:
+:ID:       TKR:1b45d816-5cc7-441a-b9cb-70863a09ba98
+:END:
 #+begin_src emacs-lisp
 (defun hermeneus--clear-old-buffers ()
   "Clear out old Hermeneus buffers to satisfy ‘hermeneus-max-buffers’."
@@ -2737,6 +2851,9 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 ** TODO Testing
+:PROPERTIES:
+:ID:       TKR:616b86f6-97e1-4eef-b5f6-4d34c45a492b
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 #+end_src
 
@@ -2744,7 +2861,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 :PROPERTIES:
 :ID:       TKR:62892e62-3cf5-4ebb-8622-83ad6021d9d3
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (provide 'hermeneus-render)
 
 ;;; hermeneus-render.el ends here
@@ -2754,7 +2871,7 @@ Well excu-u-u-u-use me, ‘princ’!"
 :PROPERTIES:
 :ID:       TKR:ea04e9be-aeef-48ed-88eb-f885d3304129
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :comments no
 (require 'hermeneus-conv)
 (require 'hermeneus-match)
 (require 'hermeneus-xml)
@@ -2770,6 +2887,9 @@ Well excu-u-u-u-use me, ‘princ’!"
 #+end_src
 
 ** Testing
+:PROPERTIES:
+:ID:       TKR:96d2cc57-bf6d-4024-b4ee-d6bb2703763d
+:END:
 #+begin_src emacs-lisp :tangle "hermeneus-test.el"
 ;;; hermeneus-test.el ends here
 #+end_src

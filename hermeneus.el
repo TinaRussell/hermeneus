@@ -33,6 +33,7 @@
 
 ;;; Code:
 
+;; [[id:TKR:b4c7fe07-d157-4832-94c7-2be9bf65d6d9][Dependencies:1]]
 (require 'eieio-core)
 (require 'cl-preloaded)
 (require 'eieio)
@@ -42,7 +43,9 @@
 (eval-when-compile (require 'subr-x)
                    (require 'rx)
                    (require 'cl-macs))
+;; Dependencies:1 ends here
 
+;; [[id:TKR:476d569a-11f6-4c85-9c83-286ab6af8fec][Constants:1]]
 (defconst hermeneus--greek-letters "αβγδεϝζηθιϳκλμνξοπρςτυφχψωΑΒΓΔΕϜΖΗΘΙͿΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
   "Every letter in the Greek alphabet, including the digamma and yot.")
 
@@ -78,7 +81,9 @@ madness, you ask? Madness? THIS IS SIGMA!")
 (defconst hermeneus--git-lsj-dir
   "https://raw.githubusercontent.com/PerseusDL/lexica/master/CTS_XML_TEI/perseus/pdllex/grc/lsj/"
   "Location of the LSJ within the PerseusDL “lexica” repository.")
+;; Constants:1 ends here
 
+;; [[id:TKR:033a6ce1-0d17-431f-921d-75c4ed9bd8d9][Utility functions:1]]
 (defun hermeneus-alist-to-local-vars (alist &optional prefix)
   "Convert each key in alist ALIST to a local variable.
 Each variable will have the name and value of the relevant key. If
@@ -96,7 +101,9 @@ name (with a hyphen in between)."
 (defun hermeneus--make-keyword (symbol)
   "Make a keyword with the same name as SYMBOL (but with a colon)."
   (make-symbol (concat ":" (symbol-name symbol))))
+;; Utility functions:1 ends here
 
+;; [[id:TKR:48d94516-5ea7-456d-b072-2666f4600d71][Get default value of class slot:1]]
 (defun hermeneus--get-slot-default-value (class slot)
   "Return the default value of SLOT in CLASS.
 SLOT should be given as a symbol. Signals an error if CLASS does not
@@ -109,14 +116,18 @@ contain a slot named SLOT."
         (cl--slot-descriptor-initform)
         (eieio-default-eval-maybe))
     (error "Class %s does not appear to contain slot ‘%s’" class slot)))
+;; Get default value of class slot:1 ends here
 
+;; [[id:TKR:835bcf45-1f4a-47a7-8fd7-a52531a7427e][Trim a string:1]]
 (defun hermeneus--trim-string-extra (string)
   "Trim a string more aggressively than the function ‘string-trim’.
 Returns STRING, with whitespace and punctuation characters found at each
 end removed."
   (let ((trim (rx (one-or-more (any blank punctuation ?\n)))))
     (string-trim string trim trim)))
+;; Trim a string:1 ends here
 
+;; [[id:TKR:feba7f56-ff49-4ed3-9db0-f6602296810a][Options:1]]
 (defgroup hermeneus nil
   "Options for Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus"
@@ -127,7 +138,9 @@ end removed."
   "Faces used in Hermeneus, the Ancient Greek word utility."
   :tag "Hermeneus faces"
   :group 'hermeneus)
+;; Options:1 ends here
 
+;; [[id:TKR:d47a2a83-a109-4534-927f-b93831bb9cbe][Hooks:1]]
 (defcustom hermeneus-scan-entry-functions nil
   "Functions called by ‘hermeneus-scan-xml’ for every XML element
 in the lexicon. Each function is run with two arguments: the word-object
@@ -135,10 +148,15 @@ corresponding to the entry, and the DOM parsed from the XML element
 itself."
   :type 'hook
   :group 'hermeneus)
+;; Hooks:1 ends here
 
+;; [[id:TKR:e540ec29-199d-4eaa-86e5-fb355dd51938][Modes:1]]
 (define-derived-mode hermeneus-mode special-mode "Hermeneus")
+;; Modes:1 ends here
 
+;; [[id:TKR:057b84a7-d596-45d7-ab34-ce9b509049a7][Keys:1]]
 (define-key hermeneus-mode-map "g" 'hermeneus-buffer-update)
+;; Keys:1 ends here
 
 (require 'hermeneus-conv)
 (require 'hermeneus-match)

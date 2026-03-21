@@ -1,5 +1,6 @@
 ;;; hermeneus-match.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:584cfcc4-e766-413c-af24-10457843fa14][Dependencies:1]]
 (require 'ucs-normalize)
 
 (eval-when-compile (require 'rx)
@@ -9,15 +10,21 @@
 (require 'hermeneus-conv)
 
 (defvar hermeneus--greek-punctuation)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:1891c233-e559-4ef7-a6e2-4d3de5f16d2d][Variables:1]]
 (hermeneus--make-regexp-versions defconst
   hermeneus--lowercase-sigmas hermeneus--uppercase-sigmas hermeneus--all-sigmas)
+;; Variables:1 ends here
 
+;; [[id:TKR:36e58a64-4ada-426c-b9b8-cd7d76123bb2][Remove diacritics from Greek words:1]]
 (defun hermeneus-remove-diacritics (string)
   "Return STRING, but with all diacritics removed."
   (replace-regexp-in-string (rx (category combining-diacritic)) ""
                             (ucs-normalize-NFD-string string)))
+;; Remove diacritics from Greek words:1 ends here
 
+;; [[id:TKR:e4580ea6-9430-414f-b91f-eeb17fb51591][Hash tables:1]]
 (defun hermeneus-normalize-greek-char (char)
   (thread-first char
     (char-to-string)
@@ -87,7 +94,9 @@
            do (puthash l hermeneus--uppercase-sigmas-regexp hermeneus--sigma-hash)))
 
 (hermeneus--make-sigma-hash)
+;; Hash tables:1 ends here
 
+;; [[id:TKR:5a761b71-feda-4241-abaa-2d85ffe2048c][Regex builder:1]]
 (defun hermeneus--re-builder (string)
   ;; Decompose the string into letters and combining diacriticals, and
   ;; translate any Beta code to Unicode
@@ -117,7 +126,9 @@
                      hermeneus--case-fold-hash
                    hermeneus--sigma-hash))))
     (hermeneus--convert-string-by-hash string hash)))
+;; Regex builder:1 ends here
 
+;; [[id:TKR:a4a164ae-0cb8-4e14-b4d1-77d311df2b71][Matcher:1]]
 (defun hermeneus--re-matcher (regexp candidates)
   "Return all strings in CANDIDATES that match REGEXP.
 Strings where the regexp matches at the beginning will be listed earlier
@@ -131,6 +142,7 @@ in the result than strings where the regexp matches elsewhere."
               (push c list-1)
             (push c list-2))))
       (append list-1 list-2))))
+;; Matcher:1 ends here
 
 (provide 'hermeneus-match)
 

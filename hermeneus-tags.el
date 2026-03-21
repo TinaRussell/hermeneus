@@ -1,5 +1,6 @@
 ;;; hermeneus-tags.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:ef24da1a-db83-4fa2-8e50-04ed115b256a][Dependencies:1]]
 (require 'gv)
 (require 'seq)
 (require 'shr)
@@ -14,7 +15,9 @@
 (require 'hermeneus-abbr) ; standalone file
 
 (defvar hermeneus--greek-punctuation)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:a3a484db-d437-4e0f-8544-861f94061a64][Variables:1]]
 (defface hermeneus-default-face '((t nil))
   "Default face for Hermeneus text display."
   :tag "Hermeneus — default face"
@@ -35,12 +38,16 @@ Should be nil if Hermeneus is not currently rendering a bibl tag.")
 (defvar hermeneus-defined-tags nil)
 
 (defvar hermeneus--tag-keywords '(:attrs :face :render :doc-source))
+;; Variables:1 ends here
 
+;; [[id:TKR:036c52c4-109f-447d-a270-b93a2a48d8a7][Local variables:1]]
 (defvar-local hermeneus--word-obj nil)
 (defvar-local hermeneus--word-dom nil)
 
 (defvar-local hermeneus-doc-source nil)
+;; Local variables:1 ends here
 
+;; [[id:TKR:17600f25-f72c-49fb-9fcb-dc7497e16687][Options:1]]
 (defcustom hermeneus-expand-abbreviations t
   "Whether abbreviations in definitions should be expanded.
 If non-nil, Hermeneus will attempt to expand abbreviations (of authors,
@@ -51,7 +58,9 @@ text. If nil, abbreviations will remain, with expansions written as
   :type 'boolean
   :tag "Hermeneus — expand abbreviations"
   :group 'hermeneus)
+;; Options:1 ends here
 
+;; [[id:TKR:170c9de8-c302-4f27-b7c6-46e2dc15372a][Functions:1]]
 (defun hermeneus--render-generic (dom &optional tag face)
   (unless tag
     (setq tag (dom-tag dom)))
@@ -66,14 +75,18 @@ text. If nil, abbreviations will remain, with expansions written as
               (let ((cs (char-syntax (char-before))))
                 (or (eq cs 32) (eq cs ?\())))
     (shr-insert " ")))
+;; Functions:1 ends here
 
+;; [[id:TKR:9807ac9b-f45b-4b1a-abbb-149cc3593b84][Buttons:1]]
 (defun hermeneus-greek-word-button-action (button)
   (hermeneus--display-word-buffer (button-get button 'target)))
 
 (define-button-type 'hermeneus-greek-word-button
   'action #'hermeneus-greek-word-button-action
   'target nil)
+;; Buttons:1 ends here
 
+;; [[id:TKR:c820e96c-8a31-4385-afb0-459476257285][Macro for defining tags:1]]
 ;; The reason for this function, and its use in Hermeneus macros, is
 ;; to make it easier for non-Lisp people to make customizations.
 ;; (i.e., learning Ancient Greek is hard enough without having to
@@ -238,7 +251,9 @@ citation will appear in the relevant docstrings."
            ;; add to the front of the list here is just too much for
            ;; my autistic sensibilities.)
            (add-to-list 'hermeneus-defined-tags ',tag t))))))
+;; Macro for defining tags:1 ends here
 
+;; [[id:TKR:0cbf3bb6-a38b-4eb4-829e-72e1c51f596e][Elements Available in All TEI Documents:1]]
 (let ((hermeneus-doc-source '("https://tei-c.org/Vault/P4/doc/html/CO.html" "Elements Available in All TEI Documents")))
 (define-hermeneus-tag foreign
   "identifies a word or phrase as belonging to some language other than that of the surrounding text.")
@@ -327,7 +342,9 @@ citation will appear in the relevant docstrings."
                                        text
                                      expansion)))))))
 )
+;; Elements Available in All TEI Documents:1 ends here
 
+;; [[id:TKR:a805acf7-e2c2-4cfb-9911-2a8bb57eaccd][Print Dictionaries:1]]
 (let ((hermeneus-doc-source '("https://tei-c.org/Vault/P4/doc/html/DI.html" "Print Dictionaries")))
 (define-hermeneus-tag entryFree
   "contains a dictionary entry which does not necessarily conform to the constraints imposed by the entry element."
@@ -418,7 +435,9 @@ citation will appear in the relevant docstrings."
 (define-hermeneus-tag tr
   "contains a translation of the headword or an example.")
 )
+;; Print Dictionaries:1 ends here
 
+;; [[id:TKR:16b30fea-d72a-46ed-8d7b-3ad080969fd1][Linking, Segmentation, and Alignment:1]]
 (let ((hermeneus-doc-source '("https://tei-c.org/Vault/P4/doc/html/ND.html" "Linking, Segmentation, and Alignment")))
 (define-hermeneus-tag ref
   "defines a reference to another location in the current document, in terms of one or more identifiable elements, possibly modified by additional text or comment."
@@ -470,11 +489,14 @@ none	no further evaluation of targets is carried out beyond that needed to find 
 Default: #IMPLIED
 Note: If no value is given, the application program is responsible for deciding (possibly on the basis of user input) how far to trace a chain of pointers.")
 )
+;; Linking, Segmentation, and Alignment:1 ends here
 
+;; [[id:TKR:87ee579a-cc46-4178-ab45-82a5c9cf108d][Names and Dates:1]]
 (let ((hermeneus-doc-source '("https://tei-c.org/Vault/P4/doc/html/ND.html" "Names and Dates")))
 (define-hermeneus-tag placeName
   "contains an absolute or relative place name.")
 )
+;; Names and Dates:1 ends here
 
 (provide 'hermeneus-tags)
 

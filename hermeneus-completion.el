@@ -1,5 +1,6 @@
 ;;; hermeneus-completion.el --- -*- lexical-binding: t -*-
 
+;; [[id:TKR:a33012b6-462c-44fd-b63f-65f07969227c][Dependencies:1]]
 (require 'cl-extra)
 (require 'custom)
 (require 'eieio)
@@ -14,7 +15,9 @@
 (require 'hermeneus-xml)
 
 (defvar hermeneus--greek-punctuation)
+;; Dependencies:1 ends here
 
+;; [[id:TKR:7f0bab31-c461-44f0-898d-a80deeefd174][Variables:1]]
 (defcustom hermeneus-use-ivy (let ((libs '(ivy counsel)))
                          (or (cl-every 'featurep libs)
                              (cl-every 'package-installed-p libs)))
@@ -35,7 +38,9 @@ but this option is turned off (‘nil’), then the Ivy version of
 ‘counsel-greek-word’."
   :type 'boolean
   :group 'hermeneus)
+;; Variables:1 ends here
 
+;; [[id:TKR:4864efa6-7652-4504-b780-f06f24283984][Describe Greek word:1]]
 ;;;###autoload
 (defun describe-greek-word (word)
   (interactive
@@ -51,7 +56,9 @@ but this option is turned off (‘nil’), then the Ivy version of
                            entries nil t nil nil default))))))
   (unless (and hermeneus-use-ivy (fboundp 'ivy-read))
     (hermeneus--display-word-buffer word)))
+;; Describe Greek word:1 ends here
 
+;; [[id:TKR:e488b337-55e7-4543-ae83-dfdedc268b8c][Read word:1]]
 (cl-defun counsel-greek-word (&optional (prompt "Look up Greek word:")
                                         (lexicon hermeneus-lsj) &rest kwargs)
   "Read a Greek word from the LSJ, with Ivy completion.
@@ -75,7 +82,9 @@ keyword arguments, which are passed to ‘ivy-read’."
       (awhen (hermeneus-greek-word-at-point)
         (kw-put :preselect it))
       (apply 'ivy-read prompt collection kwargs))))
+;; Read word:1 ends here
 
+;; [[id:TKR:9804b1a7-dae0-4425-b671-2cdc3b604017][Get Greek letter equivalents:1]]
 (defun hermeneus--fold-case (string)
   (cl-loop for l across (regexp-quote string)
            if (memq l (string-to-list hermeneus--all-sigmas))
@@ -86,7 +95,9 @@ keyword arguments, which are passed to ‘ivy-read’."
                     (if (eq upr lwr)
                         (char-to-string l)
                       (format "[%c%c]" upr lwr)))))
+;; Get Greek letter equivalents:1 ends here
 
+;; [[id:TKR:3d941c67-20eb-4ad6-9653-bc545e109827][Greek word at point:1]]
 (defun hermeneus--bounds-of-chars (chars)
   "Skip CHARS backwards and forwards, return a cons of each point.
 CHARS is a string containing the characters to skip over. If point is
@@ -112,7 +123,9 @@ not adjacent to any characters in CHARS, return nil."
     (oref obj key)))
 
 (put (intern "greek-word") 'bounds-of-thing-at-point 'hermeneus-bounds-of-greek-word-at-point)
+;; Greek word at point:1 ends here
 
+;; [[id:TKR:03304dde-533f-41bb-937b-99e3f31ef2f1][Look up Greek word noninteractively:1]]
 (cl-defun hermeneus--string-to-object (string &optional (lexicon hermeneus-lsj))
   "Retrieve the word-object in LEXICON corresponding to STRING.
 The function ‘hermeneus--fuzzy-search’ is used when there isn’t an exact
@@ -135,7 +148,9 @@ provide fuzzy-matching. Returns a word-object."
          (matches (hermeneus--re-matcher re (hash-table-keys entries))))
     (when matches
       (gethash (car matches) entries))))
+;; Look up Greek word noninteractively:1 ends here
 
+;; [[id:TKR:bd16e1ce-fd2c-4c49-9a73-1d2038210079][Display word buffer:1]]
 (cl-defun hermeneus--display-word-buffer (word &optional (lexicon hermeneus-lsj))
   "Display WORD, a string or word-object, from LEXICON (default: LSJ)."
   (unless (hermeneus-word-p word)
@@ -147,6 +162,7 @@ provide fuzzy-matching. Returns a word-object."
     (prog1 (hermeneus--switch-buffer
             (hermeneus--word-buffer word))
       (hermeneus--clear-old-buffers))))
+;; Display word buffer:1 ends here
 
 (provide 'hermeneus-completion)
 
