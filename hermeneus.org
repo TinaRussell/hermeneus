@@ -2492,7 +2492,6 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
 
 (require 'hermeneus-conv)
 (require 'hermeneus-xml)
-(require 'hermeneus-tags)
 
 (defvar hermeneus--greek-punctuation)
 #+end_src
