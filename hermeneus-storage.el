@@ -45,9 +45,14 @@ current value of ‘hermeneus-storage-file’, and the new value for
   :documentation "A Hermeneus object to represent one word.")
 
 (defclass hermeneus-lexicon (eieio-persistent)
-  ((initialized-p :type boolean
-                  :initarg :initialized-p
-                  :initform nil)
+  ((initialized :type (or boolean integer)
+                :initarg :initialized
+                :initform nil
+                :documentation "Whether the lexicon object has been initialized, and (possibly) when.
+Nil (the default) means uninitialized, t means initialized at an unknown
+time, and an integer means the Unix timestamp (in seconds) of the time
+at which the lexicon object was initialized.")
+   ;; TODO that leaves the year 2038 problem for 32-bit systems, agh
    (entries :type hash-table
             :initarg :entries
             :initform (make-hash-table :size 116493 :test 'equal))

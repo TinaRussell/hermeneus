@@ -996,9 +996,14 @@ current value of ‘hermeneus-storage-file’, and the new value for
   :documentation "A Hermeneus object to represent one word.")
 
 (defclass hermeneus-lexicon (eieio-persistent)
-  ((initialized-p :type boolean
-                  :initarg :initialized-p
-                  :initform nil)
+  ((initialized :type (or boolean integer)
+                :initarg :initialized
+                :initform nil
+                :documentation "Whether the lexicon object has been initialized, and (possibly) when.
+Nil (the default) means uninitialized, t means initialized at an unknown
+time, and an integer means the Unix timestamp (in seconds) of the time
+at which the lexicon object was initialized.")
+   ;; TODO that leaves the year 2038 problem for 32-bit systems, agh
    (entries :type hash-table
             :initarg :entries
             :initform (make-hash-table :size 116493 :test 'equal))
@@ -1298,7 +1303,7 @@ instead of using (oref LEXICON entries) is because a newly created
 its ‘entries’ slot, and will need to be populated."
   (unless (hermeneus-lexicon-p lexicon)
     (signal 'wrong-type-argument (list 'hermeneus-lexicon-p lexicon)))
-  (unless (oref lexicon initialized-p)
+  (unless (oref lexicon initialized)
     (hermeneus--populate-lexicon lexicon))
   (oref lexicon entries))
 
@@ -1306,7 +1311,12 @@ its ‘entries’ slot, and will need to be populated."
   "Populate the ‘entries’ hash-table of ‘hermeneus-lexicon’ object LEXICON
 with word-objects from the LSJ."
   (oset lexicon entries (hermeneus-scan-entries))
-  (oset lexicon initialized-p t)
+  (oset lexicon initialized
+        (if (hermeneus--url-p hermeneus-lsj-dir)
+            ;; TODO this stores the current time as an integer, which
+            ;; will run into the Year 2038 problem on 32-bit systems
+            (time-convert (current-time) 'integer)
+          t))
   (eieio-persistent-save lexicon))
 
 ;;;###autoload

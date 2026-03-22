@@ -190,7 +190,7 @@ instead of using (oref LEXICON entries) is because a newly created
 its ‘entries’ slot, and will need to be populated."
   (unless (hermeneus-lexicon-p lexicon)
     (signal 'wrong-type-argument (list 'hermeneus-lexicon-p lexicon)))
-  (unless (oref lexicon initialized-p)
+  (unless (oref lexicon initialized)
     (hermeneus--populate-lexicon lexicon))
   (oref lexicon entries))
 
@@ -198,7 +198,12 @@ its ‘entries’ slot, and will need to be populated."
   "Populate the ‘entries’ hash-table of ‘hermeneus-lexicon’ object LEXICON
 with word-objects from the LSJ."
   (oset lexicon entries (hermeneus-scan-entries))
-  (oset lexicon initialized-p t)
+  (oset lexicon initialized
+        (if (hermeneus--url-p hermeneus-lsj-dir)
+            ;; TODO this stores the current time as an integer, which
+            ;; will run into the Year 2038 problem on 32-bit systems
+            (time-convert (current-time) 'integer)
+          t))
   (eieio-persistent-save lexicon))
 
 ;;;###autoload
