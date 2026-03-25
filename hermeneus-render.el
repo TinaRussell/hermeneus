@@ -242,18 +242,47 @@ object pertains (defaults to the value of ‘hermeneus-lsj’)."
                        do (cl-callf hermeneus-beta-to-unicode child))))
 
 (defun hermeneus--get-rendering-functions-alist ()
+  "Return an alist mapping Hermeneus tags to rendering functions.
+Each tag is represented as a symbol. Tags, and their rendering
+functions, are defined using the macro ‘define-hermeneus-tag’."
   (cl-loop for tag in hermeneus-defined-tags
            collect (cons tag (intern-soft (format "hermeneus-render-%s" tag)))))
 
 (defun hermeneus-buffer-update ()
+  "Update, and render, the current Hermeneus word buffer."
   (interactive)
-  (let ((shr-external-rendering-functions
-         (hermeneus--get-rendering-functions-alist))
-        (inhibit-read-only t)
-        (pos (point)))
+  (let* ((inhibit-read-only t)
+         (pos (point))
+         (lexicon-initialized (oref hermeneus--current-lexicon initialized))
+         (date-accessed (if (integerp lexicon-initialized)
+                            (format-time-string
+                             "%F" ;ISO 8601 date format
+                             (seconds-to-time lexicon-initialized))
+                          ;; TODO there’s gotta be some way to know
+                          ;; when a local copy of the lexicon XML was
+                          ;; last downloaded/updated
+                          "[date unknown]")))
     (with-silent-modifications
       (erase-buffer)
-      (shr-insert-document hermeneus--word-dom)
+      ;; Here we use the Simple HTML Renderer with custom tag definitions…
+      ;; (to render the entry itself, using rendering functions
+      ;; defined in ‘define-hermeneus-tag’ macro calls)
+      (let ((shr-external-rendering-functions
+             (hermeneus--get-rendering-functions-alist)))
+        (shr-insert-document hermeneus--word-dom))
+      ;; …and here we use it with the regular tag definitions
+      ;; (to print the credit required by the Perseus Digital Library)
+      (shr-insert-document `(p nil
+                               (em nil "Text provided under a CC BY-SA license by Perseus Digital Library, "
+                                   (a ((href . "http://www.perseus.tufts.edu")) "http://www.perseus.tufts.edu")
+                                   ", with funding from The National Endowment for the Humanities."
+                                   (br nil)
+                                   "Data accessed from "
+                                   (a ((href . "https://github.com/PerseusDL/lexica/"))
+                                      "https://github.com/PerseusDL/lexica/")
+                                   " " ,date-accessed)))
+      ;; And now we print the source widgets
+      ;; (if variable ‘hermeneus-show-entry-source’ is non-nil, ofc)
       (when hermeneus-show-entry-source
         (insert "\n══════════════════════╡ Source ╞══════════════════════\n\n")
         (when (memq hermeneus-show-entry-source '(xml both t))
@@ -266,7 +295,7 @@ object pertains (defaults to the value of ‘hermeneus-lsj’)."
         (when (memq hermeneus-show-entry-source '(sexp both t))
           (widget-create
            `(hermeneus-tree-widget :tag "DOM tree"
-                             :hermeneus-value ,hermeneus--word-dom))))
+                                   :hermeneus-value ,hermeneus--word-dom))))
       (goto-char pos))))
 ;; Help buffers:1 ends here
 
