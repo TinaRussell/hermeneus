@@ -41,9 +41,6 @@ Should be nil if Hermeneus is not currently rendering a bibl tag.")
 ;; Variables:1 ends here
 
 ;; [[id:TKR:036c52c4-109f-447d-a270-b93a2a48d8a7][Local variables:1]]
-(defvar-local hermeneus--word-obj nil)
-(defvar-local hermeneus--word-dom nil)
-
 (defvar-local hermeneus-doc-source nil)
 ;; Local variables:1 ends here
 

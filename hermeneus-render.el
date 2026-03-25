@@ -82,6 +82,12 @@ Find out more about Tidy at http://www.html-tidy.org"
   :group 'hermeneus)
 ;; Variables:1 ends here
 
+;; [[id:TKR:9b55011d-c094-407f-9320-8928e2d3043f][Local variables:1]]
+(defvar-local hermeneus--word-obj nil)
+(defvar-local hermeneus--word-dom nil)
+(defvar-local hermeneus--current-lexicon nil)
+;; Local variables:1 ends here
+
 ;; [[id:TKR:40231884-7d27-4fa7-a8a5-52bbab041a20][Functions:1]]
 (defun hermeneus--roman-numeral-p (string)
   "A limited test for whether STRING represents a Roman numeral.
@@ -213,12 +219,15 @@ Well excu-u-u-u-use me, ‘princ’!"
 ;; Widgets:1 ends here
 
 ;; [[id:TKR:fc1834d0-b144-4892-88ba-59ce73dd836d][Help buffers:1]]
-(defun hermeneus--word-buffer (obj)
-  "Get or create a Hermeneus buffer for word-object OBJ and return it."
-  (with-current-buffer (get-buffer-create (format "*Hermeneus: %s *" (oref obj key)))
+(cl-defun hermeneus--word-buffer (obj &optional (lexicon hermeneus-lsj))
+  "Get or create a Hermeneus buffer for word object OBJ and return it.
+Optional argument LEXICON should be the lexicon object to which the word
+object pertains (defaults to the value of ‘hermeneus-lsj’)."
+  (with-current-buffer (get-buffer-create (format "*Hermeneus: %s*" (oref obj key)))
     (hermeneus-mode)
     (setq hermeneus--word-obj obj
-          hermeneus--word-dom (hermeneus--get-dom-from-word obj))
+          hermeneus--word-dom (hermeneus--get-dom-from-word obj)
+          hermeneus--current-lexicon lexicon)
     (hermeneus--dom-convert-betacode hermeneus--word-dom)
     (hermeneus-buffer-update)
     (current-buffer)))

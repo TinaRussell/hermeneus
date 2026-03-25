@@ -160,7 +160,7 @@ provide fuzzy-matching. Returns a word-object."
              word)))
   (when word
     (prog1 (hermeneus--switch-buffer
-            (hermeneus--word-buffer word))
+            (hermeneus--word-buffer word lexicon))
       (hermeneus--clear-old-buffers))))
 ;; Display word buffer:1 ends here
 
