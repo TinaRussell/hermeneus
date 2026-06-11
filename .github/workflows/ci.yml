@@ -4,11 +4,11 @@ on:
   pull_request:
   push:
     paths-ignore:
-    - '**.org'
+    - '**.org' # will need to remove this once I get tangling working with GitHub Actions
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # TODO add more OSes (using a matrix, presumably)
     strategy:
       matrix:
         emacs_version:
@@ -21,18 +21,17 @@ jobs:
           - 27.1
           - snapshot
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.14'
-        architecture: 'x64'
-    - uses: purcell/setup-emacs@master
-      with:
-        version: ${{ matrix.emacs_version }}
-    - uses: conao3/setup-cask@master
-      with:
-        version: 'snapshot'
-    - name: Install dependencies
-      run: cask install
-    - name: Byte-compile
-      run: cask build
+      - name: Set up Emacs
+        uses: jcs090218/setup-emacs@master
+        with:
+          version: ${{matrix.emacs_version}}
+
+      - name: Install Eldev
+        uses: emacs-eldev/setup-eldev@v1
+
+      - name: Check out the source code
+        uses: actions/checkout@v4
+
+      - name: Test the project
+        run: |
+          eldev -p -dtT test
