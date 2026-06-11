@@ -1,9 +1,10 @@
-;; [[id:TKR:654eb5b3-da3c-44aa-a53b-0cd49fd15648][Testing:1]]
 ;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
-;; Testing:1 ends here
+
+(require 'hermeneus)
 
 ;; [[id:TKR:ac0367f5-9016-4139-acef-3183123bb0d6][Testing:1]]
-(ert-deftest conv-test "Test Beta to Unicode conversion"
+(ert-deftest conv-test ()
+  "Test Beta to Unicode conversion"
   (should (equal (hermeneus-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
   (should (let ((hermeneus-beta-input-type 'greek-kbd))
             (hermeneus-conv--set-beta-input-type)
