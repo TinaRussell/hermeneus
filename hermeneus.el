@@ -63,10 +63,18 @@
       "upsilon"   "phi"     "chi"   "psi"   "omega"))
 
 (defconst hermeneus--greek-unicode-all
-  (cl-loop for v being the hash-values of (ucs-names)
-           for v = (char-to-string v)
-           if (string-match-p (rx (category greek)) v)
-           concat v))
+  (if (version<= "26" emacs-version)
+      ;; In Emacs ≥ 26, the function ‘ucs-names’ returns a hash table
+      (cl-loop for v being the hash-values of (ucs-names)
+               for v = (char-to-string v)
+               if (string-match-p (rx (category greek)) v)
+               concat v)
+    ;; In Emacs < 26, it returns an alist
+    (cl-loop for (k . v) in (ucs-names)
+             for v = (char-to-string v)
+             if (string-match-p (rx (category greek)) v)
+             concat v))
+  "Every Greek character in Unicode.")
 
 (defconst hermeneus--lowercase-sigmas "σςϲͻͼͽ")
 (defconst hermeneus--uppercase-sigmas "ΣϹϽϾϿ")
