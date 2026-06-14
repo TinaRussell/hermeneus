@@ -3,7 +3,7 @@
 ;; Author: Tina Russell
 ;; Maintainer: Tina Russell
 ;; Version: 0.1
-;; Package-Requires: ((emacs "25.1") (anaphora "1.0.4"))
+;; Package-Requires: ((emacs "26.1") (anaphora "1.0.4"))
 ;; Homepage: https://github.com/TinaRussell/hermeneus
 ;; Keywords: greek language reference
 
@@ -63,17 +63,10 @@
       "upsilon"   "phi"     "chi"   "psi"   "omega"))
 
 (defconst hermeneus--greek-unicode-all
-  (if (version<= "26" emacs-version)
-      ;; In Emacs ≥ 26, the function ‘ucs-names’ returns a hash table
-      (cl-loop for v being the hash-values of (ucs-names)
-               for v = (char-to-string v)
-               if (string-match-p (rx (category greek)) v)
-               concat v)
-    ;; In Emacs < 26, it returns an alist
-    (cl-loop for (k . v) in (ucs-names)
-             for v = (char-to-string v)
-             if (string-match-p (rx (category greek)) v)
-             concat v))
+  (cl-loop for v being the hash-values of (ucs-names)
+           for v = (char-to-string v)
+           if (string-match-p (rx (category greek)) v)
+           concat v)
   "Every Greek character in Unicode.")
 
 (defconst hermeneus--lowercase-sigmas "σςϲͻͼͽ")
