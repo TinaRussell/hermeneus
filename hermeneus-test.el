@@ -3,7 +3,7 @@
 (require 'hermeneus)
 
 ;; [[id:TKR:ac0367f5-9016-4139-acef-3183123bb0d6][Testing:1]]
-(ert-deftest conv-test ()
+(ert-deftest hermeneus-conv-test ()
   "Test Beta to Unicode conversion"
   (should (equal (hermeneus-beta-to-unicode "*)odusseu/s") "Ὀδυσσεύς"))
   (should (let ((hermeneus-beta-input-type 'greek-kbd))
@@ -18,7 +18,7 @@
 ;; Testing:1 ends here
 
 ;; [[id:TKR:8999aa73-3aa5-46fa-be90-be901b945d1e][Testing:1]]
-(ert-deftest match-test ()
+(ert-deftest hermeneus-match-test ()
   "Test the results of the regexp matcher."
   ;; This is the sexp used to create ‘wordlist’:
   ;; (cl-loop for string in (hash-table-keys (oref hermeneus-lsj entries)) if (string-match-p (hermeneus--re-builder "αφρο") string) collect string)
@@ -90,7 +90,7 @@
 ;; Testing:1 ends here
 
 ;; [[id:TKR:2f830a16-8963-4182-a998-c45bfa2401c1][Testing:1]]
-(ert-deftest cts-test ()
+(ert-deftest hermeneus-cts-test ()
   "Test the Canonical Test Services functionality."
   (should (equal (hermeneus-urn-to-base "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1:195")
                  "urn:cts:greekLit:tlg0020.tlg001.perseus-grc1"))
@@ -108,6 +108,4 @@
 
 ;; Testing:1 ends here
 
-;; [[id:TKR:96d2cc57-bf6d-4024-b4ee-d6bb2703763d][Testing:1]]
 ;;; hermeneus-test.el ends here
-;; Testing:1 ends here
