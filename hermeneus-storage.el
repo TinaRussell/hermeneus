@@ -70,10 +70,12 @@ Use the function ‘hermeneus-get-entries’ to access the ‘entries’ slot.")
   "When making a ‘hermeneus-lexicon’ object, try to read it from a file.
 (The file’s path can be passed as a “:file” keyword argument, but
 otherwise defaults to ‘hermeneus-storage-path’.) If the file doesn’t
-exist, or otherwise can’t be used, move on."
+exist, or is empty, move on."
   (let ((path (or (plist-get slots :file)
                   hermeneus-storage-path)))
     (or (and (file-exists-p path)
+             ;; is the existing file empty?
+             (not (= (file-attribute-size (file-attributes path)) 0))
              (eieio-persistent-read path cls t))
         (cl-call-next-method))))
 
