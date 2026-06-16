@@ -78,7 +78,31 @@
 ;; Testing:1 ends here
 
 ;; [[id:TKR:98034f7e-a248-4c5a-a6d5-69b803a991c8][Testing:1]]
-
+(ert-deftest hermeneus-storage-test ()
+  "Test the object and storage facilities of Hermeneus."
+  (let* ((file (make-temp-file "hermeneus-storage-test" nil
+                               (when (executable-find "gzip") ".gz")))
+         (key "Ἑρμῆς"))
+    (unwind-protect
+        (progn
+          ;; Make a word object
+          (let ((word (hermeneus-word :key key :id 42622 :loc '(4 31300602 31327799)))
+                ;; Make a lexicon object
+                (lexicon (hermeneus-lexicon :file file)))
+            ;; Add the word to the lexicon
+            (puthash key word (oref lexicon entries))
+            ;; Save the lexicon object
+            (eieio-persistent-save lexicon))
+          ;; Open the lexicon object from the file
+          (let* ((lexicon (eieio-persistent-read file 'hermeneus-lexicon))
+                 ;; Access the word object from it
+                 (word (gethash key (oref lexicon entries))))
+            ;; Finally, the tests
+            (cl-check-type word hermeneus-word)
+            (should (= (oref word id) 42622))
+            (should (equal (oref word loc) '(4 31300602 31327799)))))
+      ;; Clean up
+      (delete-file file))))
 ;; Testing:1 ends here
 
 ;; [[id:TKR:6a32401f-f9e7-4e52-9c47-65cc722cb2ba][Testing:1]]
