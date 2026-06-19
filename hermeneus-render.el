@@ -43,12 +43,11 @@ This affects the word defintiions displayed by ‘describe-greek-word’ and
 When this is set to “XML” (symbol ‘xml’), then any definition displayed
 will be followed by the definition’s original XML source. When this is
 set to “DOM sexp” (symbol ‘sexp’), the source will be displayed in the
-form of the DOM sexp that was generated from the XML by
-‘libxml-parse-xml-region’ and used by Hermeneus to interpret and render
-the definition. When this is set to “both” (symbol ‘both’, or t), then
-the source will be displayed as XML and as a DOM sexp. When this is set
-to “no” (nil), the default, then no source will be displayed below the
-definition."
+form of a tree representing the DOM sexp that was generated from the XML
+and used by Hermeneus to interpret and render the definition. When this
+is set to “both” (symbol ‘both’, or t), then the source will be
+displayed as XML and as a DOM sexp. When this is set to “no” (nil), the
+default, then no source will be displayed below the definition."
   :type '(choice (const xml :tag "XML")
                  (const sexp :tag "DOM sexp")
                  (const both :tag "both")

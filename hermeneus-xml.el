@@ -54,7 +54,7 @@ If keyword argument PLAIN-XML-P is non-nil, return plain XML instead."
     (hermeneus--insert-contents file)
     (funcall (if plain-xml-p
                  'buffer-substring
-               'libxml-parse-xml-region)
+               hermeneus--parse-xml-function)
              (or start (point-min))
              (or end (point-max)))))
 
@@ -97,7 +97,7 @@ URL, then the size is given from a prerecorded list. Otherwise,
              collect (nnheader-file-size l))))
 ;; Get file sizes:1 ends here
 
-;; [[id:TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737][Variables:1]]
+;; [[id:TKR:01e2f714-3f52-4049-b057-4d3618c7a2af][LSJ files:1]]
 (defvar hermeneus-lsj-files nil)
 
 (cl-defun hermeneus--set-lsj-dir (&optional (symbol 'hermeneus-lsj-dir)
@@ -130,9 +130,62 @@ If you set this outside of Customize, be sure to evaluate
                  (string :tag "URL"))
   :set 'hermeneus--set-lsj-dir
   :group 'hermeneus)
+;; LSJ files:1 ends here
+
+;; [[id:TKR:22bb245e-850e-40aa-8104-3b8a167268d2][Which function will we use to parse XML?:1]]
+(defvar hermeneus--parse-xml-function nil) ; will be set by the function below
+; (which will be called when the defcustom below it is run)
+
+(cl-defun hermeneus--set-use-libxml2 (&optional (symbol 'hermeneus-use-libxml2)
+                                                (value (if (boundp 'hermeneus-use-libxml2)
+                                                           hermeneus-use-libxml2
+                                                         'when-available)))
+  "Setter function for ‘hermeneus-use-libxml2’."
+  (set-default symbol value)
+  (setq hermeneus--parse-xml-function
+        (cond ((eq value t)
+               (if (libxml-available-p)
+                   #'libxml-parse-xml-region
+                 (error "libxml2 is not available and hermeneus-use-libxml2 is t. Either Emacs \
+was not compiled with libxml2 support, or Emacs cannot find the libxml2 \
+library on your system.")))
+              ((not value)
+               (require 'xml)
+               #'xml-parse-region)
+              (t ; value is 'when-available
+                 ; (or, actually, anything that isn’t t or nil)
+               (if (libxml-available-p)
+                   #'libxml-parse-xml-region
+                 (require 'xml)
+                 #'xml-parse-region)))))
+
+(defcustom hermeneus-use-libxml2 'when-available
+  "Whether to use libxml2 when parsing XML data.
+The default, “When available” (symbol ‘when-available’), means Hermeneus
+will use libxml2 when it is available (when Emacs has been compiled with
+libxml2 support, and libxml2 is present on your system; this is checked
+with the function ‘libxml-available-p’), and will otherwise default to
+using the function ‘xml-parse-region’. “Require libxml2” (t) means
+Hermeneus functions that parse XML will require the use of libxml2 and
+will signal an error if it is not available. “Use xml-parse-region”
+\(nil) means to ignore libxml2 altogether and always use the function
+‘xml-parse-region’, which is slower but does not require an external
+library.
+
+Use of libxml2 is recommended for Hermeneus.
+
+When setting this outside of Customize, be sure to evaluate the function
+‘hermeneus--set-use-libxml2’." ; FIXME add instructions for installing
+                               ; libxml2 on different platforms
+  :tag "Hermeneus — use libxml2?"
+  :type '(choice (const :tag "When available" when-available)
+                 (const :tag "Require libxml2" t)
+                 (const :tag "Use xml-parse-region" nil))
+  :set 'hermeneus--set-use-libxml2
+  :group 'hermeneus)
 
 (defvar hermeneus-use-fonts t)
-;; Variables:1 ends here
+;; Which function will we use to parse XML?:1 ends here
 
 ;; [[id:TKR:34c72ac9-f545-4bfb-b2b7-8befe008bddf][Scan the LSJ:1]]
 (defun hermeneus-scan-entries ()
@@ -152,7 +205,7 @@ corresponding word object."
         (let ((cur-size (pop sizes))
               (max (point-max)))
           (awhile (hermeneus--get-next-tag "entryFree")
-            (oset (hermeneus-scan-entry (apply 'libxml-parse-xml-region it) hash) loc (cons i it))
+            (oset (hermeneus-scan-entry (apply hermeneus--parse-xml-function it) hash) loc (cons i it))
             (progress-reporter-update progress (+ total
                                                   (* cur-size
                                                      (/ (float (cadr it))
