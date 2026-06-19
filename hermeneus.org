@@ -1224,6 +1224,29 @@ URL, then the size is given from a prerecorded list. Otherwise,
              collect (nnheader-file-size l))))
 #+end_src
 
+*** Does the current Emacs support libxml2?
+:PROPERTIES:
+:ID:       TKR:a1918fd7-545d-4252-90e9-60dfcbfefabb
+:END:
+This is here because Emacs 26 (the earliest Emacs supported by Hermeneus) doesn’t have the function ~libxml-available-p~. If we ever drop support for Emacs 26, we can simply use ~libxml-available-p~ instead of this.
+
+#+begin_src emacs-lisp
+(defun hermeneus--check-for-libxml2 ()
+  "Return t if libxml2 support is available in this instance of Emacs.
+On most Emacs versions, this simply runs the function
+‘libxml-available-p’. If that function is not present, this function
+tests to see if the function ‘libxml-parse-xml-region’ is present and
+works."
+  ;; with acknowledgment to the code of counsel.el
+  ;; (see the defalias for ‘counsel--xml-parse-region’)
+  (cond ((fboundp 'libxml-available-p)
+         (libxml-available-p))
+        ((fboundp 'libxml-parse-xml-region)
+         (when (with-temp-buffer
+                 (insert "<xml/>")
+                 (libxml-parse-xml-region (point-min) (point-max)))
+           t))))
+#+end_src
 ** Variables
 :PROPERTIES:
 :ID:       TKR:c163e73e-c2d6-47f9-8e78-07834c1fe737
@@ -1286,7 +1309,7 @@ If you set this outside of Customize, be sure to evaluate
   (set-default symbol value)
   (setq hermeneus--parse-xml-function
         (cond ((eq value t)
-               (if (libxml-available-p)
+               (if (hermeneus--check-for-libxml2)
                    #'libxml-parse-xml-region
                  (error "libxml2 is not available and hermeneus-use-libxml2 is t. Either Emacs \
 was not compiled with libxml2 support, or Emacs cannot find the libxml2 \
@@ -1296,7 +1319,7 @@ library on your system.")))
                #'xml-parse-region)
               (t ; value is 'when-available
                  ; (or, actually, anything that isn’t t or nil)
-               (if (libxml-available-p)
+               (if (hermeneus--check-for-libxml2)
                    #'libxml-parse-xml-region
                  (require 'xml)
                  #'xml-parse-region)))))

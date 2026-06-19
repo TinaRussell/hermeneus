@@ -97,6 +97,24 @@ URL, then the size is given from a prerecorded list. Otherwise,
              collect (nnheader-file-size l))))
 ;; Get file sizes:1 ends here
 
+;; [[id:TKR:a1918fd7-545d-4252-90e9-60dfcbfefabb][Does the current Emacs support libxml2?:1]]
+(defun hermeneus--check-for-libxml2 ()
+  "Return t if libxml2 support is available in this instance of Emacs.
+On most Emacs versions, this simply runs the function
+‘libxml-available-p’. If that function is not present, this function
+tests to see if the function ‘libxml-parse-xml-region’ is present and
+works."
+  ;; with acknowledgment to the code of counsel.el
+  ;; (see the defalias for ‘counsel--xml-parse-region’)
+  (cond ((fboundp 'libxml-available-p)
+         (libxml-available-p))
+        ((fboundp 'libxml-parse-xml-region)
+         (when (with-temp-buffer
+                 (insert "<xml/>")
+                 (libxml-parse-xml-region (point-min) (point-max)))
+           t))))
+;; Does the current Emacs support libxml2?:1 ends here
+
 ;; [[id:TKR:01e2f714-3f52-4049-b057-4d3618c7a2af][LSJ files:1]]
 (defvar hermeneus-lsj-files nil)
 
@@ -144,7 +162,7 @@ If you set this outside of Customize, be sure to evaluate
   (set-default symbol value)
   (setq hermeneus--parse-xml-function
         (cond ((eq value t)
-               (if (libxml-available-p)
+               (if (hermeneus--check-for-libxml2)
                    #'libxml-parse-xml-region
                  (error "libxml2 is not available and hermeneus-use-libxml2 is t. Either Emacs \
 was not compiled with libxml2 support, or Emacs cannot find the libxml2 \
@@ -154,7 +172,7 @@ library on your system.")))
                #'xml-parse-region)
               (t ; value is 'when-available
                  ; (or, actually, anything that isn’t t or nil)
-               (if (libxml-available-p)
+               (if (hermeneus--check-for-libxml2)
                    #'libxml-parse-xml-region
                  (require 'xml)
                  #'xml-parse-region)))))
