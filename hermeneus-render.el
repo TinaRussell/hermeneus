@@ -325,11 +325,8 @@ functions, are defined using the macro ‘define-hermeneus-tag’."
         ;; fontify the source—thanks go to Wilfred Hughes’s ‘helpful’
         ;; package for a good example of how to do this (in function
         ;; ‘helpful--syntax-highlight’)
-        (delay-mode-hooks
-          (if (fboundp 'xml-mode)
-              (nxml-mode)
-            (xml-mode)))
-        (if (fboundp 'font-lock-ensure)
+        (delay-mode-hooks (nxml-mode))
+        (if (fboundp 'font-lock-ensure) ; not sure this check is needed
             (font-lock-ensure)
           (with-no-warnings
             (font-lock-fontify-buffer)))
