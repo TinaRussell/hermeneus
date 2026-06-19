@@ -1,6 +1,7 @@
 # -*- mode: org; org-src-preserve-indentation: t; org-blank-before-new-entry: '((heading . t) (plain-list-item . auto)); org-id-link-to-org-use-id: t; eval: (progn (when (fboundp 'tina/org-insert-heading-after) (add-hook 'org-insert-heading-hook 'tina/org-insert-heading-after t t)) (when (and (fboundp 'tina/org-add-end-matter) (fboundp 'tina/org-babel-tangle-add-end-matter)) (add-hook 'org-babel-pre-tangle-hook 'tina/org-babel-tangle-add-end-matter nil t))) -*-
 
 #+TITLE: Hermeneus
+#+AUTHOR: Tina Russell
 
 #+PROPERTY: header-args :results silent :tangle yes :comments link
 #+PROPERTY: header-args:emacs-lisp :lexical t
@@ -13,6 +14,8 @@
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus.el --- Ancient Greek word lookup tool -*- lexical-binding: t -*-
+
+;; Copyright © 2020–2026 Tina Russell
 #+end_src
 
 ** Package header

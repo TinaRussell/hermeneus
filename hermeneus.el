@@ -1,5 +1,7 @@
 ;;; hermeneus.el --- Ancient Greek word lookup tool -*- lexical-binding: t -*-
 
+;; Copyright © 2020–2026 Tina Russell
+
 ;; Author: Tina Russell
 ;; Maintainer: Tina Russell
 ;; Version: 0.1
