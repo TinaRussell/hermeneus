@@ -228,6 +228,7 @@ in the lexicon. Each function is run with two arguments: the word-object
 corresponding to the entry, and the DOM parsed from the XML element
 itself."
   :type 'hook
+  :tag "Hermeneus — scan entry functions"
   :group 'hermeneus)
 #+end_src
 
@@ -1579,6 +1580,7 @@ but this option is turned off (‘nil’), then the Ivy version of
 ‘describe-greek-word’ is still available as the command
 ‘counsel-greek-word’."
   :type 'boolean
+  :tag "Hermeneus — use Ivy?"
   :group 'hermeneus)
 #+end_src
 

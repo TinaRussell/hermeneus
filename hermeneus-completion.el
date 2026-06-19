@@ -37,6 +37,7 @@ but this option is turned off (‘nil’), then the Ivy version of
 ‘describe-greek-word’ is still available as the command
 ‘counsel-greek-word’."
   :type 'boolean
+  :tag "Hermeneus — use Ivy?"
   :group 'hermeneus)
 ;; Variables:1 ends here
 

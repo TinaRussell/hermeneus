@@ -150,6 +150,7 @@ in the lexicon. Each function is run with two arguments: the word-object
 corresponding to the entry, and the DOM parsed from the XML element
 itself."
   :type 'hook
+  :tag "Hermeneus — scan entry functions"
   :group 'hermeneus)
 ;; Hooks:1 ends here
 
