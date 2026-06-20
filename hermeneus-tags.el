@@ -12,6 +12,7 @@
 (require 'hermeneus-xml)
 (require 'hermeneus-conv)
 (require 'hermeneus-render)
+(require 'hermeneus-storage)
 (require 'hermeneus-abbr) ; standalone file
 
 (defvar hermeneus--greek-punctuation)

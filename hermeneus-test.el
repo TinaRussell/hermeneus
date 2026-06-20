@@ -1,5 +1,6 @@
 ;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
 
+(require 'ert)
 (require 'hermeneus)
 
 ;; [[id:TKR:ac0367f5-9016-4139-acef-3183123bb0d6][Testing:1]]

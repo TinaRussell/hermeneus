@@ -15,6 +15,7 @@
                    (require 'cl-macs))
 
 (require 'hermeneus-conv)
+(require 'hermeneus-storage)
 
 (defvar hermeneus--greek-punctuation)
 ;; Dependencies:1 ends here

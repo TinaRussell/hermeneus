@@ -6,6 +6,7 @@
 (require 'eieio)
 (require 'ucs-normalize)
 (require 'rx)
+(require 'anaphora)
 
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))

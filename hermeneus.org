@@ -255,6 +255,7 @@ itself."
 #+begin_src emacs-lisp :tangle "hermeneus-test.el" :comments no
 ;;; hermeneus-test.el --- Tests for Hermeneus -*- lexical-binding: t -*-
 
+(require 'ert)
 (require 'hermeneus)
 #+end_src
 
@@ -1124,6 +1125,7 @@ If you’d like, you can write a function (whose arguments are a word-object and
                    (require 'cl-macs))
 
 (require 'hermeneus-conv)
+(require 'hermeneus-storage)
 
 (defvar hermeneus--greek-punctuation)
 #+end_src
@@ -1545,6 +1547,7 @@ This section handles completion (via ~completing-read~ or Ivy) and contains func
 (require 'eieio)
 (require 'ucs-normalize)
 (require 'rx)
+(require 'anaphora)
 
 (eval-when-compile (require 'cl-macs)
                    (require 'subr-x))
@@ -1968,6 +1971,7 @@ This handles all the many types of tags found in the XML version of the LSJ, how
 (require 'hermeneus-xml)
 (require 'hermeneus-conv)
 (require 'hermeneus-render)
+(require 'hermeneus-storage)
 (require 'hermeneus-abbr) ; standalone file
 
 (defvar hermeneus--greek-punctuation)
