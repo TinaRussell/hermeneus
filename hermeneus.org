@@ -274,6 +274,21 @@ Now, Beta code, as it exists in this program, takes two forms: the standard Beta
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-conv.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -677,6 +692,21 @@ Here we have everything to do with matching one string to another. This is mainl
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-match.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -946,6 +976,21 @@ This section contains the ~hermeneus-word~ and ~hermeneus-lexicon~ objects, used
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-storage.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -1104,6 +1149,21 @@ If you’d like, you can write a function (whose arguments are a word-object and
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-xml.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -1535,6 +1595,21 @@ This section handles completion (via ~completing-read~ or Ivy) and contains func
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-completion.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -1764,6 +1839,21 @@ Most of these code blocks do not tangle, because at present most of this section
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-cts.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Variables
@@ -1953,6 +2043,21 @@ This handles all the many types of tags found in the XML version of the LSJ, how
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-tags.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies
@@ -2593,6 +2698,21 @@ Here we use the [[lib:shr][Simple HTML Renderer]] to render entries from the LSJ
 :END:
 #+begin_src emacs-lisp :comments no
 ;;; hermeneus-render.el --- -*- lexical-binding: t -*-
+
+;; This file is not part of GNU Emacs
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; For a full copy of the GNU General Public License
+;; see <http://www.gnu.org/licenses/>.
 #+end_src
 
 ** Dependencies

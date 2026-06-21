@@ -41,7 +41,21 @@ Hermeneus should be able to scan the LSJ remotely from the Perseus Project’s G
 
 When the LSJ is being scanned, it calls each function in ~hermeneus-scan-entry-functions~ with two arguments: the generated word object, and the raw DOM from the entry’s XML (as parsed by ~libxml-parse-xml-region~). This way, users and developers can easily create functions which take information from a word’s LSJ entry and add it (in some fashion or another) to the relevant word object.
 
-When a word is selected via ~describe-greek-word~, the entry is displayed using the Simple HTML Renderer, with custom tag definitions fitting the XML schema used by the XML LSJ. To add new tag definitions, use the macro ~define-hermeneus-tag~; for more information on defining tags, see that macro’s documentation, and for examples, see [[file:hermeneus.org::*Tag definitions][Tag definitions]].
+When a word is selected via ~describe-greek-word~, the entry is displayed using the Simple HTML Renderer, with custom tag definitions fitting the XML schema used by the XML LSJ. To add new tag definitions, use the macro ~define-hermeneus-tag~; for more information on defining tags, see that macro’s documentation, and for examples, see [[file:hermeneus.org::*Tag definitions][Tag definitions]] in the file [[file:hermeneus.org][hermeneus.org]].
+
+* L
+
+* License
+Hermeneus is licensed under the [[https://www.gnu.org/licenses/gpl-3.0.html][GNU General Public License]], version 3 or later. See [[file:LICENSE][LICENSE]].
+
+Hermeneus accesses (but does not, at present, include, save for expansions of abbreviations) data from the [[https://github.com/PerseusDL/lexica][Perseus Digital Library’s XML version of the Liddell-Scott-Jones /Greek-English Lexicon/​]]. This text is available under the [[https://creativecommons.org/licenses/by-sa/4.0/][Creative Commons Attribution Share-Alike 4.0 International]] license, provided that Perseus is given credit with the following statement:
+
+#+begin_quote
+Text provided under a CC BY-SA license by Perseus Digital Library, [[http://www.perseus.tufts.edu]], with funding from The National Endowment for the Humanities.
+Data accessed from [[https://github.com/PerseusDL/lexica/]] [date of access].
+#+end_quote
+
+(This text appears when you display the definition of a word in Hermeneus.)
 
 * Contributing
 Some notes on contributing:
