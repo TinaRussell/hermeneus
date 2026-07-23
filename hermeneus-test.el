@@ -122,7 +122,39 @@
 ;; Testing:1 ends here
 
 ;; [[id:TKR:6a32401f-f9e7-4e52-9c47-65cc722cb2ba][Testing:1]]
-
+(ert-deftest hermeneus-xml-test ()
+  "Test the XML functionality in Hermeneus."
+  (should (hermeneus--url-p "https://sega.com/"))
+  (should-not (hermeneus--url-p user-emacs-directory))
+  ;; Shadow some variables
+  (let* ((temp-storage-dir (make-temp-file "hermeneus-" t))
+         (hermeneus-storage-dir temp-storage-dir)
+         hermeneus-storage-path
+         ;; Here we set ‘hermeneus-lsj-dir’, temporarily, to its
+         ;; default value, which is the location of the LSJ in the
+         ;; PerseusDL “lexica” repository. I’m wondering if we should
+         ;; set it the same location in a fork of the repository, to
+         ;; make sure it stays consistent between tests. I don’t know.
+         (hermeneus-lsj-dir hermeneus--git-lsj-dir)
+         hermeneus-lsj-files)
+    (hermeneus--set-storage-dir)
+    (hermeneus--set-lsj-dir)
+    (unwind-protect
+        (let* ((hermeneus-lsj (hermeneus-lexicon))
+               (entries (hermeneus-get-entries hermeneus-lsj))
+               (word (gethash "Ἀφροδίτη" entries))
+               (dom (hermeneus--get-dom-from-word word)))
+          ;; Finally, the actual tests
+          (cl-check-type word hermeneus-word)
+          (should (dom-ensure-node dom))
+          (should (eq (dom-tag dom) 'entryFree))
+          (should (string= (thread-first dom
+                                         (dom-child-by-tag 'sense)
+                                         (dom-child-by-tag 'tr)
+                                         (dom-text))
+                           "Aphrodite,")))
+      ;; Clean up
+      (delete-directory temp-storage-dir t))))
 ;; Testing:1 ends here
 
 ;; [[id:TKR:ba63b06f-cf08-4ff1-9b1f-eed5387a6a47][Testing:1]]
