@@ -301,7 +301,11 @@ with word-objects from the LSJ."
         (if (hermeneus--url-p hermeneus-lsj-dir)
             ;; TODO this stores the current time as an integer, which
             ;; will run into the Year 2038 problem on 32-bit systems
-            (time-convert (current-time) 'integer)
+            (if (version< emacs-version "27.1") ; Emacs < 27.1 doesn’t
+                (let* ((current-time-list nil)  ; have ‘time-convert’
+                       (time (current-time)))
+                  (/ (car time) (cdr time)))
+              (time-convert (current-time) 'integer))
           t))
   (eieio-persistent-save lexicon))
 
