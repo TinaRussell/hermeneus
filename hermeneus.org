@@ -26,7 +26,7 @@
 ;; Author: Tina Russell
 ;; Maintainer: Tina Russell
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1") (anaphora "1.0.4"))
+;; Package-Requires: ((emacs "26.1") (anaphora "20260720.903"))
 ;; Homepage: https://github.com/TinaRussell/hermeneus
 ;; Keywords: greek language reference
 
