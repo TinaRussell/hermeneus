@@ -1219,7 +1219,7 @@ If you’d like, you can write a function (whose arguments are a word-object and
 (defun hermeneus--url-p (path)
   "Return non-nil if PATH is a valid URL.
 Specifically, this will return a parsed URL object from
-  ‘url-generic-parse-url’, otherwise nil."
+‘url-generic-parse-url’, otherwise nil."
   (let ((url (url-generic-parse-url path)))
     (when (cl-struct-slot-value 'url 'type url)
       url)))
@@ -1249,9 +1249,19 @@ Specifically, this will return a parsed URL object from
 :END:
 #+begin_src emacs-lisp
 (cl-defun hermeneus--get-dom-from-file (file &optional start end
-                                       &key plain-xml-p)
+                                             &key plain-xml-p)
   "Return a DOM sexp from the XML file FILE.
-If keyword argument PLAIN-XML-P is non-nil, return plain XML instead."
+If FILE is an integer, it is interpreted as the file at that index in
+the variable ‘hermeneus-lsj-files’ (found using the function ‘nth’, so
+count from zero). Use optional arguments START and END to return a DOM
+sexp from only part of the XML file. If keyword argument PLAIN-XML-P is
+non-nil, return plain XML instead.
+
+If you use PLAIN-XML-P, be sure to provide START and END, even if you
+just leave them as nil (which here will be interpreted as the default,
+which is to say, the XML file’s actual start and end); for more on the
+intricacies of optional and keyword arguments, see Info node
+‘(cl)Argument Lists’."
   (when (integerp file)
     (setq file (nth file hermeneus-lsj-files)))
   (with-temp-buffer
@@ -1366,7 +1376,7 @@ This can be an URL or a local file path. The files themselves should
 be named in the format “grc.lsj.perseus-engXX.xml”, where XX is a
 number from 1 to 27 (no padding).
 
-If you set this outside of Customize, be sure to evaluate
+If you set this outside of Customize, be sure to evaluate the function
 ‘hermeneus--set-lsj-dir’."
   :tag "Hermeneus — LSJ directory"
   :type `(choice (const ,hermeneus--git-lsj-dir
