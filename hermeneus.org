@@ -1467,13 +1467,15 @@ corresponding word object."
       (with-temp-buffer
         (hermeneus--insert-contents (nth i hermeneus-lsj-files))
         (let ((cur-size (pop sizes))
-              (max (point-max)))
+              ;; (max (point-max))
+              )
           (awhile (hermeneus--get-next-tag "entryFree")
             (oset (hermeneus-scan-entry (apply hermeneus--parse-xml-function it) hash) loc (cons i it))
-            (progress-reporter-update progress (+ total
-                                                  (* cur-size
-                                                     (/ (float (cadr it))
-                                                        max)))))
+            ;; (progress-reporter-update progress (+ total
+            ;;                                       (* cur-size
+            ;;                                          (/ (float (cadr it))
+            ;;                                             max))))
+            )
           (progress-reporter-update progress (cl-incf total cur-size)))))
     (progress-reporter-done progress)
     hash))
