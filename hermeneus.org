@@ -1531,9 +1531,7 @@ with word-objects from the LSJ."
             ;; TODO this stores the current time as an integer, which
             ;; will run into the Year 2038 problem on 32-bit systems
             (if (version< emacs-version "27.1") ; Emacs < 27.1 doesn’t
-                (let* ((current-time-list nil)  ; have ‘time-convert’
-                       (time (current-time)))
-                  (/ (car time) (cdr time)))
+                (truncate (float-time))         ; have ‘time-convert’)
               (time-convert (current-time) 'integer))
           t))
   (eieio-persistent-save lexicon))
